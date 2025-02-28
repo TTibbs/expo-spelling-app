@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
-import { StyleSheet, View } from "react-native";
-import { BookOpen, Home, Settings, User } from "lucide-react-native";
+import { StyleSheet } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function TabLayout() {
   return (
@@ -17,7 +17,9 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" color={color} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -25,7 +27,7 @@ export default function TabLayout() {
         options={{
           title: "Words",
           tabBarIcon: ({ color, size }) => (
-            <BookOpen color={color} size={size} />
+            <Ionicons name="book-outline" color={color} size={size} />
           ),
         }}
       />
@@ -33,7 +35,9 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" color={color} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -41,7 +45,7 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ color, size }) => (
-            <Settings color={color} size={size} />
+            <Ionicons name="settings-outline" color={color} size={size} />
           ),
         }}
       />

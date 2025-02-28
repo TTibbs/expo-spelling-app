@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Brain, Sparkles, Trophy } from "lucide-react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function HomeScreen() {
 
           <View style={styles.featureCard}>
             <View style={styles.featureIconContainer}>
-              <BookOpen color="#6366F1" size={24} />
+              <Ionicons name="book-outline" color="#6366F1" size={24} />
             </View>
             <View style={styles.featureContent}>
               <Text style={styles.featureTitle}>Choose a Word</Text>
@@ -58,7 +58,7 @@ export default function HomeScreen() {
 
           <View style={styles.featureCard}>
             <View style={styles.featureIconContainer}>
-              <Brain color="#6366F1" size={24} />
+              <Ionicons name="bulb-outline" color="#6366F1" size={24} />
             </View>
             <View style={styles.featureContent}>
               <Text style={styles.featureTitle}>Guess Letters</Text>
@@ -70,7 +70,7 @@ export default function HomeScreen() {
 
           <View style={styles.featureCard}>
             <View style={styles.featureIconContainer}>
-              <Trophy color="#6366F1" size={24} />
+              <Ionicons name="trophy-outline" color="#6366F1" size={24} />
             </View>
             <View style={styles.featureContent}>
               <Text style={styles.featureTitle}>Learn & Improve</Text>

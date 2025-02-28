@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Award, BookOpen, Star, Trophy } from "lucide-react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 
 // Define the learned word type
@@ -74,7 +74,7 @@ export default function ProfileScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <BookOpen color="#CBD5E1" size={60} />
+      <Ionicons name="book-outline" color="#CBD5E1" size={60} />
       <Text style={styles.emptyTitle}>No Words Learned Yet</Text>
       <Text style={styles.emptyText}>
         Start playing to add words to your collection!
@@ -97,7 +97,7 @@ export default function ProfileScreen() {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <View style={styles.statIconContainer}>
-            <BookOpen color="#6366F1" size={20} />
+            <Ionicons name="book-outline" color="#6366F1" size={20} />
           </View>
           <Text style={styles.statValue}>{totalWords}</Text>
           <Text style={styles.statLabel}>Words Learned</Text>
@@ -105,7 +105,7 @@ export default function ProfileScreen() {
 
         <View style={styles.statCard}>
           <View style={styles.statIconContainer}>
-            <Award color="#6366F1" size={20} />
+            <Ionicons name="trophy-outline" color="#6366F1" size={20} />
           </View>
           <Text style={styles.statValue}>{categories}</Text>
           <Text style={styles.statLabel}>Categories</Text>
@@ -113,7 +113,7 @@ export default function ProfileScreen() {
 
         <View style={styles.statCard}>
           <View style={styles.statIconContainer}>
-            <Star color="#6366F1" size={20} />
+            <Ionicons name="star-outline" color="#6366F1" size={20} />
           </View>
           <Text style={styles.statValue}>
             {totalWords > 0 ? "Level 1" : "Beginner"}
@@ -125,7 +125,7 @@ export default function ProfileScreen() {
       <View style={styles.wordsContainer}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Words I've Learned</Text>
-          <Trophy color="#6366F1" size={20} />
+          <Ionicons name="trophy-outline" color="#6366F1" size={20} />
         </View>
 
         {isLoading ? (

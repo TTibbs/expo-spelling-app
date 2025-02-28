@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Search } from "lucide-react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 // Mock data for word categories
 const categories = [
@@ -224,7 +224,7 @@ export default function WordsScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Word Categories</Text>
         <TouchableOpacity style={styles.searchButton}>
-          <Search color="#64748B" size={20} />
+          <Ionicons name="search" size={20} color="#64748B" />
         </TouchableOpacity>
       </View>
 

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft, RefreshCw } from "lucide-react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -326,10 +326,10 @@ export default function WordDetailScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <ArrowLeft color="#1E293B" size={24} />
+          <Ionicons name="arrow-back" size={24} color="#1E293B" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.resetButton} onPress={resetGame}>
-          <RefreshCw color="#1E293B" size={20} />
+          <Ionicons name="refresh" size={20} color="#1E293B" />
         </TouchableOpacity>
       </View>
 

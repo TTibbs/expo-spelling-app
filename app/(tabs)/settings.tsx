@@ -8,13 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
-import {
-  Bell,
-  CircleHelp as HelpCircle,
-  Info,
-  Moon,
-  Volume2,
-} from "lucide-react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function SettingsScreen() {
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -34,7 +28,7 @@ export default function SettingsScreen() {
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
               <View style={styles.iconContainer}>
-                <Volume2 color="#6366F1" size={20} />
+                <Ionicons name="volume-high" size={20} color="#6366F1" />
               </View>
               <Text style={styles.settingLabel}>Sound Effects</Text>
             </View>
@@ -49,7 +43,7 @@ export default function SettingsScreen() {
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
               <View style={styles.iconContainer}>
-                <Moon color="#6366F1" size={20} />
+                <Ionicons name="moon" size={20} color="#6366F1" />
               </View>
               <Text style={styles.settingLabel}>Dark Mode</Text>
             </View>
@@ -64,7 +58,11 @@ export default function SettingsScreen() {
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
               <View style={styles.iconContainer}>
-                <Bell color="#6366F1" size={20} />
+                <Ionicons
+                  name="notifications-outline"
+                  size={20}
+                  color="#6366F1"
+                />
               </View>
               <Text style={styles.settingLabel}>Notifications</Text>
             </View>
@@ -83,7 +81,7 @@ export default function SettingsScreen() {
           <TouchableOpacity style={styles.linkItem}>
             <View style={styles.settingInfo}>
               <View style={styles.iconContainer}>
-                <HelpCircle color="#6366F1" size={20} />
+                <Ionicons name="help-circle" size={20} color="#6366F1" />
               </View>
               <Text style={styles.settingLabel}>Help & FAQ</Text>
             </View>
@@ -92,7 +90,7 @@ export default function SettingsScreen() {
           <TouchableOpacity style={styles.linkItem}>
             <View style={styles.settingInfo}>
               <View style={styles.iconContainer}>
-                <Info color="#6366F1" size={20} />
+                <Ionicons name="information-circle" size={20} color="#6366F1" />
               </View>
               <Text style={styles.settingLabel}>About</Text>
             </View>
