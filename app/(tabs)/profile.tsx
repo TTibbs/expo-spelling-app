@@ -1,9 +1,17 @@
-import { useState, useEffect } from "react";
-import { View, Text, FlatList, Image, TouchableOpacity } from "react-native";
+import { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
+import { playerLevels } from "@/lib/data";
 
 // Define the learned word type
 type LearnedWord = {
@@ -14,8 +22,20 @@ type LearnedWord = {
   learnedAt: string;
 };
 
+// Define the user profile type
+type UserProfile = {
+  xp: number;
+  level: string;
+  lastPlayed: string | null;
+};
+
 export default function ProfileScreen() {
   const [learnedWords, setLearnedWords] = useState<LearnedWord[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    xp: 0,
+    level: "1",
+    lastPlayed: null,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -24,23 +44,57 @@ export default function ProfileScreen() {
   const categories = [...new Set(learnedWords.map((word) => word.category))]
     .length;
 
-  useEffect(() => {
-    loadLearnedWords();
-  }, []);
+  // Get current level data
+  const currentLevel =
+    playerLevels.find((level) => level.id === userProfile.level) ||
+    playerLevels[0];
+  const nextLevel = playerLevels.find(
+    (level) => level.id === String(Number(userProfile.level) + 1)
+  );
 
-  const loadLearnedWords = async () => {
+  // Calculate XP progress
+  const xpForCurrentLevel = userProfile.xp - (currentLevel?.minXp || 0);
+  const xpRequiredForNextLevel = nextLevel
+    ? nextLevel.minXp - (currentLevel?.minXp || 0)
+    : 100; // Default to 100 if at max level
+  const progressPercentage = Math.min(
+    (xpForCurrentLevel / Math.max(xpRequiredForNextLevel, 1)) * 100,
+    100
+  );
+
+  const loadUserData = useCallback(async () => {
     try {
       setIsLoading(true);
+
+      // Load learned words
       const storedWords = await AsyncStorage.getItem("learnedWords");
       if (storedWords) {
         setLearnedWords(JSON.parse(storedWords));
       }
+
+      // Load user profile
+      const userProfileStr = await AsyncStorage.getItem("userProfile");
+      if (userProfileStr) {
+        setUserProfile(JSON.parse(userProfileStr));
+      }
     } catch (error) {
-      console.error("Failed to load learned words:", error);
+      console.error("Failed to load user data:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Load data on initial mount
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  // Refresh data when the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+    }, [loadUserData])
+  );
 
   const handleWordPress = (word: LearnedWord) => {
     router.push({
@@ -95,6 +149,36 @@ export default function ProfileScreen() {
         </Text>
       </View>
 
+      {/* Level progress bar */}
+      <View className="mx-5 mb-5 bg-white p-4 rounded-xl shadow-sm">
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className="text-base font-bold text-[#1E293B]">
+            Level {userProfile.level}: {currentLevel?.title || "Beginner"}
+          </Text>
+          <Text className="text-sm text-[#6366F1] font-bold">
+            {userProfile.xp} XP Total
+          </Text>
+        </View>
+
+        <View className="h-3 bg-[#EEF2FF] rounded-full overflow-hidden mb-2">
+          <View
+            className="h-full bg-[#6366F1]"
+            style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+          />
+        </View>
+
+        {nextLevel ? (
+          <Text className="text-xs text-[#64748B]">
+            {xpForCurrentLevel} / {xpRequiredForNextLevel} XP to Level{" "}
+            {nextLevel.id} ({nextLevel.title})
+          </Text>
+        ) : (
+          <Text className="text-xs text-[#64748B]">
+            Maximum level reached! Keep learning to maintain your skills.
+          </Text>
+        )}
+      </View>
+
       <View className="flex-row justify-between px-5 mb-5">
         <View className="bg-white rounded-xl p-4 items-center w-[30%] shadow-sm">
           <View className="w-10 h-10 rounded-full bg-[#EEF2FF] justify-center items-center mb-2">
@@ -123,9 +207,11 @@ export default function ProfileScreen() {
             <Ionicons name="star-outline" color="#6366F1" size={20} />
           </View>
           <Text className="text-lg font-bold text-[#1E293B] mb-1">
-            {totalWords > 0 ? "Level 1" : "Beginner"}
+            Level {userProfile.level}
           </Text>
-          <Text className="text-xs text-[#64748B] text-center">Level</Text>
+          <Text className="text-xs text-[#64748B] text-center">
+            {currentLevel.title}
+          </Text>
         </View>
       </View>
 
