@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Image,
   TouchableOpacity,
   Dimensions,
@@ -295,16 +294,16 @@ export default function WordDetailScreen() {
     return wordData.word.split("").map((letter, index) => {
       const isGuessed = correctLetters.includes(letter);
       return (
-        <View key={index} style={styles.letterContainer}>
+        <View key={index} className="mx-1.5 my-1.5 w-[30px] items-center">
           {isGuessed ? (
             <Animated.Text
               entering={FlipInYRight.delay(index * 100)}
-              style={styles.letter}
+              className="text-2xl font-bold text-[#1E293B]"
             >
               {letter}
             </Animated.Text>
           ) : (
-            <Text style={styles.letterBlank}>_</Text>
+            <Text className="text-2xl font-bold text-[#94A3B8]">_</Text>
           )}
         </View>
       );
@@ -313,53 +312,63 @@ export default function WordDetailScreen() {
 
   if (!wordData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView className="flex-1 bg-[#F9F9F9]">
         <Text>Word not found</Text>
       </SafeAreaView>
     );
   }
 
+  const { width } = Dimensions.get("window");
+  const keyboardButtonWidth = (width - 60) / 7; // 7 buttons per row with margins
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView className="flex-1 bg-[#F9F9F9]">
+      <View className="flex-row justify-between items-center px-5 py-4">
         <TouchableOpacity
-          style={styles.backButton}
+          className="w-10 h-10 rounded-full bg-[#F1F5F9] justify-center items-center"
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color="#1E293B" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.resetButton} onPress={resetGame}>
+        <TouchableOpacity
+          className="w-10 h-10 rounded-full bg-[#F1F5F9] justify-center items-center"
+          onPress={resetGame}
+        >
           <Ionicons name="refresh" size={20} color="#1E293B" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.imageContainer}>
+      <View className="w-full h-[200px] px-5 mb-7 relative">
         <Image
           source={{ uri: wordData.image }}
-          style={styles.image}
+          className="w-full h-full rounded-2xl"
           resizeMode="cover"
         />
         {wordAlreadyLearned && !gameWon && (
-          <View style={styles.learnedBadge}>
-            <Text style={styles.learnedText}>Already Learned</Text>
+          <View className="absolute top-2.5 right-7 bg-[#6366F1]/90 py-1.5 px-2.5 rounded-xl">
+            <Text className="text-white font-bold text-xs">
+              Already Learned
+            </Text>
           </View>
         )}
       </View>
 
-      <View style={styles.wordContainer}>{renderWord()}</View>
+      <View className="flex-row justify-center items-center mb-10 flex-wrap px-5">
+        {renderWord()}
+      </View>
 
       {gameWon && (
         <Animated.View
           entering={FadeIn}
           exiting={FadeOut}
-          style={styles.congratsContainer}
+          className="absolute top-1/2 left-0 right-0 items-center justify-center bg-[#6366F1]/90 py-4 -translate-y-6"
         >
-          <Text style={styles.congratsText}>Great Job!</Text>
+          <Text className="text-2xl font-bold text-white">Great Job!</Text>
         </Animated.View>
       )}
 
-      <View style={styles.keyboardContainer}>
-        <View style={styles.keyboard}>
+      <View className="px-4 pb-5 mt-auto">
+        <View className="flex-row flex-wrap justify-center">
           {alphabet.map((letter) => {
             const isGuessed = guessedLetters.includes(letter);
             const isCorrect = correctLetters.includes(letter);
@@ -367,22 +376,24 @@ export default function WordDetailScreen() {
             return (
               <TouchableOpacity
                 key={letter}
-                style={[
-                  styles.keyboardButton,
-                  isGuessed &&
-                    (isCorrect ? styles.correctButton : styles.incorrectButton),
-                ]}
+                className={`w-[${keyboardButtonWidth}px] h-[45px] rounded-lg justify-center items-center m-1 shadow-sm ${
+                  isGuessed
+                    ? isCorrect
+                      ? "bg-[#D1FAE5] border border-[#10B981]"
+                      : "bg-[#FEE2E2] border border-[#EF4444]"
+                    : "bg-white"
+                }`}
                 onPress={() => handleLetterPress(letter)}
                 disabled={isGuessed || gameWon}
               >
                 <Text
-                  style={[
-                    styles.keyboardButtonText,
-                    isGuessed &&
-                      (isCorrect
-                        ? styles.correctButtonText
-                        : styles.incorrectButtonText),
-                  ]}
+                  className={`text-lg font-semibold ${
+                    isGuessed
+                      ? isCorrect
+                        ? "text-[#047857]"
+                        : "text-[#B91C1C]"
+                      : "text-[#1E293B]"
+                  }`}
                 >
                   {letter}
                 </Text>
@@ -394,147 +405,3 @@ export default function WordDetailScreen() {
     </SafeAreaView>
   );
 }
-
-const { width } = Dimensions.get("window");
-const keyboardButtonWidth = (width - 60) / 7; // 7 buttons per row with margins
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9F9F9",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F1F5F9",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  resetButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F1F5F9",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  imageContainer: {
-    width: "100%",
-    height: 200,
-    paddingHorizontal: 20,
-    marginBottom: 30,
-    position: "relative",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 16,
-  },
-  learnedBadge: {
-    position: "absolute",
-    top: 10,
-    right: 30,
-    backgroundColor: "rgba(99, 102, 241, 0.9)",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-  },
-  learnedText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 12,
-  },
-  wordContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 40,
-    flexWrap: "wrap",
-    paddingHorizontal: 20,
-  },
-  letterContainer: {
-    marginHorizontal: 5,
-    marginVertical: 5,
-    width: 30,
-    alignItems: "center",
-  },
-  letter: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E293B",
-  },
-  letterBlank: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#94A3B8",
-  },
-  congratsContainer: {
-    position: "absolute",
-    top: "50%",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(99, 102, 241, 0.9)",
-    paddingVertical: 15,
-    transform: [{ translateY: -25 }],
-  },
-  congratsText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
-  },
-  keyboardContainer: {
-    paddingHorizontal: 15,
-    paddingBottom: 20,
-    marginTop: "auto",
-  },
-  keyboard: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  keyboardButton: {
-    width: keyboardButtonWidth,
-    height: 45,
-    borderRadius: 8,
-    backgroundColor: "white",
-    justifyContent: "center",
-    alignItems: "center",
-    margin: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  keyboardButtonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1E293B",
-  },
-  correctButton: {
-    backgroundColor: "#D1FAE5",
-    borderColor: "#10B981",
-    borderWidth: 1,
-  },
-  incorrectButton: {
-    backgroundColor: "#FEE2E2",
-    borderColor: "#EF4444",
-    borderWidth: 1,
-  },
-  correctButtonText: {
-    color: "#047857",
-  },
-  incorrectButtonText: {
-    color: "#B91C1C",
-  },
-});

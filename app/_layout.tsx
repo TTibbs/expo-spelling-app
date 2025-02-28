@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Platform } from "react-native";
+import "./global.css";
 
 declare global {
   interface Window {

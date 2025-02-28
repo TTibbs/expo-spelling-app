@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  Image,
-} from "react-native";
+import { View, Text, TouchableOpacity, FlatList, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -179,18 +172,18 @@ export default function WordsScreen() {
     item: { id: string; title: string; icon: string };
   }) => (
     <TouchableOpacity
-      style={[
-        styles.categoryItem,
-        selectedCategory === item.id && styles.categoryItemSelected,
-      ]}
+      className={`mx-1.5 px-4 py-3 ${
+        selectedCategory === item.id ? "bg-[#EEF2FF]" : "bg-[#F1F5F9]"
+      } rounded-xl items-center flex-row`}
       onPress={() => setSelectedCategory(item.id)}
     >
-      <Text style={styles.categoryIcon}>{item.icon}</Text>
+      <Text className="text-lg mr-2">{item.icon}</Text>
       <Text
-        style={[
-          styles.categoryTitle,
-          selectedCategory === item.id && styles.categoryTitleSelected,
-        ]}
+        className={`text-sm font-medium ${
+          selectedCategory === item.id
+            ? "text-[#6366F1] font-semibold"
+            : "text-[#64748B]"
+        }`}
       >
         {item.title}
       </Text>
@@ -203,7 +196,7 @@ export default function WordsScreen() {
     item: { id: string; word: string; image: string };
   }) => (
     <TouchableOpacity
-      style={styles.wordCard}
+      className="w-[48%] h-[120px] rounded-xl overflow-hidden mb-4"
       onPress={() =>
         router.push({
           pathname: "/word/[id]",
@@ -211,19 +204,23 @@ export default function WordsScreen() {
         })
       }
     >
-      <Image source={{ uri: item.image }} style={styles.wordImage} />
+      <Image source={{ uri: item.image }} className="w-full h-full" />
       {/* Removed the word text overlay to hide the spelling */}
-      <View style={styles.wordCardOverlay}>
-        <Text style={styles.wordCardText}>Tap to spell</Text>
+      <View className="absolute bottom-0 left-0 right-0 bg-black/50 p-2.5">
+        <Text className="text-white font-bold text-sm text-center">
+          Tap to spell
+        </Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Word Categories</Text>
-        <TouchableOpacity style={styles.searchButton}>
+    <SafeAreaView className="flex-1 bg-[#F9F9F9]">
+      <View className="flex-row justify-between items-center px-5 pt-5 pb-4">
+        <Text className="text-2xl font-bold text-[#1E293B]">
+          Word Categories
+        </Text>
+        <TouchableOpacity className="w-10 h-10 rounded-full bg-[#F1F5F9] justify-center items-center">
           <Ionicons name="search" size={20} color="#64748B" />
         </TouchableOpacity>
       </View>
@@ -234,11 +231,11 @@ export default function WordsScreen() {
         renderItem={renderCategoryItem}
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoriesList}
+        className="px-4 h-[200px]"
       />
 
-      <View style={styles.wordsContainer}>
-        <Text style={styles.sectionTitle}>
+      <View className="px-5">
+        <Text className="text-lg font-bold text-[#1E293B] mb-4">
           {categories.find((c) => c.id === selectedCategory)?.title || "Words"}
         </Text>
 
@@ -250,108 +247,11 @@ export default function WordsScreen() {
           renderItem={renderWordItem}
           keyExtractor={(item) => item.id}
           numColumns={2}
-          columnWrapperStyle={styles.wordRow}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.wordsList}
+          className="pb-5"
         />
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9F9F9",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 15,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E293B",
-  },
-  searchButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F1F5F9",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  categoriesList: {
-    paddingHorizontal: 15,
-    height: 200,
-  },
-  categoryItem: {
-    marginHorizontal: 5,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#F1F5F9",
-    borderRadius: 12,
-    alignItems: "center",
-    flexDirection: "row",
-  },
-  categoryItemSelected: {
-    backgroundColor: "#EEF2FF",
-  },
-  categoryIcon: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  categoryTitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#64748B",
-  },
-  categoryTitleSelected: {
-    color: "#6366F1",
-    fontWeight: "600",
-  },
-  wordsContainer: {
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 15,
-  },
-  wordsList: {
-    paddingBottom: 20,
-  },
-  wordRow: {
-    justifyContent: "space-between",
-  },
-  wordCard: {
-    width: "48%",
-    height: 120,
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 15,
-  },
-  wordImage: {
-    width: "100%",
-    height: "100%",
-  },
-  wordCardOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    padding: 10,
-  },
-  wordCardText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 14,
-    textAlign: "center",
-  },
-});
