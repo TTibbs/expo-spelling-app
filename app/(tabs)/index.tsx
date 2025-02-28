@@ -1,74 +1,194 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { Brain, Sparkles, Trophy } from "lucide-react-native";
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>SpellMaster</Text>
+          <Text style={styles.subtitle}>Learn spelling the fun way!</Text>
+        </View>
+
+        <View style={styles.heroContainer}>
+          <Image
+            source={{
+              uri: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop",
+            }}
+            style={styles.heroImage}
+            resizeMode="cover"
+          />
+          <View style={styles.heroOverlay}>
+            <Text style={styles.heroText}>Start your spelling adventure!</Text>
+            <TouchableOpacity
+              style={styles.heroButton}
+              onPress={() => router.push("/words")}
+            >
+              <Text style={styles.heroButtonText}>Play Now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.featuresContainer}>
+          <Text style={styles.sectionTitle}>How It Works</Text>
+
+          <View style={styles.featureCard}>
+            <View style={styles.featureIconContainer}>
+              <BookOpen color="#6366F1" size={24} />
+            </View>
+            <View style={styles.featureContent}>
+              <Text style={styles.featureTitle}>Choose a Word</Text>
+              <Text style={styles.featureDescription}>
+                Select from our collection of words to practice your spelling
+                skills.
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.featureCard}>
+            <View style={styles.featureIconContainer}>
+              <Brain color="#6366F1" size={24} />
+            </View>
+            <View style={styles.featureContent}>
+              <Text style={styles.featureTitle}>Guess Letters</Text>
+              <Text style={styles.featureDescription}>
+                Tap letters to reveal the hidden word, hangman-style.
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.featureCard}>
+            <View style={styles.featureIconContainer}>
+              <Trophy color="#6366F1" size={24} />
+            </View>
+            <View style={styles.featureContent}>
+              <Text style={styles.featureTitle}>Learn & Improve</Text>
+              <Text style={styles.featureDescription}>
+                Build your vocabulary and spelling skills with each game.
+              </Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
+import { BookOpen } from "lucide-react-native";
+
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#F9F9F9",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  scrollContent: {
+    paddingBottom: 30,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#1E293B",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#64748B",
+    marginTop: 5,
+  },
+  heroContainer: {
+    marginHorizontal: 20,
+    marginVertical: 15,
+    borderRadius: 16,
+    overflow: "hidden",
+    height: 200,
+  },
+  heroImage: {
+    width: "100%",
+    height: "100%",
+  },
+  heroOverlay: {
+    position: "absolute",
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 20,
+  },
+  heroText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  heroButton: {
+    backgroundColor: "#6366F1",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+  heroButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  featuresContainer: {
+    padding: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1E293B",
+    marginBottom: 15,
+  },
+  featureCard: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  featureIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#EEF2FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  featureContent: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1E293B",
+    marginBottom: 4,
+  },
+  featureDescription: {
+    fontSize: 14,
+    color: "#64748B",
+    lineHeight: 20,
   },
 });
