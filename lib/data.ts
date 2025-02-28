@@ -188,4 +188,63 @@ export const xpValues = {
   completeWord: 10, // Base XP for completing a word
   perfectWord: 5, // Additional XP for completing without mistakes
   dailyStreak: 5, // XP for maintaining a daily streak
+  completeChore: 15, // XP for completing a chore
+  completeAllChores: 10, // Bonus XP for completing all assigned chores
+};
+
+// Mock data for chore categories
+export const choreCategories = [
+  { id: "home", title: "Home", icon: "🏠" },
+  { id: "school", title: "School", icon: "🏫" },
+  { id: "personal", title: "Personal", icon: "👤" },
+  { id: "outdoor", title: "Outdoor", icon: "🌳" },
+  { id: "other", title: "Other", icon: "📝" },
+];
+
+// Mock data for chores by category
+export const choresByCategory = {
+  home: [
+    { id: "clean_room", title: "Clean Room", icon: "bed-outline", xp: 15 },
+    { id: "do_dishes", title: "Do Dishes", icon: "water-outline", xp: 10 },
+    {
+      id: "take_out_trash",
+      title: "Take Out Trash",
+      icon: "trash-outline",
+      xp: 5,
+    },
+    { id: "vacuum", title: "Vacuum", icon: "flash-outline", xp: 10 },
+    { id: "make_bed", title: "Make Bed", icon: "bed-outline", xp: 5 },
+    { id: "laundry", title: "Do Laundry", icon: "shirt-outline", xp: 15 },
+  ],
+  school: [
+    { id: "homework", title: "Do Homework", icon: "book-outline", xp: 20 },
+    { id: "study", title: "Study", icon: "school-outline", xp: 15 },
+    { id: "project", title: "Work on Project", icon: "create-outline", xp: 25 },
+    { id: "reading", title: "Reading", icon: "library-outline", xp: 10 },
+    { id: "practice", title: "Practice Skills", icon: "bulb-outline", xp: 15 },
+  ],
+  personal: [
+    { id: "exercise", title: "Exercise", icon: "fitness-outline", xp: 15 },
+    { id: "meditate", title: "Meditate", icon: "leaf-outline", xp: 10 },
+    { id: "journal", title: "Journal", icon: "journal-outline", xp: 10 },
+    { id: "read_book", title: "Read a Book", icon: "book-outline", xp: 15 },
+    { id: "drink_water", title: "Drink Water", icon: "water-outline", xp: 5 },
+  ],
+  outdoor: [
+    { id: "walk_dog", title: "Walk the Dog", icon: "paw-outline", xp: 10 },
+    { id: "gardening", title: "Gardening", icon: "leaf-outline", xp: 15 },
+    { id: "mow_lawn", title: "Mow the Lawn", icon: "cut-outline", xp: 20 },
+    { id: "car_wash", title: "Wash the Car", icon: "car-outline", xp: 15 },
+  ],
+  other: [
+    {
+      id: "help_sibling",
+      title: "Help Sibling",
+      icon: "people-outline",
+      xp: 10,
+    },
+    { id: "help_parent", title: "Help Parent", icon: "person-outline", xp: 10 },
+    { id: "volunteer", title: "Volunteer", icon: "heart-outline", xp: 25 },
+    { id: "custom", title: "Custom Chore", icon: "create-outline", xp: 15 },
+  ],
 };

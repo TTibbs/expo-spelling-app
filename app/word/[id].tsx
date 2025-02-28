@@ -1,53 +1,43 @@
-import { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  Dimensions,
-  Alert,
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import Animated, {
-  FadeIn,
-  FadeOut,
-  FlipInYRight,
-} from "react-native-reanimated";
+import Animated, { FlipInYRight } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { wordsByCategory, xpValues, playerLevels } from "@/lib/data";
+import { Word, LearnedWord, UserProfile } from "@/types/common";
 
 // Generate alphabet buttons
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-export default function WordDetailScreen() {
+export default function WordDetailScreen(): JSX.Element {
   const { id, category } = useLocalSearchParams();
   const router = useRouter();
 
   // Find the word data
-  const wordData = wordsByCategory[
+  const wordData: Word | undefined = wordsByCategory[
     category as keyof typeof wordsByCategory
   ]?.find((w) => w.id === id);
 
   const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
   const [correctLetters, setCorrectLetters] = useState<string[]>([]);
   const [incorrectLetters, setIncorrectLetters] = useState<string[]>([]);
-  const [gameWon, setGameWon] = useState(false);
-  const [wordAlreadyLearned, setWordAlreadyLearned] = useState(false);
+  const [gameWon, setGameWon] = useState<boolean>(false);
+  const [wordAlreadyLearned, setWordAlreadyLearned] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if this word has already been learned
     checkIfWordLearned();
   }, []);
 
-  const checkIfWordLearned = async () => {
+  const checkIfWordLearned = async (): Promise<void> => {
     try {
       const storedWords = await AsyncStorage.getItem("learnedWords");
       if (storedWords) {
         const learnedWords = JSON.parse(storedWords);
         const isLearned = learnedWords.some(
-          (word: any) => word.id === id && word.category === category
+          (word: LearnedWord) => word.id === id && word.category === category
         );
         setWordAlreadyLearned(isLearned);
       }
@@ -57,11 +47,11 @@ export default function WordDetailScreen() {
   };
 
   // Update user XP
-  const updateUserXp = async (xpToAdd: number) => {
+  const updateUserXp = async (xpToAdd: number): Promise<UserProfile | null> => {
     try {
       // Get current user profile
       const userProfileStr = await AsyncStorage.getItem("userProfile");
-      let userProfile = userProfileStr
+      let userProfile: UserProfile = userProfileStr
         ? JSON.parse(userProfileStr)
         : { xp: 0, level: "1", lastPlayed: null };
 
@@ -88,7 +78,7 @@ export default function WordDetailScreen() {
   };
 
   // Calculate XP earned for this word
-  const calculateXpEarned = () => {
+  const calculateXpEarned = (): number => {
     if (!wordData) return 0;
 
     let xp = xpValues.completeWord; // Base XP for completing a word
@@ -115,17 +105,19 @@ export default function WordDetailScreen() {
   };
 
   // Save word to learned words and award XP
-  const saveWordAndAwardXp = async () => {
+  const saveWordAndAwardXp = async (): Promise<number> => {
     if (!wordData) return 0;
 
     try {
       // Get current learned words
       const storedWords = await AsyncStorage.getItem("learnedWords");
-      let learnedWords = storedWords ? JSON.parse(storedWords) : [];
+      let learnedWords: LearnedWord[] = storedWords
+        ? JSON.parse(storedWords)
+        : [];
 
       // Check if word is already in the list
       const wordExists = learnedWords.some(
-        (word: any) => word.id === id && word.category === category
+        (word: LearnedWord) => word.id === id && word.category === category
       );
 
       // If word already exists, no XP awarded
@@ -142,7 +134,7 @@ export default function WordDetailScreen() {
       learnedWords.push({
         id: wordData.id,
         word: wordData.word,
-        category: category,
+        category: category as string,
         image: wordData.image,
         learnedAt: new Date().toISOString(),
       });
@@ -162,7 +154,7 @@ export default function WordDetailScreen() {
   };
 
   // Reset the game
-  const resetGame = () => {
+  const resetGame = (): void => {
     setGuessedLetters([]);
     setCorrectLetters([]);
     setIncorrectLetters([]);
@@ -170,7 +162,7 @@ export default function WordDetailScreen() {
   };
 
   // Handle letter press
-  const handleLetterPress = async (letter: string) => {
+  const handleLetterPress = async (letter: string): Promise<void> => {
     if (guessedLetters.includes(letter) || gameWon) return;
 
     const newGuessedLetters = [...guessedLetters, letter];
@@ -243,26 +235,33 @@ export default function WordDetailScreen() {
   };
 
   // Render word with blanks and guessed letters
-  const renderWord = () => {
+  const renderWord = (): JSX.Element | null => {
     if (!wordData) return null;
 
-    return wordData.word.split("").map((letter, index) => {
-      const isGuessed = correctLetters.includes(letter);
-      return (
-        <View key={index} className="mx-[5px] my-[5px] w-[30px] items-center">
-          {isGuessed ? (
-            <Animated.Text
-              entering={FlipInYRight.delay(index * 100)}
-              className="text-2xl font-bold text-[#1E293B]"
+    return (
+      <>
+        {wordData.word.split("").map((letter, index) => {
+          const isGuessed = correctLetters.includes(letter);
+          return (
+            <View
+              key={index}
+              className="mx-[5px] my-[5px] w-[30px] items-center"
             >
-              {letter}
-            </Animated.Text>
-          ) : (
-            <Text className="text-2xl font-bold text-[#94A3B8]">_</Text>
-          )}
-        </View>
-      );
-    });
+              {isGuessed ? (
+                <Animated.Text
+                  entering={FlipInYRight.delay(index * 100)}
+                  className="text-2xl font-bold text-[#1E293B]"
+                >
+                  {letter}
+                </Animated.Text>
+              ) : (
+                <Text className="text-2xl font-bold text-[#94A3B8]">_</Text>
+              )}
+            </View>
+          );
+        })}
+      </>
+    );
   };
 
   if (!wordData) {

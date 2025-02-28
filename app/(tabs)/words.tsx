@@ -1,19 +1,20 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   Image,
-  ScrollView,
+  ListRenderItemInfo,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { wordsByCategory } from "@/lib/data";
+import { Word, WordCategory } from "@/types/common";
 
 // Mock data for word categories
-const categories = [
+const categories: WordCategory[] = [
   { id: "animals", title: "Animals", icon: "🐘" },
   { id: "fruits", title: "Fruits", icon: "🍎" },
   { id: "colors", title: "Colors", icon: "🌈" },
@@ -22,15 +23,13 @@ const categories = [
   { id: "sports", title: "Sports", icon: "⚽" },
 ];
 
-export default function WordsScreen() {
+export default function WordsScreen(): JSX.Element {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState("animals");
+  const [selectedCategory, setSelectedCategory] = useState<string>("animals");
 
   const renderCategoryItem = ({
     item,
-  }: {
-    item: { id: string; title: string; icon: string };
-  }) => (
+  }: ListRenderItemInfo<WordCategory>): JSX.Element => (
     <TouchableOpacity
       className={`mx-1.5 px-4 py-3 ${
         selectedCategory === item.id ? "bg-[#EEF2FF]" : "bg-[#F1F5F9]"
@@ -50,11 +49,7 @@ export default function WordsScreen() {
     </TouchableOpacity>
   );
 
-  const renderWordItem = ({
-    item,
-  }: {
-    item: { id: string; word: string; image: string };
-  }) => (
+  const renderWordItem = ({ item }: ListRenderItemInfo<Word>): JSX.Element => (
     <TouchableOpacity
       className="w-[48%] h-[140px] rounded-xl overflow-hidden mb-4"
       onPress={() =>

@@ -1,12 +1,12 @@
+import React, { useState } from "react";
 import { View, Text, Switch, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-export default function SettingsScreen() {
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState(true);
+export default function SettingsScreen(): JSX.Element {
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [notifications, setNotifications] = useState<boolean>(true);
 
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">

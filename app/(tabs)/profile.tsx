@@ -5,38 +5,23 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  StyleSheet,
+  ListRenderItemInfo,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { playerLevels } from "@/lib/data";
+import { LearnedWord, UserProfile, PlayerLevel } from "@/types/common";
 
-// Define the learned word type
-type LearnedWord = {
-  id: string;
-  word: string;
-  category: string;
-  image: string;
-  learnedAt: string;
-};
-
-// Define the user profile type
-type UserProfile = {
-  xp: number;
-  level: string;
-  lastPlayed: string | null;
-};
-
-export default function ProfileScreen() {
+export default function ProfileScreen(): JSX.Element {
   const [learnedWords, setLearnedWords] = useState<LearnedWord[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile>({
     xp: 0,
     level: "1",
     lastPlayed: null,
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
 
   // Stats for the profile
@@ -45,24 +30,24 @@ export default function ProfileScreen() {
     .length;
 
   // Get current level data
-  const currentLevel =
+  const currentLevel: PlayerLevel =
     playerLevels.find((level) => level.id === userProfile.level) ||
     playerLevels[0];
-  const nextLevel = playerLevels.find(
+  const nextLevel: PlayerLevel | undefined = playerLevels.find(
     (level) => level.id === String(Number(userProfile.level) + 1)
   );
 
   // Calculate XP progress
-  const xpForCurrentLevel = userProfile.xp - (currentLevel?.minXp || 0);
-  const xpRequiredForNextLevel = nextLevel
+  const xpForCurrentLevel: number = userProfile.xp - (currentLevel?.minXp || 0);
+  const xpRequiredForNextLevel: number = nextLevel
     ? nextLevel.minXp - (currentLevel?.minXp || 0)
     : 100; // Default to 100 if at max level
-  const progressPercentage = Math.min(
+  const progressPercentage: number = Math.min(
     (xpForCurrentLevel / Math.max(xpRequiredForNextLevel, 1)) * 100,
     100
   );
 
-  const loadUserData = useCallback(async () => {
+  const loadUserData = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
 
@@ -96,14 +81,16 @@ export default function ProfileScreen() {
     }, [loadUserData])
   );
 
-  const handleWordPress = (word: LearnedWord) => {
+  const handleWordPress = (word: LearnedWord): void => {
     router.push({
       pathname: "/word/[id]",
       params: { id: word.id, category: word.category },
     });
   };
 
-  const renderWordItem = ({ item }: { item: LearnedWord }) => (
+  const renderWordItem = ({
+    item,
+  }: ListRenderItemInfo<LearnedWord>): JSX.Element => (
     <TouchableOpacity
       className="bg-white rounded-xl mb-3 overflow-hidden flex-row shadow-sm"
       onPress={() => handleWordPress(item)}
@@ -123,7 +110,7 @@ export default function ProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderEmptyState = () => (
+  const renderEmptyState = (): JSX.Element => (
     <View className="items-center justify-center py-10">
       <Ionicons name="book-outline" color="#CBD5E1" size={60} />
       <Text className="text-lg font-bold text-[#1E293B] mt-4 mb-2">
