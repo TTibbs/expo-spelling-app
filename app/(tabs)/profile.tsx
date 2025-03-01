@@ -130,10 +130,17 @@ export default function ProfileScreen(): JSX.Element {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
-      <View className="px-5 pt-5 pb-4">
+      <View className="px-5 pt-5 pb-4 flex-row justify-between items-center">
         <Text className="text-2xl font-bold text-[#1E293B]">
           My Learning Profile
         </Text>
+        <TouchableOpacity
+          onPress={() => router.push("/settings")}
+          className="flex-row items-center gap-2"
+        >
+          <Text className="text-sm text-[#6366F1]">Parental Controls</Text>
+          <Ionicons name="settings-outline" color="#6366F1" size={20} />
+        </TouchableOpacity>
       </View>
 
       {/* Level progress bar */}
