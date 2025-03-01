@@ -8,6 +8,9 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+android/
+ios/
+.vscode/
 
 # Native
 *.orig.*
@@ -36,3 +39,5 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+spelling-bee-452322-1ec3c22ed7e9.json

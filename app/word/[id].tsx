@@ -7,6 +7,7 @@ import Animated, { FlipInYRight } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { wordsByCategory, xpValues, playerLevels } from "@/lib/data";
 import { Word, LearnedWord, UserProfile } from "@/types/common";
+import { Audio } from "expo-av";
 
 // Generate alphabet buttons
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -25,11 +26,44 @@ export default function WordDetailScreen(): JSX.Element {
   const [incorrectLetters, setIncorrectLetters] = useState<string[]>([]);
   const [gameWon, setGameWon] = useState<boolean>(false);
   const [wordAlreadyLearned, setWordAlreadyLearned] = useState<boolean>(false);
+  const [soundEffect, setSoundEffect] = useState<Audio.Sound | null>(null);
 
   useEffect(() => {
     // Check if this word has already been learned
     checkIfWordLearned();
   }, []);
+
+  async function playSound(type: "correct" | "incorrect" | "winner") {
+    try {
+      // Unload previous sound if exists
+      if (soundEffect) {
+        await soundEffect.unloadAsync();
+      }
+
+      // Select the appropriate sound file
+      const soundFile =
+        type === "correct"
+          ? require("../../assets/sounds/correct.mp3")
+          : type === "incorrect"
+          ? require("../../assets/sounds/incorrect.mp3")
+          : require("../../assets/sounds/winner.mp3");
+
+      // Load and play the sound
+      const { sound } = await Audio.Sound.createAsync(soundFile);
+      setSoundEffect(sound);
+      await sound.playAsync();
+    } catch (error) {
+      console.error("Failed to play sound:", error);
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (soundEffect) {
+        soundEffect.unloadAsync();
+      }
+    };
+  }, [soundEffect]);
 
   const checkIfWordLearned = async (): Promise<void> => {
     try {
@@ -171,6 +205,7 @@ export default function WordDetailScreen(): JSX.Element {
     if (wordData?.word.includes(letter)) {
       const newCorrectLetters = [...correctLetters, letter];
       setCorrectLetters(newCorrectLetters);
+      playSound("correct");
 
       // Check if all letters have been guessed
       const uniqueLettersInWord = [...new Set(wordData.word.split(""))];
@@ -186,6 +221,9 @@ export default function WordDetailScreen(): JSX.Element {
 
           // Set game won state after XP is calculated
           setGameWon(true);
+
+          // Play winner sound
+          playSound("winner");
 
           // Show the alert with XP information immediately
           const message = `You've spelled "${wordData.word}" correctly!`;
@@ -231,6 +269,7 @@ export default function WordDetailScreen(): JSX.Element {
       }
     } else {
       setIncorrectLetters([...incorrectLetters, letter]);
+      playSound("incorrect");
     }
   };
 
