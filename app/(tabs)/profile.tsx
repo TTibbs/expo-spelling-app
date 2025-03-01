@@ -135,7 +135,7 @@ export default function ProfileScreen(): JSX.Element {
           My Learning Profile
         </Text>
         <TouchableOpacity
-          onPress={() => router.push("/settings")}
+          onPress={() => router.push("/(protected)/settings")}
           className="flex-row items-center gap-2"
         >
           <Text className="text-sm text-[#6366F1]">Parental Controls</Text>
