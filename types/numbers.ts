@@ -1,47 +1,54 @@
-import React from "react";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Activity, CategoryStats, Difficulty } from "./common";
 
-// Math activity interface for the numbers main screen
-export interface MathActivity {
-  id: string;
-  title: string;
-  description: string;
-  route: string;
-  icon: React.ComponentProps<typeof Ionicons>["name"];
-  color: string;
-  backgroundColor: string;
-  difficulty: "easy" | "medium" | "hard";
-  available: boolean;
+/**
+ * Math activity interface for the numbers main screen
+ * @extends Activity
+ */
+export interface MathActivity extends Activity {
+  // Extended properties specific to math activities can be added here
 }
 
-// Math problem interfaces
+/**
+ * Base interface for all math problems
+ */
 export interface MathProblem {
   id: number;
   question: string;
   options?: string[];
   correctAnswer: string | number;
   image?: string;
-  difficulty: "easy" | "medium" | "hard";
+  difficulty: Difficulty;
 }
 
-// Addition problem
+/**
+ * Interface for addition problems
+ * @extends MathProblem
+ */
 export interface AdditionProblem extends MathProblem {
   firstNumber: number;
   secondNumber: number;
 }
 
-// Subtraction problem
+/**
+ * Interface for subtraction problems
+ * @extends MathProblem
+ */
 export interface SubtractionProblem extends MathProblem {
   firstNumber: number;
   secondNumber: number;
 }
 
-// Counting problem
+/**
+ * Interface for counting problems
+ * @extends MathProblem
+ */
 export interface CountingProblem extends MathProblem {
   count: number;
 }
 
-// Math statistics interface for AsyncStorage
+/**
+ * Math statistics interface for tracking progress across math activities
+ */
 export interface MathStats {
   totalProblems: number;
   correctAnswers: number;
@@ -52,15 +59,19 @@ export interface MathStats {
   counting: MathCategoryStats;
 }
 
-export interface MathCategoryStats {
-  attempted: number;
-  correct: number;
-  accuracy: number;
+/**
+ * Statistics for a specific math category
+ * @extends CategoryStats
+ */
+export interface MathCategoryStats extends CategoryStats {
+  // Extended properties specific to math category stats can be added here
 }
 
 // Component Props Interfaces
 
-// Addition Screen
+/**
+ * Props for the Addition Equation component
+ */
 export interface AdditionEquationProps {
   num1: number;
   num2: number;
@@ -69,7 +80,9 @@ export interface AdditionEquationProps {
   onSelect: (answer: number) => void;
 }
 
-// Subtraction Screen
+/**
+ * Props for the Subtraction Equation component
+ */
 export interface SubtractionEquationProps {
   num1: number;
   num2: number;
@@ -78,7 +91,9 @@ export interface SubtractionEquationProps {
   onSelect: (answer: number) => void;
 }
 
-// Counting Screen
+/**
+ * Props for the Number Item component in the counting screen
+ */
 export interface NumberItemProps {
   number: number;
   onPress: (number: number) => void;
@@ -86,19 +101,27 @@ export interface NumberItemProps {
   correct: boolean | null;
 }
 
+/**
+ * Props for the Number Visual component that displays a count of items
+ */
 export interface NumberVisualProps {
   count: number;
   icon: string;
   color: string;
 }
 
-// Common interfaces for math activities
+/**
+ * Common interface for math equations (addition, subtraction)
+ */
 export interface MathEquation {
   num1: number;
   num2: number;
   answer: number;
 }
 
+/**
+ * State interface for math activity screens
+ */
 export interface MathActivityState {
   score: number;
   streak: number;

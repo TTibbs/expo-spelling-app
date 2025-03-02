@@ -1,9 +1,14 @@
-import { Word, WordCategory } from "./common";
+/**
+ * Types related to spelling activities and word learning
+ */
+import { Word, WordCategory, CategoryStats } from "./common";
 
 // Re-export types from common.ts
 export { Word, WordCategory };
 
-// Spelling attempt tracking
+/**
+ * Interface to track a spelling attempt by the user
+ */
 export interface SpellingAttempt {
   wordId: string;
   word: string;
@@ -12,7 +17,9 @@ export interface SpellingAttempt {
   date: string;
 }
 
-// Spelling statistics for AsyncStorage
+/**
+ * Interface for spelling statistics to track user progress
+ */
 export interface SpellingStats {
   totalAttempts: number;
   correctAttempts: number;
@@ -21,15 +28,13 @@ export interface SpellingStats {
   highestStreak: number;
   wordsLearned: number;
   categories: {
-    [categoryId: string]: {
-      attempted: number;
-      correct: number;
-      accuracy: number;
-    };
+    [categoryId: string]: CategoryStats;
   };
 }
 
-// Letter tile interface
+/**
+ * Interface for a letter tile in the spelling game
+ */
 export interface LetterTile {
   id: string;
   letter: string;
@@ -37,7 +42,9 @@ export interface LetterTile {
   position: number;
 }
 
-// Word progress tracking
+/**
+ * Interface to track progress for a specific word
+ */
 export interface WordProgress {
   wordId: string;
   attempts: number;

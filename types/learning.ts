@@ -1,21 +1,15 @@
-import type { ComponentProps } from "react";
-import Ionicons from "@expo/vector-icons/Ionicons";
-
 /**
- * Type for Ionicons names to be used in learning paths
+ * Types related to the learning paths and educational content
  */
-export type IconName = ComponentProps<typeof Ionicons>["name"];
+import { Activity, IconName } from "./common";
 
 /**
  * Interface for learning paths displayed on the main learning screen
+ * @extends Activity
  */
-export interface LearningPath {
-  id: string;
-  title: string;
-  description: string;
-  icon: IconName;
-  iconColor: string;
-  backgroundColor: string;
-  route: string; // Where this learning path should navigate to
-  available: boolean;
+export interface LearningPath extends Activity {
+  iconColor: string; // Specific to learning paths
 }
+
+// Re-export IconName for convenience
+export { IconName };
