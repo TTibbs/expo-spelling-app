@@ -126,11 +126,15 @@ export default function WordDetailScreen(): JSX.Element {
 
     // Bonus XP for longer words
     const wordLength = wordData.word.length;
-    if (wordLength > 5) {
-      const lengthBonus = Math.floor(wordLength / 2);
-      xp += lengthBonus;
+    if (wordLength >= 10) {
+      xp += xpValues.tenLetterWord;
       console.log(
-        `Added length bonus for ${wordLength} letters: +${lengthBonus}`
+        `Added bonus for 10+ letter word: +${xpValues.tenLetterWord}`
+      );
+    } else if (wordLength >= 5) {
+      xp += xpValues.fiveLetterWord;
+      console.log(
+        `Added bonus for 5+ letter word: +${xpValues.fiveLetterWord}`
       );
     }
 
@@ -238,8 +242,10 @@ export default function WordDetailScreen(): JSX.Element {
               xpMessage += "\n🌟 Perfect game bonus included! 🌟";
             }
 
-            if (wordData.word.length > 5) {
-              xpMessage += "\n📏 Long word bonus included!";
+            if (wordData.word.length >= 10) {
+              xpMessage += "\n📏 10+ letter word bonus included!";
+            } else if (wordData.word.length >= 5) {
+              xpMessage += "\n📏 5+ letter word bonus included!";
             }
           } else if (wordAlreadyLearned) {
             xpMessage = "\n\nYou've already learned this word before.";

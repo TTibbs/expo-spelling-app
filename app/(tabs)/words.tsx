@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { wordsByCategory } from "@/lib/data";
 import { Word, WordCategory } from "@/types/common";
 
@@ -59,7 +58,7 @@ export default function WordsScreen(): JSX.Element {
         })
       }
     >
-      <Image source={{ uri: item.image }} className="w-full h-full scale-75" />
+      <Image source={{ uri: item.image }} className="w-full h-full" />
       <View className="absolute bottom-0 left-0 right-0 bg-black/50 p-2.5">
         <Text className="text-white font-bold text-sm text-center">
           Tap to spell
@@ -75,9 +74,6 @@ export default function WordsScreen(): JSX.Element {
         <Text className="text-2xl font-bold text-[#1E293B]">
           Word Categories
         </Text>
-        <TouchableOpacity className="w-10 h-10 rounded-full bg-[#F1F5F9] justify-center items-center">
-          <Ionicons name="search" size={20} color="#64748B" />
-        </TouchableOpacity>
       </View>
 
       {/* Fixed categories section */}

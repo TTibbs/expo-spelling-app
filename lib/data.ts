@@ -4,37 +4,67 @@ export const wordsByCategory = {
       id: "dog",
       word: "DOG",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSHmf3hOJ1lNEDnoxSku9J6gBzTIfqG80tKeRm",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSDfQx8alJebwp2xlgqY3jMGVs7hdF0mc6KkyQ",
     },
     {
       id: "cat",
       word: "CAT",
       image:
-        "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=500&auto=format&fit=crop",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSD1puuslJebwp2xlgqY3jMGVs7hdF0mc6KkyQ",
     },
     {
       id: "elephant",
       word: "ELEPHANT",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSoWpQJq4AjnOXWLYkm0l1D9e6qMcyugPZp5EH",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS26ymDt1M4vrZwxQ0N1yhuKXDkFBT9qPA3dsf",
     },
     {
       id: "lion",
       word: "LION",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSE98KuMpSFWCZSeyEsq4d1oMwpgaRQG3rvKc2",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS2JXiWA1M4vrZwxQ0N1yhuKXDkFBT9qPA3dsf",
     },
     {
       id: "tiger",
       word: "TIGER",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSOLlHKKRszmLi8lAQ3o70IuwkSCqF65EbMth4",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSjg0aUxnhsGFjivqmwBAdUOJTr7RLVucZ2EIH",
     },
     {
       id: "zebra",
       word: "ZEBRA",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSCHmvVeTYdz2utbITNaBZ8rAigRnEXL06mFsU",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSjCotdxnhsGFjivqmwBAdUOJTr7RLVucZ2EIH",
+    },
+    {
+      id: "panda",
+      word: "PANDA",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSVpxz5H4dxrnH03DvhITlM1JBybYamwAWoO9q",
+    },
+    {
+      id: "monkey",
+      word: "MONKEY",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSdav37kADMlEjw4tkcx0UP3mLh9ufo5BIa2V1",
+    },
+    {
+      id: "giraffe",
+      word: "GIRAFFE",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS4vjBgzKPIQKJkTlq8c0fB4LAruWhgDwy9vjO",
+    },
+    {
+      id: "kangaroo",
+      word: "KANGAROO",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSLPscvnHwrE4nBUfmD5JYS9RpVO8bj3KFcioG",
+    },
+    {
+      id: "penguin",
+      word: "PENGUIN",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSnvfpNvoalE5CuiI20k97KNb3tPovUHDYXjch",
     },
   ],
   fruits: [
@@ -42,25 +72,55 @@ export const wordsByCategory = {
       id: "apple",
       word: "APPLE",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSlz3fxU1ypjqye9wTSMZJoIHOd8hu2vDKcfCV",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS5WAkKS79sKImhSWxFPQcnYTBi0rzptqOkLgy",
     },
     {
       id: "banana",
       word: "BANANA",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSmyE8F3pDfQbW2cevsHodzPSLq57Nt8CBZRuG",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSbqSKh7fVaPvojbXHSNfQdGWr7nqUiAt9yYFm",
     },
     {
       id: "orange",
       word: "ORANGE",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSj4VAw15nhsGFjivqmwBAdUOJTr7RLVucZ2EI",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSj3wNxEnhsGFjivqmwBAdUOJTr7RLVucZ2EIH",
     },
     {
       id: "strawberry",
       word: "STRAWBERRY",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS3SoltAuW16a4KnZMgupDASql7rkO9vVcdYwB",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSiAJMVOBsfTOpHWVJmKRu81MsxDLAYPZdGQhr",
+    },
+    {
+      id: "pineapple",
+      word: "PINEAPPLE",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSReVhGkUekrSKANg6utVqnFThQyHJOCZdp87l",
+    },
+    {
+      id: "mango",
+      word: "MANGO",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSx5FowgisONvSfLK1Ejzm4lriYVBh3geFwIuG",
+    },
+    {
+      id: "kiwi",
+      word: "KIWI",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSDwqZ9xlJebwp2xlgqY3jMGVs7hdF0mc6KkyQ",
+    },
+    {
+      id: "pear",
+      word: "PEAR",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSC5hv1ATYdz2utbITNaBZ8rAigRnEXL06mFsU",
+    },
+    {
+      id: "peach",
+      word: "PEACH",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSYNZwTaBhMZ4sfkQVwby8GzJol7UC30mcvBiS",
     },
   ],
   colors: [
@@ -68,19 +128,79 @@ export const wordsByCategory = {
       id: "red",
       word: "RED",
       image:
-        "https://images.unsplash.com/photo-1580227974546-fbd48825d991?q=80&w=500&auto=format&fit=crop",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSntZenNoalE5CuiI20k97KNb3tPovUHDYXjch",
     },
     {
       id: "blue",
       word: "BLUE",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS28ZXdBP1M4vrZwxQ0N1yhuKXDkFBT9qPA3ds",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSKPPvaJm5J8KSdyL5GaXOptMRUHY3bBDi9m4T",
     },
     {
       id: "green",
       word: "GREEN",
       image:
-        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS6cQXL8eAIkGsqUgazHJ6p5X3rTLuAcBQhx70",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSwgoz1B18ZbTGdqpzrLhEBC6AjWRFU1nvwHfc",
+    },
+    {
+      id: "orange",
+      word: "ORANGE",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSbNaxccfVaPvojbXHSNfQdGWr7nqUiAt9yYFm",
+    },
+    {
+      id: "purple",
+      word: "PURPLE",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS7k58y8PI5DAPhK0S4OxwJNsFmQgkVazdL6ir",
+    },
+    {
+      id: "yellow",
+      word: "YELLOW",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSmQqWPGDfQbW2cevsHodzPSLq57Nt8CBZRuG3",
+    },
+    {
+      id: "pink",
+      word: "PINK",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSl6uCODypjqye9wTSMZJoIHOd8hu2vDKcfCVP",
+    },
+    {
+      id: "brown",
+      word: "BROWN",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSTUsSt6VCy5z6Rwf7eFcUWanZSEo4lOVd98uh",
+    },
+    {
+      id: "gray",
+      word: "GRAY",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSRdYAbFUekrSKANg6utVqnFThQyHJOCZdp87l",
+    },
+    {
+      id: "black",
+      word: "BLACK",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSmAHAKeDfQbW2cevsHodzPSLq57Nt8CBZRuG3",
+    },
+    {
+      id: "white",
+      word: "WHITE",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSKO3zvR5J8KSdyL5GaXOptMRUHY3bBDi9m4Th",
+    },
+    {
+      id: "cyan",
+      word: "CYAN",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSoRl26z4AjnOXWLYkm0l1D9e6qMcyugPZp5EH",
+    },
+    {
+      id: "lime",
+      word: "LIME",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSHRRQrkfJ1lNEDnoxSku9J6gBzTIfqG80tKeR",
     },
   ],
   vehicles: [
@@ -88,19 +208,85 @@ export const wordsByCategory = {
       id: "car",
       word: "CAR",
       image:
-        "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=500&auto=format&fit=crop",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSOVbnqiRszmLi8lAQ3o70IuwkSCqF65EbMth4",
     },
     {
       id: "bus",
       word: "BUS",
       image:
-        "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?q=80&w=500&auto=format&fit=crop",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSZ26sSegKy5UVb19hF2EsRTX6klz8G4cICnWt",
     },
     {
       id: "train",
       word: "TRAIN",
       image:
-        "https://images.unsplash.com/photo-1474487548417-781cb71495f3?q=80&w=500&auto=format&fit=crop",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSjRFXRKnhsGFjivqmwBAdUOJTr7RLVucZ2EIH",
+    },
+    {
+      id: "boat",
+      word: "BOAT",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSzbvbNf3W6FBjV4KuSe8o9Um1xpkHADfzqdQa",
+    },
+    {
+      id: "plane",
+      word: "PLANE",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSMgMNQcCTSARXNcpDmPCsIZxUw3Ohnrl1uztF",
+    },
+    {
+      id: "helicopter",
+      word: "HELICOPTER",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSzyF2zZ3W6FBjV4KuSe8o9Um1xpkHADfzqdQa",
+    },
+    {
+      id: "rocket",
+      word: "ROCKET",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSpM5A4lrte2AGqnNrbaTYx1sEVJCulQL8whjF",
+    },
+    {
+      id: "spaceship",
+      word: "SPACESHIP",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSgnrWxsb3ocp5G4CFhHJiYvUZDqztrEX28byR",
+    },
+    {
+      id: "submarine",
+      word: "SUBMARINE",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSKP70Emz5J8KSdyL5GaXOptMRUHY3bBDi9m4T",
+    },
+    {
+      id: "tank",
+      word: "TANK",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS0RWGPbceQP5GdfqZ8DjtrRzLAUJ36vKXxnol",
+    },
+    {
+      id: "truck",
+      word: "TRUCK",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSXBBbwzLvQSv6UOPZ3cKmGq4JNV7rwefMBxC0",
+    },
+    {
+      id: "bicycle",
+      word: "BICYCLE",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSmWcijcDfQbW2cevsHodzPSLq57Nt8CBZRuG3",
+    },
+    {
+      id: "motorbike",
+      word: "MOTORBIKE",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSlM0PCFypjqye9wTSMZJoIHOd8hu2vDKcfCVP",
+    },
+    {
+      id: "scooter",
+      word: "SCOOTER",
+      image:
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSHnurX6J1lNEDnoxSku9J6gBzTIfqG80tKeRm",
     },
   ],
   nature: [
@@ -108,19 +294,19 @@ export const wordsByCategory = {
       id: "tree",
       word: "TREE",
       image:
-        "https://images.unsplash.com/photo-1502082553048-f009c37129b9?q=80&w=500&auto=format&fit=crop",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSg4q30Ob3ocp5G4CFhHJiYvUZDqztrEX28byR",
     },
     {
       id: "flower",
       word: "FLOWER",
       image:
-        "https://images.unsplash.com/photo-1490750967868-88aa4486c946?q=80&w=500&auto=format&fit=crop",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSTUiolUVCy5z6Rwf7eFcUWanZSEo4lOVd98uh",
     },
     {
       id: "mountain",
       word: "MOUNTAIN",
       image:
-        "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=500&auto=format&fit=crop",
+        "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSQWwPhWDzncu8gJmYbvV1W2M0sRNHZdepILKS",
     },
   ],
   sports: [
@@ -187,6 +373,8 @@ export const playerLevels = [
 export const xpValues = {
   completeWord: 10, // Base XP for completing a word
   perfectWord: 5, // Additional XP for completing without mistakes
+  fiveLetterWord: 10, // XP for completing a 5 letter word
+  tenLetterWord: 20, // XP for completing a 10 letter word
   dailyStreak: 5, // XP for maintaining a daily streak
   completeChore: 15, // XP for completing a chore
   completeAllChores: 10, // Bonus XP for completing all assigned chores
