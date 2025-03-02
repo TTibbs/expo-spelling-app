@@ -31,7 +31,7 @@ export default function HomeScreen(): JSX.Element {
             </Text>
             <TouchableOpacity
               className="bg-[#6366F1] py-2.5 px-5 rounded-lg self-start"
-              onPress={() => router.push("/words")}
+              onPress={() => router.push("/learning/words")}
             >
               <Text className="text-white font-bold">Play Now</Text>
             </TouchableOpacity>

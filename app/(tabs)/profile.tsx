@@ -121,7 +121,7 @@ export default function ProfileScreen(): JSX.Element {
       </Text>
       <TouchableOpacity
         className="bg-[#6366F1] py-3 px-6 rounded-lg"
-        onPress={() => router.push("/words")}
+        onPress={() => router.push("/learning/words")}
       >
         <Text className="text-white font-bold text-base">Start Learning</Text>
       </TouchableOpacity>

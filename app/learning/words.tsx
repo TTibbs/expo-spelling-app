@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { wordsByCategory } from "@/lib/data";
 import { Word, WordCategory } from "@/types/common";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 // Mock data for word categories
 const categories: WordCategory[] = [
@@ -70,7 +71,13 @@ export default function WordsScreen(): JSX.Element {
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
       {/* Fixed header section */}
-      <View className="flex-row justify-between items-center px-5 pt-5 pb-4">
+      <View className="flex-row items-center gap-2 px-5 pt-5 pb-4">
+        <TouchableOpacity
+          className="w-10 h-10 rounded-full bg-[#F1F5F9] justify-center items-center"
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#1E293B" />
+        </TouchableOpacity>
         <Text className="text-2xl font-bold text-[#1E293B]">
           Word Categories
         </Text>
