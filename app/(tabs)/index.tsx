@@ -1,23 +1,103 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
 export default function HomeScreen(): JSX.Element {
   const router = useRouter();
+  const [userName, setUserName] = useState<string>("Learner");
+  const [userLevel, setUserLevel] = useState<string>("1");
+  const [xp, setXp] = useState<number>(0);
+
+  // Load user profile data
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const userProfileStr = await AsyncStorage.getItem("userProfile");
+        if (userProfileStr) {
+          const userProfile = JSON.parse(userProfileStr);
+          setUserLevel(userProfile.level || "1");
+          setXp(userProfile.xp || 0);
+        }
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
+
+  // Learning path quick access items
+  const learningPaths = [
+    {
+      id: "spelling",
+      title: "Spelling",
+      icon: "book-outline" as IconName,
+      color: "#6366F1",
+      bgColor: "#EEF2FF",
+      available: true,
+    },
+    {
+      id: "numbers",
+      title: "Numbers",
+      icon: "calculator-outline" as IconName,
+      color: "#10B981",
+      bgColor: "#ECFDF5",
+      available: true,
+    },
+    {
+      id: "shapes",
+      title: "Shapes",
+      icon: "shapes-outline" as IconName,
+      color: "#F59E0B",
+      bgColor: "#FEF3C7",
+      available: false,
+    },
+    {
+      id: "memory",
+      title: "Memory",
+      icon: "extension-puzzle-outline" as IconName,
+      color: "#8B5CF6",
+      bgColor: "#EDE9FE",
+      available: false,
+    },
+  ];
 
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
       <ScrollView className="pb-[30px]">
-        <View className="px-5 pt-5 pb-2.5">
-          <Text className="text-3xl font-bold text-[#1E293B]">SpellMaster</Text>
-          <Text className="text-base text-[#64748B] mt-1.5">
-            Learn spelling the fun way!
-          </Text>
+        {/* Header with level badge */}
+        <View className="flex-row justify-between items-center px-5 pt-5 pb-2.5">
+          <View>
+            <Text className="text-3xl font-bold text-[#1E293B]">
+              Hey there! 👋
+            </Text>
+            <Text className="text-base text-[#64748B] mt-1.5">
+              Ready for some fun learning?
+            </Text>
+          </View>
+          <TouchableOpacity
+            className="bg-[#EEF2FF] p-2 rounded-xl"
+            onPress={() => router.push("/profile")}
+          >
+            <View className="flex-row items-center">
+              <Ionicons name="star" color="#6366F1" size={18} />
+              <Text className="ml-1 font-bold text-[#6366F1]">
+                Level {userLevel}
+              </Text>
+            </View>
+            <Text className="text-xs text-[#64748B] text-center mt-1">
+              {xp} XP
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        <View className="mx-5 my-4 rounded-2xl overflow-hidden h-[200px]">
+        {/* Banner with cool image */}
+        <View className="mx-5 my-4 rounded-2xl overflow-hidden h-[180px]">
           <Image
             source={{
               uri: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop",
@@ -25,63 +105,133 @@ export default function HomeScreen(): JSX.Element {
             className="w-full h-full"
             resizeMode="cover"
           />
-          <View className="absolute bottom-0 left-0 right-0 bg-black/50 p-5">
+          <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-5">
             <Text className="text-white text-lg font-bold mb-2.5">
-              Start your spelling adventure!
+              Unlock all learning adventures!
             </Text>
             <TouchableOpacity
               className="bg-[#6366F1] py-2.5 px-5 rounded-lg self-start"
-              onPress={() => router.push("/learning/words")}
+              onPress={() => router.push("/learning")}
             >
-              <Text className="text-white font-bold">Play Now</Text>
+              <Text className="text-white font-bold">Start Learning</Text>
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* Quick access to learning paths */}
+        <View className="px-5 mb-4">
+          <Text className="text-xl font-bold text-[#1E293B] mb-4">
+            Pick your adventure! ✨
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {learningPaths.map((path) => (
+              <TouchableOpacity
+                key={path.id}
+                className="mr-4 items-center"
+                onPress={() => {
+                  if (path.available) {
+                    if (path.id === "spelling") {
+                      router.push("/learning/words");
+                    } else if (path.id === "numbers") {
+                      router.push("/learning/numbers");
+                    } else {
+                      // For other paths, show coming soon message
+                      alert(
+                        "Coming soon! This adventure is still being created."
+                      );
+                    }
+                  } else {
+                    alert(
+                      "Coming soon! This adventure is still being created."
+                    );
+                  }
+                }}
+              >
+                <View
+                  className="w-16 h-16 rounded-full items-center justify-center mb-2"
+                  style={{ backgroundColor: path.bgColor }}
+                >
+                  <Ionicons name={path.icon} size={28} color={path.color} />
+                  {!path.available && (
+                    <View className="absolute right-0 bottom-0 bg-[#94A3B8] rounded-full w-6 h-6 items-center justify-center">
+                      <Ionicons name="lock-closed" size={12} color="white" />
+                    </View>
+                  )}
+                </View>
+                <Text className="text-sm font-medium text-[#334155]">
+                  {path.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Daily challenge */}
+        <View className="mx-5 mb-5 bg-[#EEF2FF] p-4 rounded-xl">
+          <View className="flex-row items-center mb-2">
+            <Ionicons name="calendar" size={20} color="#6366F1" />
+            <Text className="text-base font-bold text-[#1E293B] ml-2">
+              Daily Challenge
+            </Text>
+          </View>
+          <Text className="text-[#64748B] mb-3">
+            Complete today's tasks to earn bonus XP!
+          </Text>
+          <TouchableOpacity
+            className="bg-[#6366F1] py-2 rounded-lg items-center"
+            onPress={() => router.push("/chores")}
+          >
+            <Text className="text-white font-bold">View Challenges</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Fun facts about learning */}
         <View className="p-5">
           <Text className="text-xl font-bold text-[#1E293B] mb-4">
-            How It Works
+            Did you know? 🧠
           </Text>
 
           <View className="bg-white rounded-xl p-4 mb-3 flex-row items-center shadow-sm">
-            <View className="w-12 h-12 rounded-full bg-[#EEF2FF] justify-center items-center mr-4">
-              <Ionicons name="book-outline" color="#6366F1" size={24} />
+            <View className="w-12 h-12 rounded-full bg-[#FCE7F3] justify-center items-center mr-4">
+              <Ionicons name="bulb-outline" color="#EC4899" size={24} />
             </View>
             <View className="flex-1">
               <Text className="text-base font-bold text-[#1E293B] mb-1">
-                Choose a Word
+                Supercharge Your Brain!
               </Text>
               <Text className="text-sm text-[#64748B] leading-5">
-                Select from our collection of words to practice your spelling
-                skills.
+                Learning new words can make your brain stronger and help you
+                become a better reader!
               </Text>
             </View>
           </View>
 
           <View className="bg-white rounded-xl p-4 mb-3 flex-row items-center shadow-sm">
-            <View className="w-12 h-12 rounded-full bg-[#EEF2FF] justify-center items-center mr-4">
-              <Ionicons name="bulb-outline" color="#6366F1" size={24} />
+            <View className="w-12 h-12 rounded-full bg-[#ECFDF5] justify-center items-center mr-4">
+              <Ionicons name="trophy-outline" color="#10B981" size={24} />
             </View>
             <View className="flex-1">
               <Text className="text-base font-bold text-[#1E293B] mb-1">
-                Guess Letters
+                Earn XP, Level Up!
               </Text>
               <Text className="text-sm text-[#64748B] leading-5">
-                Tap letters to reveal the hidden word, hangman-style.
+                Complete challenges to collect XP and unlock new levels and
+                achievements!
               </Text>
             </View>
           </View>
 
           <View className="bg-white rounded-xl p-4 mb-3 flex-row items-center shadow-sm">
-            <View className="w-12 h-12 rounded-full bg-[#EEF2FF] justify-center items-center mr-4">
-              <Ionicons name="trophy-outline" color="#6366F1" size={24} />
+            <View className="w-12 h-12 rounded-full bg-[#EDE9FE] justify-center items-center mr-4">
+              <Ionicons name="list-outline" color="#8B5CF6" size={24} />
             </View>
             <View className="flex-1">
               <Text className="text-base font-bold text-[#1E293B] mb-1">
-                Learn & Improve
+                Complete Chores, Get Rewards!
               </Text>
               <Text className="text-sm text-[#64748B] leading-5">
-                Build your vocabulary and spelling skills with each game.
+                Finish your tasks to earn bonus points and unlock more fun
+                activities!
               </Text>
             </View>
           </View>

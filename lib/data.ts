@@ -1,3 +1,72 @@
+import { LearningPath } from "@/types/learning";
+import { Circle, Rectangle, Triangle } from "@/types/shapes";
+import { MathActivity } from "@/types/numbers";
+import { ShapeActivity } from "@/types/shapes";
+import { WordCategory } from "@/types/common";
+
+export const learningPaths: LearningPath[] = [
+  {
+    id: "spelling",
+    title: "Spelling & Words",
+    description: "Learn to spell words with fun pictures",
+    icon: "book-outline",
+    iconColor: "#6366F1",
+    backgroundColor: "#EEF2FF",
+    route: "/learning/words",
+    available: true,
+  },
+  {
+    id: "numbers",
+    title: "Numbers & Math",
+    description: "Count, add, subtract and more!",
+    icon: "calculator-outline",
+    iconColor: "#10B981",
+    backgroundColor: "#ECFDF5",
+    route: "/learning/numbers",
+    available: true,
+  },
+  {
+    id: "shapes",
+    title: "Shapes",
+    description: "Learn about different shapes and patterns",
+    icon: "shapes-outline",
+    iconColor: "#F59E0B",
+    backgroundColor: "#FEF3C7",
+    route: "/learning/shapes",
+    available: true,
+  },
+  {
+    id: "phonics",
+    title: "Phonics",
+    description: "Practice letter sounds and phonics",
+    icon: "musical-notes-outline",
+    iconColor: "#EC4899",
+    backgroundColor: "#FCE7F3",
+    route: "/learning/phonics",
+    available: false,
+  },
+  {
+    id: "memory",
+    title: "Memory Games",
+    description: "Test and improve your memory skills",
+    icon: "extension-puzzle-outline",
+    iconColor: "#8B5CF6",
+    backgroundColor: "#EDE9FE",
+    route: "/learning/memory",
+    available: false,
+  },
+  {
+    id: "reading",
+    title: "Reading",
+    description: "Read fun stories and answer questions",
+    icon: "library-outline",
+    iconColor: "#3B82F6",
+    backgroundColor: "#EFF6FF",
+    route: "/learning/reading",
+    available: false,
+  },
+];
+
 export const wordsByCategory = {
   animals: [
     {
@@ -331,6 +400,15 @@ export const wordsByCategory = {
   ],
 };
 
+export const wordCategories: WordCategory[] = [
+  { id: "animals", title: "Animals", icon: "🐘" },
+  { id: "fruits", title: "Fruits", icon: "🍎" },
+  { id: "colors", title: "Colors", icon: "🌈" },
+  { id: "vehicles", title: "Vehicles", icon: "🚗" },
+  { id: "nature", title: "Nature", icon: "🌲" },
+  { id: "sports", title: "Sports", icon: "⚽" },
+];
+
 export const playerLevels = [
   {
     id: "1",
@@ -436,3 +514,343 @@ export const choresByCategory = {
     { id: "custom", title: "Custom Chore", icon: "create-outline", xp: 15 },
   ],
 };
+
+export const themes = [
+  { icon: "star", color: "#F59E0B" },
+  { icon: "heart", color: "#EF4444" },
+  { icon: "flower", color: "#EC4899" },
+  { icon: "happy", color: "#10B981" },
+  { icon: "cube", color: "#6366F1" },
+  { icon: "paw", color: "#8B5CF6" },
+];
+
+export const circles: Circle[] = [
+  {
+    id: 1,
+    name: "Circle",
+    type: "circle",
+    description: "A shape with all points at the same distance from the center",
+    properties: [
+      "All points are the same distance from the center",
+      "Has infinite lines of symmetry",
+      "Is perfectly round with no corners",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1629624427525-23d41592cce8?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 2,
+    name: "Oval",
+    type: "oval",
+    description: "A stretched circle that is longer in one direction",
+    properties: [
+      "Has 2 lines of symmetry",
+      "Is stretched in one direction",
+      "Like a flattened circle",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1630395822970-acd6a691d97e?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 3,
+    name: "Circle with Radius",
+    type: "circle",
+    description: "A circle with a line from center to edge",
+    properties: [
+      "The radius is the distance from center to edge",
+      "All radii are equal in a circle",
+      "The diameter is twice the radius",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1611117775350-ac3950990985?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 4,
+    name: "Ellipse",
+    type: "oval",
+    description: "Another name for an oval with two focal points",
+    properties: [
+      "Has two focal points",
+      "Can be drawn with a string and two pins",
+      "Used in many real-world objects",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1629624428904-ed9a7a0a2d37?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 5,
+    name: "Concentric Circles",
+    type: "circle",
+    description: "Circles that share the same center",
+    properties: [
+      "All circles share the same center point",
+      "The circles have different radii",
+      "The circles never intersect",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1597600159211-d6c104f408d1?q=80&w=1000&auto=format&fit=crop",
+  },
+];
+
+export const rectangles: Rectangle[] = [
+  {
+    id: 1,
+    name: "Square",
+    type: "square",
+    description: "A shape with 4 equal sides and 4 right angles",
+    properties: [
+      "All 4 sides are the same length",
+      "Has 4 right angles (90 degrees)",
+      "Has 4 lines of symmetry",
+      "Diagonals bisect each other",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1620332372374-f108c53d2503?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 2,
+    name: "Rectangle",
+    type: "rectangle",
+    description:
+      "A shape with 4 sides and 4 right angles where opposite sides are equal",
+    properties: [
+      "Opposite sides are equal in length",
+      "Has 4 right angles (90 degrees)",
+      "Has 2 lines of symmetry",
+      "Diagonals bisect each other",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1587654780291-39c9404d746b?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 3,
+    name: "Rhombus",
+    type: "rectangle",
+    description: "A quadrilateral with all sides equal in length",
+    properties: [
+      "All 4 sides are equal in length",
+      "Opposite angles are equal",
+      "Diagonals bisect each other at right angles",
+      "Has 2 lines of symmetry",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1632928108088-44a03445755b?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 4,
+    name: "Cube",
+    type: "square",
+    description: "A 3D shape made of 6 equal squares",
+    properties: [
+      "Has 6 square faces",
+      "Has 8 vertices (corners)",
+      "Has 12 edges",
+      "All edges are equal in length",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1627384113869-f9d480c4f989?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 5,
+    name: "Rectangular Prism",
+    type: "rectangle",
+    description: "A 3D shape made of 6 rectangles",
+    properties: [
+      "Has 6 rectangular faces",
+      "Has 8 vertices (corners)",
+      "Has 12 edges",
+      "Opposite faces are identical",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1628605760791-31ed7063f376?q=80&w=1000&auto=format&fit=crop",
+  },
+];
+
+export const triangles: Triangle[] = [
+  {
+    id: 1,
+    name: "Equilateral Triangle",
+    type: "equilateral",
+    description: "A triangle with all sides and angles equal",
+    properties: [
+      "All 3 sides are equal in length",
+      "All 3 angles are equal (60 degrees each)",
+      "Has 3 lines of symmetry",
+      "The most regular triangle",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1628605759668-dfa2ee0e99b8?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 2,
+    name: "Isosceles Triangle",
+    type: "isosceles",
+    description: "A triangle with two equal sides and two equal angles",
+    properties: [
+      "Two sides are equal in length",
+      "Two angles are equal",
+      "Has 1 line of symmetry",
+      "Base angles are equal",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1629624428850-534264adcc91?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 3,
+    name: "Scalene Triangle",
+    type: "scalene",
+    description: "A triangle with no equal sides and no equal angles",
+    properties: [
+      "All 3 sides have different lengths",
+      "All 3 angles are different",
+      "Has no lines of symmetry",
+      "Most common type of triangle",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1633008943337-3df6969c0187?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 4,
+    name: "Right Triangle",
+    type: "right",
+    description: "A triangle with one right angle (90 degrees)",
+    properties: [
+      "Has one 90-degree angle",
+      "The other two angles sum to 90 degrees",
+      "Used in Pythagorean theorem",
+      "Can be isosceles or scalene",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1628605759754-74609e7af5cc?q=80&w=1000&auto=format&fit=crop",
+  },
+  {
+    id: 5,
+    name: "Obtuse Triangle",
+    type: "scalene",
+    description: "A triangle with one angle greater than 90 degrees",
+    properties: [
+      "Has one angle greater than 90 degrees",
+      "The other two angles are acute (less than 90 degrees)",
+      "Sum of all angles is still 180 degrees",
+      "Can be isosceles or scalene",
+    ],
+    image:
+      "https://images.unsplash.com/photo-1629624427491-721a0e8fbbd7?q=80&w=1000&auto=format&fit=crop",
+  },
+];
+
+export const mathActivities: MathActivity[] = [
+  {
+    id: "counting",
+    title: "Counting Fun",
+    description: "Learn to count from 1 to 20 with fun animations",
+    route: "/learning/numbers/counting",
+    icon: "list-outline",
+    color: "#10B981",
+    backgroundColor: "#ECFDF5",
+    difficulty: "easy",
+    available: true,
+  },
+  {
+    id: "addition",
+    title: "Addition Adventure",
+    description: "Add numbers and solve exciting problems",
+    route: "/learning/numbers/addition",
+    icon: "add-circle-outline",
+    color: "#6366F1",
+    backgroundColor: "#EEF2FF",
+    difficulty: "medium",
+    available: true,
+  },
+  {
+    id: "subtraction",
+    title: "Subtraction Quest",
+    description: "Learn to subtract with fun challenges",
+    route: "/learning/numbers/subtraction",
+    icon: "remove-circle-outline",
+    color: "#F59E0B",
+    backgroundColor: "#FEF3C7",
+    difficulty: "medium",
+    available: true,
+  },
+  {
+    id: "multiplication",
+    title: "Multiplication Magic",
+    description: "Discover the magic of multiplication",
+    route: "/learning/numbers/multiplication",
+    icon: "grid-outline",
+    color: "#8B5CF6",
+    backgroundColor: "#EDE9FE",
+    difficulty: "hard",
+    available: false,
+  },
+  {
+    id: "division",
+    title: "Division Discovery",
+    description: "Explore division through fun games",
+    route: "/learning/numbers/division",
+    icon: "cut-outline",
+    color: "#EC4899",
+    backgroundColor: "#FCE7F3",
+    difficulty: "hard",
+    available: false,
+  },
+];
+
+export const shapeActivities: ShapeActivity[] = [
+  {
+    id: "circles",
+    title: "Circles & Ovals",
+    description: "Learn about circles, ovals and their properties",
+    route: "/learning/shapes/circles",
+    icon: "ellipse-outline",
+    color: "#EC4899",
+    backgroundColor: "#FCE7F3",
+    difficulty: "easy",
+    available: true,
+  },
+  {
+    id: "squares",
+    title: "Squares & Rectangles",
+    description: "Explore squares, rectangles and their sides",
+    route: "/learning/shapes/squares",
+    icon: "square-outline",
+    color: "#8B5CF6",
+    backgroundColor: "#EDE9FE",
+    difficulty: "medium",
+    available: true,
+  },
+  {
+    id: "triangles",
+    title: "Triangles",
+    description: "Discover different types of triangles",
+    route: "/learning/shapes/triangles",
+    icon: "triangle-outline",
+    color: "#10B981",
+    backgroundColor: "#ECFDF5",
+    difficulty: "medium",
+    available: true,
+  },
+  {
+    id: "patterns",
+    title: "Shape Patterns",
+    description: "Learn to identify and continue patterns",
+    route: "/learning/shapes/patterns",
+    icon: "grid-outline",
+    color: "#F59E0B",
+    backgroundColor: "#FEF3C7",
+    difficulty: "hard",
+    available: false,
+  },
+  {
+    id: "3d",
+    title: "3D Shapes",
+    description: "Explore cubes, spheres, and more",
+    route: "/learning/shapes/3d",
+    icon: "cube-outline",
+    color: "#6366F1",
+    backgroundColor: "#EEF2FF",
+    difficulty: "hard",
+    available: false,
+  },
+];
