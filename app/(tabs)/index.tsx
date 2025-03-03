@@ -3,9 +3,8 @@ import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { getData, StorageKeys } from "@/lib/storage";
-
-type IconName = React.ComponentProps<typeof Ionicons>["name"];
+import { loadUserProfile } from "@/lib/storage";
+import { learningPaths } from "@/lib/data";
 
 export default function HomeScreen(): JSX.Element {
   const router = useRouter();
@@ -15,13 +14,14 @@ export default function HomeScreen(): JSX.Element {
 
   // Load user profile data
   useEffect(() => {
-    const loadUserProfile = async () => {
+    const fetchUserProfile = async () => {
       try {
-        const userProfile = await getData(StorageKeys.USER_PROFILE);
-        if (userProfile) {
-          setUserLevel(userProfile.level || "1");
-          setXp(userProfile.xp || 0);
-        }
+        // Use the centralized loadUserProfile function to get a validated profile
+        const profile = await loadUserProfile();
+        setUserLevel(profile.level);
+        setXp(profile.xp);
+        // Note: UserProfile doesn't include a name property
+        // We're keeping the default "Learner" name set in useState
       } catch (error) {
         console.error(
           "Failed to load user profile:",
@@ -30,44 +30,8 @@ export default function HomeScreen(): JSX.Element {
       }
     };
 
-    loadUserProfile();
+    fetchUserProfile();
   }, []);
-
-  // Learning path quick access items
-  const learningPaths = [
-    {
-      id: "spelling",
-      title: "Spelling",
-      icon: "book-outline" as IconName,
-      color: "#6366F1",
-      bgColor: "#EEF2FF",
-      available: true,
-    },
-    {
-      id: "numbers",
-      title: "Numbers",
-      icon: "calculator-outline" as IconName,
-      color: "#10B981",
-      bgColor: "#ECFDF5",
-      available: true,
-    },
-    {
-      id: "shapes",
-      title: "Shapes",
-      icon: "shapes-outline" as IconName,
-      color: "#F59E0B",
-      bgColor: "#FEF3C7",
-      available: false,
-    },
-    {
-      id: "memory",
-      title: "Memory",
-      icon: "extension-puzzle-outline" as IconName,
-      color: "#8B5CF6",
-      bgColor: "#EDE9FE",
-      available: false,
-    },
-  ];
 
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
@@ -151,7 +115,7 @@ export default function HomeScreen(): JSX.Element {
               >
                 <View
                   className="w-16 h-16 rounded-full items-center justify-center mb-2"
-                  style={{ backgroundColor: path.bgColor }}
+                  style={{ backgroundColor: path.color }}
                 >
                   <Ionicons name={path.icon} size={28} color={path.color} />
                   {!path.available && (

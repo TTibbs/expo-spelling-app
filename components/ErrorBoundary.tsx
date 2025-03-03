@@ -8,24 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-
-/**
- * Props for the ErrorBoundary component
- */
-interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-}
-
-/**
- * State for the ErrorBoundary component
- */
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-}
+import { ErrorBoundaryProps, ErrorBoundaryState } from "@/types/common";
 
 /**
  * A class component that catches JavaScript errors anywhere in its child component tree,

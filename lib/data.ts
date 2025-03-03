@@ -536,11 +536,11 @@ export const xpValues = {
 
 // Mock data for chore categories
 export const choreCategories = [
-  { id: "home", title: "Home", icon: "🏠" },
-  { id: "school", title: "School", icon: "🏫" },
-  { id: "personal", title: "Personal", icon: "👤" },
-  { id: "outdoor", title: "Outdoor", icon: "🌳" },
-  { id: "other", title: "Other", icon: "📝" },
+  { id: "home", title: "Home", icon: "home" },
+  { id: "school", title: "School", icon: "school" },
+  { id: "personal", title: "Personal", icon: "person" },
+  { id: "outdoor", title: "Outdoor", icon: "leaf" },
+  { id: "other", title: "Other", icon: "create" },
 ];
 
 // Mock data for chores by category

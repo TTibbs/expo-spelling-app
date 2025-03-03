@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,11 +12,37 @@ import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { learningPaths } from "@/lib/data";
 import { LearningPath } from "@/types/learning";
-
-type IconName = React.ComponentProps<typeof Ionicons>["name"];
+import {
+  getData,
+  StorageKeys,
+  storeData,
+  loadUserProfile,
+} from "@/lib/storage";
+import type { UserProfile } from "@/types/common";
 
 export default function LearningScreen() {
   const router = useRouter();
+  const [userLevel, setUserLevel] = useState<string>("1");
+  const [xp, setXp] = useState<number>(0);
+
+  // Load user profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        // Use the centralized loadUserProfile function to get a validated profile
+        const profile = await loadUserProfile();
+        setUserLevel(profile.level);
+        setXp(profile.xp);
+      } catch (error) {
+        console.error(
+          "Failed to load user profile:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handlePathPress = (path: LearningPath) => {
     if (path.available) {
@@ -64,8 +90,20 @@ export default function LearningScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Learning Adventures</Text>
-        <Text style={styles.subtitle}>Pick a path to start learning!</Text>
+        <View>
+          <Text style={styles.title}>Learning Adventures</Text>
+          <Text style={styles.subtitle}>Pick a path to start learning!</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.profileButton}
+          onPress={() => router.push("/profile")}
+        >
+          <View style={styles.levelContainer}>
+            <Ionicons name="star" color="#6366F1" size={18} />
+            <Text style={styles.levelText}>Level {userLevel}</Text>
+          </View>
+          <Text style={styles.xpText}>{xp} XP</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.bannerContainer}>
@@ -103,6 +141,9 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingVertical: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   title: {
     fontSize: 24,
@@ -112,6 +153,26 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: "#64748B",
+    marginTop: 4,
+  },
+  profileButton: {
+    backgroundColor: "#EEF2FF",
+    padding: 8,
+    borderRadius: 12,
+  },
+  levelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  levelText: {
+    marginLeft: 4,
+    fontWeight: "bold",
+    color: "#6366F1",
+  },
+  xpText: {
+    fontSize: 12,
+    color: "#64748B",
+    textAlign: "center",
     marginTop: 4,
   },
   bannerContainer: {

@@ -2,13 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import PinModal from "@/components/PinModal";
-
-interface PinProtectionProps {
-  children: React.ReactNode;
-  isProtected: boolean;
-  onAccessGranted?: () => void;
-  onAccessDenied?: () => void;
-}
+import { PinProtectionProps } from "@/types/common";
 
 const PIN_KEY = "parental_control_pin";
 

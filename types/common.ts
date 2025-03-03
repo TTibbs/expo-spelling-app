@@ -1,7 +1,7 @@
 /**
  * Common types used throughout the application
  */
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode, ErrorInfo } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 /**
@@ -128,3 +128,66 @@ export type XPValues = {
   completeChore: number;
   completeAllChores: number;
 };
+
+/**
+ * Component Props Interfaces
+ */
+
+export interface AssignedChoresListProps {
+  assignedChores: Chore[];
+  toggleChoreCompletion: (id: string) => void;
+  removeChore: (id: string) => void;
+}
+
+export interface CategorySelectorProps {
+  categories: Category[];
+  selectedCategory: string;
+  setSelectedCategory: (category: string) => void;
+}
+
+export interface ChoreActionButtonsProps {
+  assignedChores: Chore[];
+  resetChores: () => Promise<void>;
+  completeAllChores: () => Promise<void>;
+  calculateTotalXp: () => number;
+}
+
+export interface ChoreDropdownProps {
+  isDropdownOpen: boolean;
+  setIsDropdownOpen: (isOpen: boolean) => void;
+  selectedCategory: string;
+  choresByCategory: Record<string, Chore[]>;
+  assignedChores: Chore[];
+  addChore: (chore: Chore) => void;
+}
+
+export interface ProfileHeaderProps {
+  userLevel: string;
+  xp: number;
+}
+
+export interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+}
+
+export interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+}
+
+export interface PinModalProps {
+  isVisible: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  setupMode?: boolean;
+}
+
+export interface PinProtectionProps {
+  children: ReactNode;
+  isProtected: boolean;
+  onAccessGranted?: () => void;
+  onAccessDenied?: () => void;
+}

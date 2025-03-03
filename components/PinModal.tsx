@@ -12,13 +12,7 @@ import {
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
-
-interface PinModalProps {
-  isVisible: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-  setupMode?: boolean;
-}
+import { PinModalProps } from "@/types/common";
 
 const PIN_KEY = "parental_control_pin";
 

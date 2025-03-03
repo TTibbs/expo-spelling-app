@@ -7,6 +7,7 @@ import {
   ValidationStorageKeys,
   ValidationStorageData,
 } from "@/lib/validation";
+import { playerLevels } from "@/lib/data";
 
 /**
  * Storage keys used throughout the app
@@ -218,11 +219,82 @@ export async function updateUserXp(
     userProfile.xp += xpToAdd;
     userProfile.lastPlayed = new Date().toISOString();
 
+    // Calculate level based on updated XP
+    for (const level of playerLevels) {
+      if (userProfile.xp >= level.minXp && userProfile.xp < level.maxXp) {
+        userProfile.level = level.id;
+        break;
+      }
+    }
+
+    // Handle case where XP exceeds the highest level
+    if (userProfile.xp >= playerLevels[playerLevels.length - 1].maxXp) {
+      userProfile.level = playerLevels[playerLevels.length - 1].id;
+    }
+
     // Save updated profile
     const success = await storeData(StorageKeys.USER_PROFILE, userProfile);
     return success ? userProfile : null;
   } catch (error) {
     console.error("Error updating user XP:", error);
     return null;
+  }
+}
+
+/**
+ * Load and validate user profile, ensuring the level is correct based on XP
+ * @returns Promise with validated user profile
+ */
+export async function loadUserProfile(): Promise<UserProfile> {
+  try {
+    // Get user profile from storage
+    const userProfile = await getData(StorageKeys.USER_PROFILE);
+
+    if (userProfile) {
+      // Validate profile by ensuring level is correct for current XP
+      const updatedProfile = { ...userProfile };
+
+      // Find the appropriate level based on XP
+      for (const level of playerLevels) {
+        if (
+          updatedProfile.xp >= level.minXp &&
+          updatedProfile.xp < level.maxXp
+        ) {
+          updatedProfile.level = level.id;
+          break;
+        }
+      }
+
+      // Handle case where XP exceeds the highest level
+      if (updatedProfile.xp >= playerLevels[playerLevels.length - 1].maxXp) {
+        updatedProfile.level = playerLevels[playerLevels.length - 1].id;
+      }
+
+      // If level was updated, save the profile back to storage
+      if (updatedProfile.level !== userProfile.level) {
+        await storeData(StorageKeys.USER_PROFILE, updatedProfile);
+      }
+
+      return updatedProfile;
+    } else {
+      // Create a default profile if none exists
+      const defaultProfile: UserProfile = {
+        xp: 0,
+        level: "1",
+        lastPlayed: new Date().toISOString(),
+      };
+
+      // Save the default profile
+      await storeData(StorageKeys.USER_PROFILE, defaultProfile);
+      return defaultProfile;
+    }
+  } catch (error) {
+    console.error("Failed to load user profile:", error);
+    // Return a default profile in case of error
+    return {
+      xp: 0,
+      level: "1",
+      lastPlayed: null,
+    };
   }
 }
