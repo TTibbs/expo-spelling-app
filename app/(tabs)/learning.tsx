@@ -1,24 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-} from "react-native";
+import { View, Text, FlatList, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { learningPaths } from "@/lib/data";
 import { LearningPath } from "@/types/learning";
-import {
-  getData,
-  StorageKeys,
-  storeData,
-  loadUserProfile,
-} from "@/lib/storage";
-import type { UserProfile } from "@/types/common";
+import { loadUserProfile } from "@/lib/storage";
 
 export default function LearningScreen() {
   const router = useRouter();
@@ -63,23 +50,27 @@ export default function LearningScreen() {
 
   const renderLearningPath = ({ item }: { item: LearningPath }) => (
     <TouchableOpacity
-      style={[styles.learningCard, { backgroundColor: item.backgroundColor }]}
+      className="rounded-2xl mb-4 p-4 shadow-sm"
+      style={{ backgroundColor: item.backgroundColor }}
       onPress={() => handlePathPress(item)}
       activeOpacity={0.8}
     >
-      <View style={styles.cardContent}>
+      <View className="flex-row items-center">
         <View
-          style={[styles.iconContainer, { backgroundColor: item.iconColor }]}
+          className="w-12 h-12 rounded-full justify-center items-center mr-4"
+          style={{ backgroundColor: item.iconColor }}
         >
           <Ionicons name={item.icon} size={28} color="white" />
         </View>
-        <View style={styles.cardTextContainer}>
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          <Text style={styles.cardDescription}>{item.description}</Text>
+        <View className="flex-1">
+          <Text className="text-lg font-bold text-slate-800 mb-1">
+            {item.title}
+          </Text>
+          <Text className="text-sm text-slate-500">{item.description}</Text>
         </View>
         {!item.available && (
-          <View style={styles.comingSoonBadge}>
-            <Text style={styles.comingSoonText}>Coming Soon</Text>
+          <View className="bg-slate-400 px-2 py-1 rounded-xl mr-2">
+            <Text className="text-xs font-bold text-white">Coming Soon</Text>
           </View>
         )}
         <Ionicons name="chevron-forward" size={24} color="#64748B" />
@@ -88,35 +79,45 @@ export default function LearningScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <View className="px-4 py-4 flex-row justify-between items-center">
         <View>
-          <Text style={styles.title}>Learning Adventures</Text>
-          <Text style={styles.subtitle}>Pick a path to start learning!</Text>
+          <Text className="text-2xl font-bold text-slate-800">
+            Learning Adventures
+          </Text>
+          <Text className="text-base text-slate-500 mt-1">
+            Pick a path to start learning!
+          </Text>
         </View>
         <TouchableOpacity
-          style={styles.profileButton}
+          className="bg-indigo-50 p-2 rounded-xl"
           onPress={() => router.push("/profile")}
         >
-          <View style={styles.levelContainer}>
+          <View className="flex-row items-center">
             <Ionicons name="star" color="#6366F1" size={18} />
-            <Text style={styles.levelText}>Level {userLevel}</Text>
+            <Text className="font-bold text-indigo-500 ml-1">
+              Level {userLevel}
+            </Text>
           </View>
-          <Text style={styles.xpText}>{xp} XP</Text>
+          <Text className="text-xs text-slate-500 text-center mt-1">
+            {xp} XP
+          </Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.bannerContainer}>
+      <View className="mx-4 h-40 rounded-2xl overflow-hidden mb-6">
         <Image
           source={{
             uri: "https://images.unsplash.com/photo-1577451818680-9abb25a366cd?q=80&w=1000&auto=format&fit=crop",
           }}
-          style={styles.bannerImage}
+          className="w-full h-full"
           resizeMode="cover"
         />
-        <View style={styles.bannerOverlay}>
-          <Text style={styles.bannerTitle}>Unlock Your Potential!</Text>
-          <Text style={styles.bannerText}>
+        <View className="absolute bottom-0 left-0 right-0 bg-black/50 p-4">
+          <Text className="text-xl font-bold text-white mb-1">
+            Unlock Your Potential!
+          </Text>
+          <Text className="text-sm text-white/90">
             Explore different subjects and earn XP as you learn
           </Text>
         </View>
@@ -126,133 +127,9 @@ export default function LearningScreen() {
         data={learningPaths}
         renderItem={renderLearningPath}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E293B",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#64748B",
-    marginTop: 4,
-  },
-  profileButton: {
-    backgroundColor: "#EEF2FF",
-    padding: 8,
-    borderRadius: 12,
-  },
-  levelContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  levelText: {
-    marginLeft: 4,
-    fontWeight: "bold",
-    color: "#6366F1",
-  },
-  xpText: {
-    fontSize: 12,
-    color: "#64748B",
-    textAlign: "center",
-    marginTop: 4,
-  },
-  bannerContainer: {
-    margin: 16,
-    borderRadius: 16,
-    overflow: "hidden",
-    height: 160,
-  },
-  bannerImage: {
-    width: "100%",
-    height: "100%",
-  },
-  bannerOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    padding: 16,
-  },
-  bannerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 4,
-  },
-  bannerText: {
-    fontSize: 14,
-    color: "white",
-    opacity: 0.9,
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  learningCard: {
-    borderRadius: 16,
-    marginBottom: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
-  },
-  cardTextContainer: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 4,
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: "#64748B",
-  },
-  comingSoonBadge: {
-    backgroundColor: "#94A3B8",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 8,
-  },
-  comingSoonText: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "white",
-  },
-});

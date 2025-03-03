@@ -13,23 +13,11 @@ import { wordsByCategory, wordCategories } from "@/lib/data";
 import { Word, WordCategory } from "@/types/common";
 import { AppImageSource } from "@/types/styling";
 import { RouteParams } from "@/types/navigation";
-
-// New interfaces for UI components
-interface WordCategoryItemProps {
-  item: WordCategory;
-  isSelected: boolean;
-  onSelect: (categoryId: string) => void;
-}
-
-interface WordItemProps {
-  item: Word;
-  onPress: (word: Word, category: string) => void;
-  category: string;
-}
-
-interface WordsScreenState {
-  selectedCategory: string;
-}
+import {
+  WordCategoryItemProps,
+  WordItemProps,
+  WordsScreenState,
+} from "@/types/spelling";
 
 export default function WordsScreen(): JSX.Element {
   const router = useRouter();

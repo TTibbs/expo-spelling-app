@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-} from "react-native";
+import { View, Text, TouchableOpacity, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Audio } from "expo-av";
@@ -24,77 +18,74 @@ const Equation = ({
   );
 
   return (
-    <View style={styles.equationContainer}>
-      <View style={styles.equation}>
-        <Text style={styles.equationText}>{num1}</Text>
-        <View style={styles.operationContainer}>
+    <View className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
+      <View className="flex-row justify-center items-center mb-6">
+        <Text className="text-4xl font-bold text-slate-800 mx-2">{num1}</Text>
+        <View className="mx-2">
           <Ionicons name="remove" size={36} color="#F59E0B" />
         </View>
-        <Text style={styles.equationText}>{num2}</Text>
-        <Text style={styles.equationText}>=</Text>
-        <Text style={styles.equationText}>?</Text>
+        <Text className="text-4xl font-bold text-slate-800 mx-2">{num2}</Text>
+        <Text className="text-4xl font-bold text-slate-800 mx-2">=</Text>
+        <Text className="text-4xl font-bold text-slate-800 mx-2">?</Text>
       </View>
 
-      <View style={styles.visualContainer}>
-        <View style={styles.numberVisual}>
-          {/* First show all dots */}
+      <View className="flex-row justify-center items-center mb-6 flex-wrap">
+        <View className="flex-row flex-wrap justify-center w-25 mx-1">
           {[...Array(num1)].map((_, i) => (
             <View
               key={`num1-${i}`}
-              style={[styles.dot, i >= num1 - num2 && styles.crossedDot]}
+              className={`w-4 h-4 rounded-full m-1 ${
+                i >= num1 - num2 ? "bg-slate-300 opacity-50" : "bg-amber-500"
+              }`}
             />
           ))}
         </View>
 
-        <View style={styles.operationVisual}>
+        <View className="mx-1">
           <Ionicons name="remove" size={24} color="#F59E0B" />
         </View>
 
-        <View style={styles.numberVisual}>
+        <View className="flex-row flex-wrap justify-center w-25 mx-1">
           {[...Array(num2)].map((_, i) => (
-            <View key={`num2-${i}`} style={styles.crossedDot} />
+            <View
+              key={`num2-${i}`}
+              className="w-4 h-4 rounded-full bg-slate-300 opacity-50 m-1"
+            />
           ))}
         </View>
 
-        <View style={styles.equalsVisual}>
-          <Text style={styles.equalsText}>=</Text>
+        <View className="mx-1">
+          <Text className="text-2xl font-bold text-slate-800">=</Text>
         </View>
 
-        <View style={styles.resultVisual}>
-          {/* This shows what remains after subtraction */}
+        <View className="flex-row flex-wrap justify-center w-25 mx-1">
           {[...Array(answer)].map((_, i) => (
-            <View key={`result-${i}`} style={styles.dot} />
+            <View
+              key={`result-${i}`}
+              className="w-4 h-4 rounded-full bg-amber-500 m-1"
+            />
           ))}
         </View>
       </View>
 
-      <View style={styles.answersContainer}>
+      <View className="flex-row justify-around">
         {options.map((option, index) => (
           <TouchableOpacity
             key={index}
-            style={[
-              styles.answerButton,
-              selectedAnswer === option && styles.selectedAnswer,
-              selectedAnswer === option &&
-                option === answer &&
-                styles.correctAnswer,
-              selectedAnswer === option &&
-                option !== answer &&
-                styles.incorrectAnswer,
-            ]}
+            className={`bg-white border-2 border-amber-500 rounded-xl py-3 px-6 min-w-[80px] items-center ${
+              selectedAnswer === option
+                ? option === answer
+                  ? "bg-emerald-500 border-emerald-500"
+                  : "bg-red-500 border-red-500"
+                : ""
+            }`}
             onPress={() => onSelect(option)}
             disabled={selectedAnswer !== null}
           >
             <Text
-              style={[
-                styles.answerText,
-                selectedAnswer === option &&
-                  option === answer &&
-                  styles.correctAnswerText,
-                selectedAnswer === option &&
-                  option !== answer &&
-                  styles.incorrectAnswerText,
-              ]}
+              className={`text-2xl font-bold ${
+                selectedAnswer === option ? "text-white" : "text-slate-800"
+              }`}
             >
               {option}
             </Text>
@@ -298,29 +289,31 @@ export default function SubtractionScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-amber-50">
       {/* Progress bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.scoreContainer}>
+      <View className="flex-row justify-between items-center p-4 bg-white border-b border-slate-200">
+        <View className="flex-row items-center">
           <Ionicons name="star" size={20} color="#F59E0B" />
-          <Text style={styles.scoreText}>{score}</Text>
+          <Text className="text-base font-bold text-slate-800 ml-1">
+            {score}
+          </Text>
         </View>
-        <View style={styles.levelContainer}>
-          <Text style={styles.levelText}>Level {level}</Text>
+        <View className="bg-amber-500 px-3 py-1 rounded-full">
+          <Text className="text-white font-bold">Level {level}</Text>
         </View>
-        <View style={styles.streakContainer}>
+        <View className="flex-row items-center">
           <Ionicons name="flame" size={20} color="#EF4444" />
-          <Text style={styles.streakText}>{streak}</Text>
+          <Text className="text-base font-bold text-slate-800 ml-1">
+            {streak}
+          </Text>
         </View>
       </View>
 
       {/* Main content */}
-      <View style={styles.content}>
+      <View className="flex-1 justify-center items-center p-4">
         <Animated.View
-          style={[
-            styles.equationWrapper,
-            { transform: [{ scale: scaleAnim }] },
-          ]}
+          className="w-full"
+          style={{ transform: [{ scale: scaleAnim }] }}
         >
           <Equation
             num1={currentEquation.num1}
@@ -332,9 +325,11 @@ export default function SubtractionScreen() {
         </Animated.View>
 
         {/* Instructions for kids */}
-        <View style={styles.instructionsContainer}>
-          <Text style={styles.instructionTitle}>How to Subtract:</Text>
-          <Text style={styles.instructionText}>
+        <View className="bg-white p-4 rounded-xl my-4 w-full">
+          <Text className="text-lg font-bold text-slate-800 mb-2">
+            How to Subtract:
+          </Text>
+          <Text className="text-sm text-slate-500 leading-5">
             Start with the top number, then take away (subtract) the bottom
             number!
           </Text>
@@ -342,17 +337,16 @@ export default function SubtractionScreen() {
 
         {/* Feedback icon */}
         {isCorrect !== null && (
-          <View style={styles.feedbackContainer}>
+          <View className="absolute bottom-10 items-center">
             <Ionicons
               name={isCorrect ? "checkmark-circle" : "close-circle"}
               size={48}
               color={isCorrect ? "#10B981" : "#EF4444"}
             />
             <Text
-              style={[
-                styles.feedbackText,
-                { color: isCorrect ? "#10B981" : "#EF4444" },
-              ]}
+              className={`text-lg font-bold mt-2 ${
+                isCorrect ? "text-emerald-500" : "text-red-500"
+              }`}
             >
               {isCorrect ? "Great job!" : "Let's try again!"}
             </Text>
@@ -361,9 +355,11 @@ export default function SubtractionScreen() {
 
         {/* Level up celebration */}
         {showCelebration && (
-          <View style={styles.celebrationContainer}>
-            <Text style={styles.celebrationText}>Level Up!</Text>
-            <Text style={styles.celebrationSubtext}>
+          <View className="absolute inset-0 justify-center items-center bg-white/90">
+            <Text className="text-3xl font-bold text-amber-500 mb-2">
+              Level Up!
+            </Text>
+            <Text className="text-lg text-slate-800 mb-4">
               You're now level {level}!
             </Text>
             <Ionicons name="trophy" size={48} color="#F59E0B" />
@@ -373,216 +369,3 @@ export default function SubtractionScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FEF3C7",
-  },
-  progressContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-  },
-  scoreContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  scoreText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 4,
-    color: "#1E293B",
-  },
-  levelContainer: {
-    backgroundColor: "#F59E0B",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  levelText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  streakContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  streakText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 4,
-    color: "#1E293B",
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-  },
-  equationWrapper: {
-    width: "100%",
-  },
-  equationContainer: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  equation: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  equationText: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginHorizontal: 8,
-  },
-  operationContainer: {
-    marginHorizontal: 8,
-  },
-  visualContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-    flexWrap: "wrap",
-  },
-  numberVisual: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    width: 100,
-    marginHorizontal: 4,
-  },
-  operationVisual: {
-    marginHorizontal: 4,
-  },
-  equalsVisual: {
-    marginHorizontal: 4,
-  },
-  equalsText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E293B",
-  },
-  resultVisual: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    width: 100,
-    marginHorizontal: 4,
-  },
-  dot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "#F59E0B",
-    margin: 4,
-  },
-  crossedDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "#CBD5E1",
-    margin: 4,
-    opacity: 0.5,
-  },
-  answersContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  answerButton: {
-    backgroundColor: "white",
-    borderWidth: 2,
-    borderColor: "#F59E0B",
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    minWidth: 80,
-    alignItems: "center",
-  },
-  selectedAnswer: {
-    borderWidth: 2,
-  },
-  correctAnswer: {
-    backgroundColor: "#10B981",
-    borderColor: "#10B981",
-  },
-  incorrectAnswer: {
-    backgroundColor: "#EF4444",
-    borderColor: "#EF4444",
-  },
-  answerText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E293B",
-  },
-  correctAnswerText: {
-    color: "white",
-  },
-  incorrectAnswerText: {
-    color: "white",
-  },
-  instructionsContainer: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 16,
-    marginVertical: 16,
-    width: "100%",
-  },
-  instructionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 8,
-  },
-  instructionText: {
-    fontSize: 14,
-    color: "#64748B",
-    lineHeight: 20,
-  },
-  feedbackContainer: {
-    position: "absolute",
-    alignItems: "center",
-    bottom: 40,
-  },
-  feedbackText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 8,
-  },
-  celebrationContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-  },
-  celebrationText: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#F59E0B",
-    marginBottom: 8,
-  },
-  celebrationSubtext: {
-    fontSize: 18,
-    color: "#1E293B",
-    marginBottom: 16,
-  },
-});

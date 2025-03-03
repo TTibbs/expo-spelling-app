@@ -96,16 +96,13 @@
 
 #### words.tsx
 
-- ✅ Using `ListRenderItemInfo<WordCategory>` and `ListRenderItemInfo<Word>` for list rendering
-- ✅ Added JSX.Element return type for WordsScreen and render functions
-- ✅ Properly typed state with `useState<WordsScreenState>` for screen state management
 - ✅ Create interfaces for the word selection UI components
 - ✅ Add type safety for the image source in the word items
 - ✅ Add proper typing for navigation parameters
 - ✅ Create interface for the word category selection mechanism
 - ✅ Add return type annotation for category and word item rendering functions
-- ✅ Extracted UI components into separate typed functions with proper props interfaces
-- ✅ Improved navigation safety with properly typed route parameters
+- ✅ Moved UI component interfaces to types/spelling.ts
+- ✅ Centralized word-related type definitions
 
 #### profile.tsx
 
@@ -236,6 +233,7 @@
 - [ ] Create interface for rendering word items in the list
 - ✅ Add type safety for AsyncStorage operations in profile loading
 - [ ] Create interface for progress visualization components
+- [ ] Allow the parents to add multiple children profiles in parental controls for their own learning stats and paths
 
 #### learning.tsx
 

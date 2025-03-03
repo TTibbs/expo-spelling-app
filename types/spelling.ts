@@ -201,3 +201,28 @@ export interface WordImageProps {
   isLearned: boolean;
   isGameWon: boolean;
 }
+
+/**
+ * Interface for the word category selection button props
+ */
+export interface WordCategoryItemProps {
+  item: WordCategory;
+  isSelected: boolean;
+  onSelect: (categoryId: string) => void;
+}
+
+/**
+ * Interface for the word item display props
+ */
+export interface WordItemProps {
+  item: Word;
+  onPress: (word: Word, category: string) => void;
+  category: string;
+}
+
+/**
+ * Interface for the words screen state
+ */
+export interface WordsScreenState {
+  selectedCategory: string;
+}

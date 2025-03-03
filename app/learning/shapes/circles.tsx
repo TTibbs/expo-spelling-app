@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
   Image,
   Animated,
   Alert,
@@ -116,11 +115,11 @@ export default function CirclesScreen(): JSX.Element {
   const getTypeColor = (type: CircleType): string => {
     switch (type) {
       case "circle":
-        return "#10B981";
+        return "bg-emerald-500";
       case "oval":
-        return "#3B82F6";
+        return "bg-blue-500";
       default:
-        return "#EC4899";
+        return "bg-pink-500";
     }
   };
 
@@ -136,41 +135,40 @@ export default function CirclesScreen(): JSX.Element {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+    <SafeAreaView className="flex-1 bg-amber-50">
+      <ScrollView className="flex-1 p-4">
         {/* Progress indicator */}
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>
+        <View className="mb-4">
+          <Text className="text-sm text-slate-500 mb-1">
             Shape {currentIndex + 1} of {circles.length}
           </Text>
-          <View style={styles.progressBar}>
+          <View className="h-2 bg-slate-200 rounded-full overflow-hidden">
             <View
-              style={[
-                styles.progressFill,
-                { width: `${((currentIndex + 1) / circles.length) * 100}%` },
-              ]}
+              className="h-full bg-amber-500 rounded-full"
+              style={{
+                width: `${((currentIndex + 1) / circles.length) * 100}%`,
+              }}
             />
           </View>
         </View>
 
         {/* Shape image */}
-        <View style={styles.imageContainer}>
+        <View className="h-48 rounded-2xl overflow-hidden mb-4">
           <Image
             source={{ uri: currentShape.image }}
-            style={styles.shapeImage}
+            className="w-full h-full"
             resizeMode="cover"
           />
-          <View style={styles.labelContainer}>
-            <Text style={styles.shapeLabel}>{currentShape.name}</Text>
+          <View className="absolute bottom-0 left-0 right-0 bg-black/60 p-3 flex-row justify-between items-center">
+            <Text className="text-lg font-bold text-white">
+              {currentShape.name}
+            </Text>
             <View
-              style={[
-                styles.typeTag,
-                {
-                  backgroundColor: getTypeColor(currentShape.type),
-                },
-              ]}
+              className={`px-2 py-1 rounded-full ${getTypeColor(
+                currentShape.type
+              )}`}
             >
-              <Text style={styles.typeText}>
+              <Text className="text-xs font-bold text-white">
                 {getTypeText(currentShape.type)}
               </Text>
             </View>
@@ -178,63 +176,70 @@ export default function CirclesScreen(): JSX.Element {
         </View>
 
         {/* Shape description */}
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.descriptionTitle}>Description</Text>
-          <Text style={styles.description}>{currentShape.description}</Text>
+        <View className="bg-white p-4 rounded-xl mb-4">
+          <Text className="text-base font-bold text-slate-800 mb-2">
+            Description
+          </Text>
+          <Text className="text-sm text-slate-500 leading-5">
+            {currentShape.description}
+          </Text>
         </View>
 
         {/* Properties section */}
-        <View style={styles.propertiesContainer}>
-          <Text style={styles.propertiesTitle}>Properties</Text>
+        <View className="bg-white p-4 rounded-xl mb-4">
+          <Text className="text-base font-bold text-slate-800 mb-3">
+            Properties
+          </Text>
 
           {showAnswer ? (
             <Animated.View
-              style={[
-                styles.propertiesList,
-                {
-                  opacity: answerAnimation,
-                  transform: [
-                    {
-                      translateY: answerAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [20, 0],
-                      }),
-                    },
-                  ],
-                },
-              ]}
+              className="space-y-2"
+              style={{
+                opacity: answerAnimation,
+                transform: [
+                  {
+                    translateY: answerAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0],
+                    }),
+                  },
+                ],
+              }}
             >
               {currentShape.properties.map((property, index) => (
-                <View key={index} style={styles.propertyItem}>
+                <View key={index} className="flex-row items-center">
                   <Ionicons
                     name="checkmark-circle"
                     size={20}
                     color={getTypeColor(currentShape.type)}
                   />
-                  <Text style={styles.propertyText}>{property}</Text>
+                  <Text className="text-sm text-slate-500 ml-2 flex-1">
+                    {property}
+                  </Text>
                 </View>
               ))}
             </Animated.View>
           ) : (
             <TouchableOpacity
-              style={styles.revealButton}
+              className="bg-amber-500 py-3 rounded-lg items-center"
               onPress={handleShowProperties}
             >
-              <Text style={styles.revealButtonText}>Reveal Properties</Text>
+              <Text className="text-white text-base font-bold">
+                Reveal Properties
+              </Text>
             </TouchableOpacity>
           )}
         </View>
 
         {/* Navigation buttons */}
-        <View style={styles.buttonsContainer}>
+        <View className="flex-row mb-4">
           <TouchableOpacity
-            style={[
-              styles.navButton,
-              { backgroundColor: getTypeColor(currentShape.type) },
-            ]}
+            className={`flex-1 flex-row justify-center items-center py-3 rounded-lg ${getTypeColor(
+              currentShape.type
+            )}`}
             onPress={handleNext}
           >
-            <Text style={styles.navButtonText}>
+            <Text className="text-white text-base font-bold mr-2">
               {currentIndex < circles.length - 1 ? "Next Shape" : "Finish"}
             </Text>
             <Ionicons
@@ -250,16 +255,16 @@ export default function CirclesScreen(): JSX.Element {
         </View>
 
         {/* Score display */}
-        <View style={styles.scoreContainer}>
-          <Text style={styles.scoreLabel}>Score:</Text>
-          <Text style={styles.scoreValue}>{score} XP</Text>
+        <View className="flex-row items-center justify-end mb-4">
+          <Text className="text-base text-slate-500 mr-1">Score:</Text>
+          <Text className="text-lg font-bold text-emerald-500">{score} XP</Text>
         </View>
 
         {/* Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
+        <View className="bg-slate-100 p-3 rounded-lg">
+          <View className="flex-row items-center">
             <Ionicons name="eye-outline" size={20} color="#64748B" />
-            <Text style={styles.statText}>
+            <Text className="text-sm text-slate-500 ml-2">
               {completed} shapes completed in total
             </Text>
           </View>
@@ -268,168 +273,3 @@ export default function CirclesScreen(): JSX.Element {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FEF3C7",
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  progressContainer: {
-    marginBottom: 16,
-  },
-  progressText: {
-    fontSize: 14,
-    color: "#64748B",
-    marginBottom: 4,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: "#E2E8F0",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "#F59E0B",
-    borderRadius: 4,
-  },
-  imageContainer: {
-    height: 200,
-    borderRadius: 16,
-    overflow: "hidden",
-    marginBottom: 16,
-  },
-  shapeImage: {
-    width: "100%",
-    height: "100%",
-  },
-  labelContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    padding: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  shapeLabel: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "white",
-  },
-  typeTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  typeText: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "white",
-  },
-  descriptionContainer: {
-    backgroundColor: "white",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  descriptionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 8,
-  },
-  description: {
-    fontSize: 14,
-    color: "#64748B",
-    lineHeight: 20,
-  },
-  propertiesContainer: {
-    backgroundColor: "white",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  propertiesTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 12,
-  },
-  propertiesList: {},
-  propertyItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  propertyText: {
-    fontSize: 14,
-    color: "#64748B",
-    marginLeft: 8,
-    flex: 1,
-  },
-  revealButton: {
-    backgroundColor: "#F59E0B",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  revealButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  buttonsContainer: {
-    flexDirection: "row",
-    marginBottom: 16,
-  },
-  navButton: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  navButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginRight: 8,
-  },
-  scoreContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    marginBottom: 16,
-  },
-  scoreLabel: {
-    fontSize: 16,
-    color: "#64748B",
-    marginRight: 4,
-  },
-  scoreValue: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#10B981",
-  },
-  statsContainer: {
-    backgroundColor: "#F1F5F9",
-    padding: 12,
-    borderRadius: 8,
-  },
-  statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  statText: {
-    fontSize: 14,
-    color: "#64748B",
-    marginLeft: 8,
-  },
-});

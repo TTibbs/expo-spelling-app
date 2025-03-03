@@ -21,7 +21,6 @@ import {
 } from "@/types/spelling";
 import { AppImageSource } from "@/types/styling";
 import { RouteParams } from "@/types/navigation";
-import { AnimationType, AnimationTiming } from "@/types/animations";
 import { Audio } from "expo-av";
 import { isWordLearned, saveLearnedWord, updateUserXp } from "@/lib/storage";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
@@ -30,31 +29,11 @@ import { wordSounds } from "@/lib/data";
 // Generate alphabet buttons
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-// Type-safe animation configuration
-const animations = {
-  letterFlip: {
-    type: "flip" as AnimationType,
-    timing: {
-      duration: 300,
-      delay: 100,
-    } as AnimationTiming,
-  },
-  successZoom: {
-    type: "zoom" as AnimationType,
-    timing: {
-      duration: 500,
-      delay: 0,
-    } as AnimationTiming,
-  },
-};
-
 // Create a custom error fallback for word details
 const WordDetailErrorFallback = ({
-  error,
   resetError,
   goToHome,
 }: {
-  error: Error | null;
   resetError: () => void;
   goToHome: () => void;
 }): JSX.Element => (
@@ -678,10 +657,6 @@ export default withErrorBoundary(WordDetailScreen, {
     console.error("Component Stack:", errorInfo.componentStack);
   },
   fallback: (
-    <WordDetailErrorFallback
-      error={null}
-      resetError={() => {}}
-      goToHome={() => {}}
-    />
+    <WordDetailErrorFallback resetError={() => {}} goToHome={() => {}} />
   ),
 });

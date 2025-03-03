@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-  FlatList,
-} from "react-native";
+import { View, Text, TouchableOpacity, Animated, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Audio } from "expo-av";
@@ -23,21 +16,20 @@ const NumberItem = ({
 }: NumberItemProps) => {
   return (
     <TouchableOpacity
-      style={[
-        styles.numberItem,
-        selected && styles.selectedItem,
-        selected && correct === true && styles.correctItem,
-        selected && correct === false && styles.incorrectItem,
-      ]}
+      className={`w-[18%] aspect-square m-[1%] bg-white justify-center items-center rounded-xl border-2 ${
+        selected
+          ? correct === true
+            ? "bg-emerald-500 border-emerald-500"
+            : "bg-red-500 border-red-500"
+          : "border-emerald-500"
+      }`}
       onPress={() => onPress(number)}
       disabled={selected}
     >
       <Text
-        style={[
-          styles.numberText,
-          selected && correct === true && styles.correctText,
-          selected && correct === false && styles.incorrectText,
-        ]}
+        className={`text-2xl font-bold ${
+          selected ? "text-white" : "text-slate-800"
+        }`}
       >
         {number}
       </Text>
@@ -48,9 +40,9 @@ const NumberItem = ({
 // Number visuals - displays objects to count
 const NumberVisual = ({ count, icon, color }: NumberVisualProps) => {
   return (
-    <View style={styles.visualContainer}>
+    <View className="flex-row flex-wrap justify-center p-4 bg-white rounded-2xl max-w-[90%] mx-[5%] shadow-sm">
       {[...Array(count)].map((_, index) => (
-        <View key={index} style={styles.iconWrapper}>
+        <View key={index} className="m-1.5">
           <Ionicons name={icon as any} size={32} color={color} />
         </View>
       ))}
@@ -246,29 +238,34 @@ export default function CountingScreen() {
   const numbers = Array.from({ length: 20 }, (_, i) => i + 1);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-emerald-50">
       {/* Header with score */}
-      <View style={styles.header}>
-        <View style={styles.scoreContainer}>
+      <View className="flex-row justify-between items-center p-4 bg-white border-b border-slate-200">
+        <View className="flex-row items-center">
           <Ionicons name="star" size={20} color="#F59E0B" />
-          <Text style={styles.scoreText}>{score} points</Text>
+          <Text className="text-base font-bold text-slate-800 ml-1">
+            {score} points
+          </Text>
         </View>
 
-        <View style={styles.streakContainer}>
+        <View className="flex-row items-center bg-red-50 px-3 py-1 rounded-full">
           <Ionicons name="flame" size={20} color="#EF4444" />
-          <Text style={styles.streakText}>{streak}</Text>
+          <Text className="text-sm font-bold text-red-500 ml-1">{streak}</Text>
         </View>
       </View>
 
       {/* Question - "Count the items" */}
-      <View style={styles.questionContainer}>
-        <Text style={styles.questionText}>How many items do you see?</Text>
-        <Text style={styles.questionLabel}>Count them!</Text>
+      <View className="items-center my-4">
+        <Text className="text-2xl font-bold text-slate-800">
+          How many items do you see?
+        </Text>
+        <Text className="text-base text-slate-500 mt-2">Count them!</Text>
       </View>
 
       {/* Visual representation - items to count */}
       <Animated.View
-        style={[styles.visualWrapper, { transform: [{ scale: scaleAnim }] }]}
+        className="items-center my-4"
+        style={{ transform: [{ scale: scaleAnim }] }}
       >
         <NumberVisual
           count={currentNumber}
@@ -278,8 +275,10 @@ export default function CountingScreen() {
       </Animated.View>
 
       {/* Number selection */}
-      <View style={styles.numberSelectionContainer}>
-        <Text style={styles.selectionLabel}>Pick the correct number:</Text>
+      <View className="flex-1 mt-4 px-4">
+        <Text className="text-lg font-bold text-slate-800 mb-3">
+          Pick the correct number:
+        </Text>
 
         <FlatList
           data={numbers}
@@ -293,23 +292,22 @@ export default function CountingScreen() {
             />
           )}
           keyExtractor={(item) => item.toString()}
-          contentContainerStyle={styles.numberGrid}
+          contentContainerStyle={{ paddingBottom: 32 }}
         />
       </View>
 
       {/* Feedback message */}
       {isCorrect !== null && (
-        <View style={styles.feedbackContainer}>
+        <View className="absolute bottom-10 left-0 right-0 items-center">
           <Ionicons
             name={isCorrect ? "checkmark-circle" : "close-circle"}
             size={48}
             color={isCorrect ? "#10B981" : "#EF4444"}
           />
           <Text
-            style={[
-              styles.feedbackText,
-              { color: isCorrect ? "#10B981" : "#EF4444" },
-            ]}
+            className={`text-lg font-bold mt-2 ${
+              isCorrect ? "text-emerald-500" : "text-red-500"
+            }`}
           >
             {isCorrect
               ? "Great counting!"
@@ -320,9 +318,11 @@ export default function CountingScreen() {
 
       {/* Celebration overlay */}
       {showCelebration && (
-        <View style={styles.celebrationContainer}>
-          <Text style={styles.celebrationText}>Amazing!</Text>
-          <Text style={styles.celebrationSubtext}>
+        <View className="absolute inset-0 justify-center items-center bg-white/90 z-10">
+          <Text className="text-3xl font-bold text-amber-500 mb-2">
+            Amazing!
+          </Text>
+          <Text className="text-lg text-slate-800 mb-4">
             You got {streak} correct in a row!
           </Text>
           <Ionicons name="trophy" size={64} color="#F59E0B" />
@@ -331,160 +331,3 @@ export default function CountingScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ECFDF5",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-  },
-  scoreContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  scoreText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 4,
-    color: "#1E293B",
-  },
-  streakContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FEE2E2",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  streakText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginLeft: 4,
-    color: "#EF4444",
-  },
-  questionContainer: {
-    alignItems: "center",
-    marginVertical: 16,
-  },
-  questionText: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#1E293B",
-  },
-  questionLabel: {
-    fontSize: 16,
-    color: "#64748B",
-    marginTop: 8,
-  },
-  visualWrapper: {
-    alignItems: "center",
-    marginVertical: 16,
-  },
-  visualContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    padding: 16,
-    backgroundColor: "white",
-    borderRadius: 16,
-    maxWidth: "90%",
-    marginHorizontal: "5%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  iconWrapper: {
-    margin: 6,
-  },
-  numberSelectionContainer: {
-    flex: 1,
-    marginTop: 16,
-    paddingHorizontal: 16,
-  },
-  selectionLabel: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 12,
-  },
-  numberGrid: {
-    paddingBottom: 32,
-  },
-  numberItem: {
-    width: "18%",
-    aspectRatio: 1,
-    margin: "1%",
-    backgroundColor: "white",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#10B981",
-  },
-  selectedItem: {
-    borderWidth: 2,
-  },
-  correctItem: {
-    backgroundColor: "#10B981",
-    borderColor: "#10B981",
-  },
-  incorrectItem: {
-    backgroundColor: "#EF4444",
-    borderColor: "#EF4444",
-  },
-  numberText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E293B",
-  },
-  correctText: {
-    color: "white",
-  },
-  incorrectText: {
-    color: "white",
-  },
-  feedbackContainer: {
-    position: "absolute",
-    bottom: 40,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  feedbackText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 8,
-  },
-  celebrationContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    zIndex: 10,
-  },
-  celebrationText: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#F59E0B",
-    marginBottom: 8,
-  },
-  celebrationSubtext: {
-    fontSize: 18,
-    color: "#1E293B",
-    marginBottom: 16,
-  },
-});
