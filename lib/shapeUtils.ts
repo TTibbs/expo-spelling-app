@@ -1,4 +1,8 @@
-import { ShapeStorageData, ShapeCategoryStats } from "@/types/shapes";
+import {
+  ShapeStorageData,
+  ShapeCategoryStats,
+  ShapeStats,
+} from "@/types/shapes";
 import { getData, storeData, StorageKeys } from "@/lib/storage";
 
 /**
@@ -6,13 +10,16 @@ import { getData, storeData, StorageKeys } from "@/lib/storage";
  * @param data The data to check
  * @returns boolean indicating if the data is a valid ShapeCategoryStats
  */
-export function isShapeCategoryStats(data: any): data is ShapeCategoryStats {
+export function isShapeCategoryStats(
+  data: unknown
+): data is ShapeCategoryStats {
+  if (!data || typeof data !== "object") return false;
+
+  const stats = data as Partial<ShapeCategoryStats>;
   return (
-    data !== null &&
-    typeof data === "object" &&
-    typeof data.completed === "number" &&
-    typeof data.accuracy === "number" &&
-    (data.correct === undefined || typeof data.correct === "number")
+    typeof stats.completed === "number" &&
+    typeof stats.accuracy === "number" &&
+    (stats.correct === undefined || typeof stats.correct === "number")
   );
 }
 
@@ -21,14 +28,15 @@ export function isShapeCategoryStats(data: any): data is ShapeCategoryStats {
  * @param data The data to check
  * @returns boolean indicating if the data is a valid ShapeStorageData
  */
-export function isShapeStorageData(data: any): data is ShapeStorageData {
+export function isShapeStorageData(data: unknown): data is ShapeStorageData {
+  if (!data || typeof data !== "object") return false;
+
+  const storage = data as Partial<ShapeStorageData>;
   return (
-    data !== null &&
-    typeof data === "object" &&
-    typeof data.totalShapes === "number" &&
-    isShapeCategoryStats(data.circles) &&
-    isShapeCategoryStats(data.squares) &&
-    isShapeCategoryStats(data.triangles)
+    typeof storage.totalShapes === "number" &&
+    isShapeCategoryStats(storage.circles) &&
+    isShapeCategoryStats(storage.squares) &&
+    isShapeCategoryStats(storage.triangles)
   );
 }
 
@@ -50,18 +58,96 @@ export class ShapeStorageError extends Error {
 export async function loadShapeStats(): Promise<ShapeStorageData> {
   try {
     const shapeStats = await getData(StorageKeys.SHAPE_STATS);
-
     if (!shapeStats) {
-      // Return default shape stats if none exist
       return {
         totalShapes: 0,
-        circles: { completed: 0, accuracy: 0 },
-        squares: { completed: 0, accuracy: 0 },
-        triangles: { completed: 0, accuracy: 0 },
+        circles: {
+          completed: 0,
+          accuracy: 0,
+          correct: 0,
+          timeSpent: 0,
+          averageTime: 0,
+          highestScore: 0,
+          perfectScores: 0,
+          hintsUsed: 0,
+          propertiesLearned: [],
+        },
+        squares: {
+          completed: 0,
+          accuracy: 0,
+          correct: 0,
+          timeSpent: 0,
+          averageTime: 0,
+          highestScore: 0,
+          perfectScores: 0,
+          hintsUsed: 0,
+          propertiesLearned: [],
+        },
+        triangles: {
+          completed: 0,
+          accuracy: 0,
+          correct: 0,
+          timeSpent: 0,
+          averageTime: 0,
+          highestScore: 0,
+          perfectScores: 0,
+          hintsUsed: 0,
+          propertiesLearned: [],
+        },
+        polygons: {
+          completed: 0,
+          accuracy: 0,
+          correct: 0,
+          timeSpent: 0,
+          averageTime: 0,
+          highestScore: 0,
+          perfectScores: 0,
+          hintsUsed: 0,
+          propertiesLearned: [],
+        },
+        achievements: [],
+        lastPlayed: new Date().toISOString(),
+        settings: {
+          soundEnabled: true,
+          vibrationEnabled: true,
+          showTimer: true,
+          showHints: true,
+          showExplanations: true,
+          difficulty: "easy",
+          gameMode: "learn",
+          shapeCount: 10,
+          showProperties: true,
+          showMeasurements: true,
+          showAngles: true,
+        },
       };
     }
 
-    return shapeStats;
+    // Convert ShapeStats to ShapeStorageData
+    const storageData: ShapeStorageData = {
+      totalShapes: shapeStats.totalShapes,
+      circles: shapeStats.circles,
+      squares: shapeStats.squares,
+      triangles: shapeStats.triangles,
+      polygons: shapeStats.polygons,
+      achievements: shapeStats.achievements,
+      lastPlayed: shapeStats.lastPlayed,
+      settings: {
+        soundEnabled: true,
+        vibrationEnabled: true,
+        showTimer: true,
+        showHints: true,
+        showExplanations: true,
+        difficulty: "easy",
+        gameMode: "learn",
+        shapeCount: 10,
+        showProperties: true,
+        showMeasurements: true,
+        showAngles: true,
+      },
+    };
+
+    return storageData;
   } catch (error) {
     throw new ShapeStorageError("Error loading shape stats", error);
   }
@@ -74,7 +160,19 @@ export async function loadShapeStats(): Promise<ShapeStorageData> {
  */
 export async function saveShapeStats(data: ShapeStorageData): Promise<void> {
   try {
-    const success = await storeData(StorageKeys.SHAPE_STATS, data);
+    // Convert ShapeStorageData to ShapeStats
+    const statsData: ShapeStats = {
+      totalShapes: data.totalShapes,
+      circles: data.circles,
+      squares: data.squares,
+      triangles: data.triangles,
+      polygons: data.polygons,
+      achievements: data.achievements,
+      lastPlayed: data.lastPlayed,
+      averageTimePerShape: 0, // Calculate this based on timeSpent and totalShapes
+    };
+
+    const success = await storeData(StorageKeys.SHAPE_STATS, statsData);
     if (!success) {
       throw new Error("Failed to save shape stats");
     }

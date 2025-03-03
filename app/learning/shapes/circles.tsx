@@ -11,14 +11,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { circles } from "@/lib/data";
-import { CircleType } from "@/types/shapes";
+import { shapes } from "@/lib/data";
+import { Circle, CircleType } from "@/types/shapes";
 import {
   updateShapeCategoryStats,
   loadShapeStats,
   ShapeStorageError,
 } from "@/lib/shapeUtils";
 import { getData, storeData, StorageKeys } from "@/lib/storage";
+
+// Filter circles from shapes array
+const circles = shapes.filter(
+  (shape): shape is Circle => shape.type === "circle" || shape.type === "oval"
+);
 
 export default function CirclesScreen(): JSX.Element {
   const router = useRouter();
@@ -206,18 +211,20 @@ export default function CirclesScreen(): JSX.Element {
                 ],
               }}
             >
-              {currentShape.properties.map((property, index) => (
-                <View key={index} className="flex-row items-center">
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={20}
-                    color={getTypeColor(currentShape.type)}
-                  />
-                  <Text className="text-sm text-slate-500 ml-2 flex-1">
-                    {property}
-                  </Text>
-                </View>
-              ))}
+              {currentShape.properties.map(
+                (property: string, index: number) => (
+                  <View key={index} className="flex-row items-center">
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={20}
+                      color={getTypeColor(currentShape.type)}
+                    />
+                    <Text className="text-sm text-slate-500 ml-2 flex-1">
+                      {property}
+                    </Text>
+                  </View>
+                )
+              )}
             </Animated.View>
           ) : (
             <TouchableOpacity

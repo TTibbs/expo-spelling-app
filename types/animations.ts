@@ -17,12 +17,27 @@ export type AnimationType =
   | "zoom"
   | "slide"
   | "bounce"
+  | "spring"
+  | "timing"
   | "none";
 
 /**
  * Direction for animations that support it
  */
-export type AnimationDirection = "up" | "down" | "left" | "right";
+export type AnimationDirection = "up" | "down" | "left" | "right" | "center";
+
+/**
+ * Easing function type for animations
+ */
+export type EasingFunction =
+  | "linear"
+  | "ease"
+  | "ease-in"
+  | "ease-out"
+  | "ease-in-out"
+  | "bounce"
+  | "spring"
+  | ((value: number) => number);
 
 /**
  * Animation timing configuration
@@ -30,7 +45,21 @@ export type AnimationDirection = "up" | "down" | "left" | "right";
 export interface AnimationTiming {
   duration: number;
   delay?: number;
-  easing?: (value: number) => number;
+  easing?: EasingFunction;
+  iterations?: number;
+  useNativeDriver?: boolean;
+}
+
+/**
+ * Spring animation configuration
+ */
+export interface SpringConfig {
+  damping: number;
+  mass: number;
+  stiffness: number;
+  initialVelocity?: number;
+  restDisplacementThreshold?: number;
+  restSpeedThreshold?: number;
 }
 
 /**
@@ -39,9 +68,13 @@ export interface AnimationTiming {
 export interface AnimationConfig {
   type: AnimationType;
   direction?: AnimationDirection;
-  timing: AnimationTiming;
+  timing?: AnimationTiming;
+  spring?: SpringConfig;
   loop?: boolean;
   autoPlay?: boolean;
+  onComplete?: () => void;
+  onStart?: () => void;
+  onUpdate?: (value: number) => void;
 }
 
 /**

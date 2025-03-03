@@ -11,14 +11,20 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { rectangles } from "@/lib/data";
-import { RectangleType } from "@/types/shapes";
+import { shapes } from "@/lib/data";
+import { Rectangle, RectangleType } from "@/types/shapes";
 import {
   updateShapeCategoryStats,
   loadShapeStats,
   ShapeStorageError,
 } from "@/lib/shapeUtils";
 import { getData, storeData, StorageKeys } from "@/lib/storage";
+
+// Filter rectangles from shapes array
+const rectangles = shapes.filter(
+  (shape): shape is Rectangle =>
+    shape.type === "square" || shape.type === "rectangle"
+);
 
 /**
  * SquaresScreen component - displays educational content about squares and rectangles
@@ -236,14 +242,20 @@ export default function SquaresScreen(): JSX.Element {
                 ],
               }}
             >
-              {currentShape.properties.map((property, index) => (
-                <View key={index} className="flex-row items-center">
-                  <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-                  <Text className="text-sm text-slate-500 ml-2 flex-1">
-                    {property}
-                  </Text>
-                </View>
-              ))}
+              {currentShape.properties.map(
+                (property: string, index: number) => (
+                  <View key={index} className="flex-row items-center">
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={20}
+                      color="#10B981"
+                    />
+                    <Text className="text-sm text-slate-500 ml-2 flex-1">
+                      {property}
+                    </Text>
+                  </View>
+                )
+              )}
             </Animated.View>
           ) : (
             <TouchableOpacity

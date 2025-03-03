@@ -84,6 +84,8 @@ export default function AdditionScreen() {
     num1: 1,
     num2: 1,
     answer: 2,
+    operator: "+",
+    difficulty: "easy",
   });
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -107,7 +109,13 @@ export default function AdditionScreen() {
     const num2 = Math.floor(Math.random() * maxNum) + 1;
     const answer = num1 + num2;
 
-    setCurrentEquation({ num1, num2, answer });
+    setCurrentEquation({
+      num1,
+      num2,
+      answer,
+      operator: "+",
+      difficulty: "easy",
+    });
     setSelectedAnswer(null);
     setIsCorrect(null);
   };
@@ -195,9 +203,64 @@ export default function AdditionScreen() {
           correctAnswers: 0,
           streak: 0,
           highestStreak: 0,
-          addition: { attempted: 0, correct: 0, accuracy: 0 },
-          subtraction: { attempted: 0, correct: 0, accuracy: 0 },
-          counting: { attempted: 0, correct: 0, accuracy: 0 },
+          addition: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          subtraction: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          counting: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          multiplication: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          division: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          averageTimePerProblem: 0,
+          lastPlayed: "",
+          achievements: [],
         };
 
         // Update addition stats
@@ -237,9 +300,64 @@ export default function AdditionScreen() {
           correctAnswers: 0,
           streak: 0,
           highestStreak: 0,
-          addition: { attempted: 0, correct: 0, accuracy: 0 },
-          subtraction: { attempted: 0, correct: 0, accuracy: 0 },
-          counting: { attempted: 0, correct: 0, accuracy: 0 },
+          addition: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          subtraction: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          counting: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          multiplication: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          division: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          averageTimePerProblem: 0,
+          lastPlayed: "",
+          achievements: [],
         };
 
         // Update addition stats

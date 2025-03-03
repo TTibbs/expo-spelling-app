@@ -101,6 +101,8 @@ export default function SubtractionScreen() {
     num1: 5,
     num2: 2,
     answer: 3,
+    operator: "-",
+    difficulty: "easy",
   });
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [score, setScore] = useState(0);
@@ -124,7 +126,13 @@ export default function SubtractionScreen() {
     const num2 = Math.floor(Math.random() * num1); // ensure num2 <= num1
     const answer = num1 - num2;
 
-    setCurrentEquation({ num1, num2, answer });
+    setCurrentEquation({
+      num1,
+      num2,
+      answer,
+      operator: "-",
+      difficulty: "easy",
+    });
     setSelectedAnswer(null);
     setIsCorrect(null);
   };
@@ -210,9 +218,64 @@ export default function SubtractionScreen() {
           correctAnswers: 0,
           streak: 0,
           highestStreak: 0,
-          addition: { attempted: 0, correct: 0, accuracy: 0 },
-          subtraction: { attempted: 0, correct: 0, accuracy: 0 },
-          counting: { attempted: 0, correct: 0, accuracy: 0 },
+          addition: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          subtraction: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          counting: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          multiplication: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          division: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          averageTimePerProblem: 0,
+          lastPlayed: "",
+          achievements: [],
         };
 
         // Update subtraction stats
@@ -253,9 +316,64 @@ export default function SubtractionScreen() {
           correctAnswers: 0,
           streak: 0,
           highestStreak: 0,
-          addition: { attempted: 0, correct: 0, accuracy: 0 },
-          subtraction: { attempted: 0, correct: 0, accuracy: 0 },
-          counting: { attempted: 0, correct: 0, accuracy: 0 },
+          addition: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          subtraction: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          counting: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          multiplication: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          division: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          averageTimePerProblem: 0,
+          lastPlayed: "",
+          achievements: [],
         };
 
         mathStats.totalProblems += 1;

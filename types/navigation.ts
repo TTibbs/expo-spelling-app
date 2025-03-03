@@ -20,7 +20,11 @@ export type AppRoute =
   | "/circles" // Circles Game
   | "/squares" // Squares Game
   | "/triangles" // Triangles Game
-  | "/settings"; // Settings
+  | "/settings" // Settings
+  | "/achievements" // Achievements
+  | "/leaderboard" // Leaderboard
+  | "/tutorial" // Tutorial
+  | "/feedback"; // Feedback
 
 /**
  * Parameters for routes that accept them
@@ -32,21 +36,73 @@ export interface RouteParams {
   };
   "/addition": {
     difficulty?: "easy" | "medium" | "hard";
+    level?: number;
   };
   "/subtraction": {
     difficulty?: "easy" | "medium" | "hard";
+    level?: number;
   };
   "/counting": {
     maxNumber?: string;
+    mode?: "ascending" | "descending" | "random";
   };
   "/circles": {
     level?: string;
+    mode?: "learn" | "practice" | "quiz";
   };
   "/squares": {
     level?: string;
+    mode?: "learn" | "practice" | "quiz";
   };
   "/triangles": {
     level?: string;
+    mode?: "learn" | "practice" | "quiz";
+  };
+  "/tutorial": {
+    section?: string;
+    step?: number;
+  };
+  "/feedback": {
+    type?: "bug" | "feature" | "general";
+    source?: string;
+  };
+}
+
+/**
+ * Navigation state interface
+ */
+export interface NavigationState {
+  index: number;
+  routes: {
+    name: AppRoute;
+    params?: Record<string, unknown>;
+    state?: NavigationState;
+  }[];
+  stale: boolean;
+  type: string;
+  key: string;
+}
+
+/**
+ * Navigation event types
+ */
+export type NavigationEventType =
+  | "state"
+  | "beforeRemove"
+  | "focus"
+  | "blur"
+  | "action";
+
+/**
+ * Navigation event payload
+ */
+export interface NavigationEventPayload {
+  data: {
+    state: NavigationState;
+    action?: {
+      type: string;
+      payload?: unknown;
+    };
   };
 }
 
@@ -69,3 +125,34 @@ export type NavigateOptions<T extends AppRoute> = T extends RouteWithParams
 export type NavigateFunction = <T extends AppRoute>(
   options: NavigateOptions<T>
 ) => void;
+
+/**
+ * Navigation listener type
+ */
+export type NavigationListener = (
+  event: NavigationEventType,
+  payload: NavigationEventPayload
+) => void;
+
+/**
+ * Navigation screen props
+ */
+export interface NavigationScreenProps<T extends AppRoute = AppRoute> {
+  route: {
+    name: T;
+    params?: T extends RouteWithParams ? RouteParams[T] : undefined;
+  };
+  navigation: {
+    navigate: NavigateFunction;
+    goBack: () => void;
+    setOptions: (options: Record<string, unknown>) => void;
+    addListener: (
+      type: NavigationEventType,
+      listener: NavigationListener
+    ) => void;
+    removeListener: (
+      type: NavigationEventType,
+      listener: NavigationListener
+    ) => void;
+  };
+}

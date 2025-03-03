@@ -23,6 +23,20 @@ export default function WordsScreen(): JSX.Element {
   const router = useRouter();
   const [state, setState] = useState<WordsScreenState>({
     selectedCategory: wordCategories[0]?.id || "animals",
+    searchQuery: "",
+    sortBy: "alphabetical",
+    filterBy: {
+      difficulty: "easy",
+      mastered: false,
+      category: "all",
+    },
+    viewMode: "grid",
+    showProgress: true,
+    showSearch: true,
+    showFilters: true,
+    showSort: true,
+    isLoading: false,
+    error: null,
   });
 
   const handleCategorySelect = (categoryId: string): void => {

@@ -102,6 +102,10 @@ function WordDetailScreen(): JSX.Element {
     gameWon: false,
     wordAlreadyLearned: false,
     xpEarned: 0,
+    timeSpent: 0,
+    hintsUsed: 0,
+    difficulty: "easy",
+    mode: "practice",
     animations: {
       main: {
         letterEntrance: { isActive: false, delay: 100 },
@@ -110,14 +114,20 @@ function WordDetailScreen(): JSX.Element {
         value: null,
       },
       letterFlip: {
-        letterEntrance: { isActive: false, delay: 0 },
-        wordReveal: { isActive: false, duration: 0 },
+        letterEntrance: { isActive: false, delay: 100 },
+        wordReveal: { isActive: false, duration: 500 },
         winAnimation: { isActive: false },
         value: null,
       },
       successAnimation: {
-        letterEntrance: { isActive: false, delay: 0 },
-        wordReveal: { isActive: false, duration: 0 },
+        letterEntrance: { isActive: false, delay: 100 },
+        wordReveal: { isActive: false, duration: 500 },
+        winAnimation: { isActive: false },
+        value: null,
+      },
+      hintAnimation: {
+        letterEntrance: { isActive: false, delay: 100 },
+        wordReveal: { isActive: false, duration: 500 },
         winAnimation: { isActive: false },
         value: null,
       },
@@ -126,6 +136,18 @@ function WordDetailScreen(): JSX.Element {
       correct: { sound: null, isLoaded: false, isPlaying: false },
       incorrect: { sound: null, isLoaded: false, isPlaying: false },
       winner: { sound: null, isLoaded: false, isPlaying: false },
+    },
+    hints: {
+      available: 3,
+      used: 0,
+      lastUsed: null,
+    },
+    scoring: {
+      basePoints: 0,
+      timeBonus: 0,
+      streakBonus: 0,
+      hintPenalty: 0,
+      totalPoints: 0,
     },
   });
 
@@ -214,6 +236,10 @@ function WordDetailScreen(): JSX.Element {
     } else if (wordLength >= 5) {
       xp += xpValues.fiveLetterWord;
     }
+
+    // Apply hint penalties
+    const hintPenalty = gameState.hintsUsed * xpValues.hintPenalty; // Use the value from xpValues
+    xp = Math.max(0, xp - hintPenalty); // Ensure XP doesn't go below 0
 
     return xp;
   };
@@ -542,6 +568,85 @@ function WordDetailScreen(): JSX.Element {
     }
   };
 
+  // Handle hint
+  const handleHint = (): void => {
+    if (gameState.hints.available > 0 && wordData) {
+      // Get all unguessed letters in the word
+      const unguessedLetters = wordData.word
+        .split("")
+        .filter((letter) => !gameState.correctLetters.includes(letter));
+
+      if (unguessedLetters.length > 0) {
+        // Pick a random unguessed letter
+        const randomIndex = Math.floor(Math.random() * unguessedLetters.length);
+        const hintedLetter = unguessedLetters[randomIndex];
+
+        // Update game state with the hinted letter
+        setGameState((prev) => ({
+          ...prev,
+          hintsUsed: prev.hintsUsed + 1,
+          hints: {
+            ...prev.hints,
+            available: prev.hints.available - 1,
+            used: prev.hints.used + 1,
+            lastUsed: new Date().toISOString(),
+          },
+          correctLetters: [...prev.correctLetters, hintedLetter],
+          scoring: {
+            ...prev.scoring,
+            hintPenalty: prev.scoring.hintPenalty + xpValues.hintPenalty,
+            totalPoints: prev.scoring.totalPoints - xpValues.hintPenalty,
+          },
+        }));
+
+        // Play hint sound
+        playSound("correct");
+
+        // Check if all letters have been revealed
+        const allLettersRevealed = wordData.word
+          .split("")
+          .every((letter) =>
+            [...gameState.correctLetters, hintedLetter].includes(letter)
+          );
+
+        if (allLettersRevealed) {
+          // End the game if all letters are revealed
+          saveWordAndAwardXp().then((earnedXpAmount) => {
+            setGameState((prev) => ({
+              ...prev,
+              gameWon: true,
+              status: "won",
+              xpEarned: earnedXpAmount,
+            }));
+            playSound("winner");
+
+            // Show the alert with XP information
+            const message = `You've spelled "${wordData.word}" correctly!`;
+            let xpMessage = "";
+            if (earnedXpAmount > 0) {
+              xpMessage = `\n\n✨ You earned ${earnedXpAmount} XP! ✨`;
+              if (!gameState.wordAlreadyLearned) {
+                xpMessage += `\n(First time bonus: +${xpValues.completeWord} XP)`;
+              }
+            } else {
+              xpMessage = "\n\nYou've already earned XP for this word.";
+            }
+
+            setTimeout(() => {
+              Alert.alert("Well Done!", message + xpMessage, [
+                {
+                  text: "View Profile",
+                  onPress: () => router.push("/profile"),
+                },
+                { text: "Choose Another Word", onPress: () => router.back() },
+              ]);
+            }, 200);
+          });
+        }
+      }
+    }
+  };
+
   if (!wordData) {
     return (
       <SafeAreaView className="flex-1 bg-[#F9F9F9]">
@@ -560,6 +665,26 @@ function WordDetailScreen(): JSX.Element {
           <Ionicons name="arrow-back" size={24} color="#1E293B" />
         </TouchableOpacity>
         <View className="flex-row">
+          <TouchableOpacity
+            className={`w-10 h-10 rounded-full ${
+              gameState.hints.available > 0 ? "bg-blue-500" : "bg-slate-300"
+            } justify-center items-center mr-2`}
+            onPress={handleHint}
+            disabled={gameState.hints.available === 0 || gameWon}
+          >
+            <Ionicons
+              name="bulb"
+              size={20}
+              color={gameState.hints.available > 0 ? "white" : "#94A3B8"}
+            />
+            {gameState.hints.available > 0 && (
+              <View className="absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center">
+                <Text className="text-white text-xs font-bold">
+                  {gameState.hints.available}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <Animated.View
             style={{
               transform: [{ scale: pronounceAnim }],
@@ -618,6 +743,14 @@ function WordDetailScreen(): JSX.Element {
                 return {
                   backgroundColor: "bg-red-500",
                   borderStyle: "border-2 border-red-500",
+                  textColor: "text-white",
+                };
+              }
+              // If the letter is correct but not guessed (revealed by hint)
+              if (isCorrect) {
+                return {
+                  backgroundColor: "bg-green-500",
+                  borderStyle: "border-2 border-green-500",
                   textColor: "text-white",
                 };
               }

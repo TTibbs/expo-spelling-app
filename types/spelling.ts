@@ -18,6 +18,12 @@ export interface SpellingAttempt {
   category: string;
   correct: boolean;
   date: string;
+  timeSpent: number;
+  hintsUsed: number;
+  attempts: number;
+  lettersGuessed: string[];
+  difficulty: "easy" | "medium" | "hard";
+  mode: "practice" | "challenge" | "quiz";
 }
 
 /**
@@ -33,12 +39,26 @@ export interface SpellingStats {
   categories: {
     [categoryId: string]: CategoryStats;
   };
+  averageTimePerWord: number;
+  lastPlayed: string;
+  achievements: string[];
+  dailyProgress: {
+    date: string;
+    wordsLearned: number;
+    accuracy: number;
+    timeSpent: number;
+  }[];
 }
 
 /**
  * Possible game states for the word spelling game
  */
-export type WordGameStatus = "initial" | "in-progress" | "completed" | "won";
+export type WordGameStatus =
+  | "initial"
+  | "in-progress"
+  | "completed"
+  | "won"
+  | "lost";
 
 /**
  * Animation status for different game elements
@@ -55,7 +75,7 @@ export interface AnimationState {
   winAnimation: {
     isActive: boolean;
   };
-  value: Animated.Value | null; // Properly typed Animated value
+  value: Animated.Value | null;
   type?: AnimationType;
   timing?: AnimationTiming;
 }
@@ -64,9 +84,12 @@ export interface AnimationState {
  * Interface for the sound effect management
  */
 export interface SoundState {
-  sound: Audio.Sound | null; // Properly typed sound object
+  sound: Audio.Sound | null;
   isLoaded: boolean;
   isPlaying: boolean;
+  volume?: number;
+  rate?: number;
+  pitch?: number;
 }
 
 /**
@@ -77,8 +100,11 @@ export interface LetterTile {
   letter: string;
   selected: boolean;
   position: number;
-  status: "unused" | "correct" | "incorrect";
+  status: "unused" | "correct" | "incorrect" | "hint";
   animation?: AnimationState;
+  isHint?: boolean;
+  isJoker?: boolean;
+  points?: number;
 }
 
 /**
@@ -92,6 +118,13 @@ export interface RenderableLetterTile extends LetterTile {
     borderColor: string;
     borderRadius: number;
   };
+  shadowStyle?: {
+    shadowColor: string;
+    shadowOffset: { width: number; height: number };
+    shadowOpacity: number;
+    shadowRadius: number;
+    elevation?: number;
+  };
 }
 
 /**
@@ -102,12 +135,22 @@ export interface WordProgress {
   attempts: number;
   mastered: boolean;
   lastAttempt: string;
+  timeSpent: number;
+  hintsUsed: number;
+  streak: number;
+  highestStreak: number;
+  difficulty: "easy" | "medium" | "hard";
+  mode: "practice" | "challenge" | "quiz";
 }
 
 /**
  * Supported pronunciation sound types
  */
-export type PronunciationSoundType = "word" | "letter" | "phonetic";
+export type PronunciationSoundType =
+  | "word"
+  | "letter"
+  | "phonetic"
+  | "syllable";
 
 /**
  * Interface for pronunciation state management
@@ -117,6 +160,9 @@ export interface PronunciationState {
   soundType: PronunciationSoundType;
   animation: Animated.Value;
   settings: PronunciationSettings;
+  currentWord?: string;
+  currentLetter?: string;
+  currentSyllable?: string;
 }
 
 /**
@@ -124,15 +170,18 @@ export interface PronunciationState {
  */
 export interface PronunciationSettings {
   enabled: boolean;
-  rate: number; // Speech rate (0.1 to 2.0)
-  voice: string | null; // Voice identifier or null for device default
-  autoPlay: boolean; // Whether to automatically pronounce words when viewed
-  breakdownLongWords: boolean; // Whether to break down words into syllables
+  rate: number;
+  voice: string | null;
+  autoPlay: boolean;
+  breakdownLongWords: boolean;
+  showPhonetics: boolean;
+  showSyllables: boolean;
+  volume: number;
+  pitch: number;
 }
 
 /**
  * Interface for the word game state
- * Represents the complete state of a word spelling game session
  */
 export interface WordGameState {
   wordId: string;
@@ -145,20 +194,39 @@ export interface WordGameState {
   gameWon: boolean;
   wordAlreadyLearned: boolean;
   xpEarned: number;
+  timeSpent: number;
+  hintsUsed: number;
+  difficulty: "easy" | "medium" | "hard";
+  mode: "practice" | "challenge" | "quiz";
   animations: {
     main: AnimationState;
     letterFlip: AnimationState;
     successAnimation: AnimationState;
+    hintAnimation: AnimationState;
   };
   sounds: {
     correct: SoundState;
     incorrect: SoundState;
     winner: SoundState;
     pronunciation?: SoundState;
+    hint?: SoundState;
   };
   pronunciation?: {
     isPronouncing: boolean;
     lastPronounced: string | null;
+    currentType: PronunciationSoundType;
+  };
+  hints: {
+    available: number;
+    used: number;
+    lastUsed: string | null;
+  };
+  scoring: {
+    basePoints: number;
+    timeBonus: number;
+    streakBonus: number;
+    hintPenalty: number;
+    totalPoints: number;
   };
 }
 
@@ -171,6 +239,10 @@ export interface LetterSelectionProps {
   guessedLetters: string[];
   correctLetters: string[];
   gameWon: boolean;
+  disabled?: boolean;
+  showHints?: boolean;
+  onHintPress?: () => void;
+  hintsRemaining?: number;
 }
 
 /**
@@ -182,6 +254,10 @@ export interface LetterButtonProps {
   isCorrect: boolean;
   disabled: boolean;
   onPress: () => Promise<void>;
+  isHint?: boolean;
+  isJoker?: boolean;
+  points?: number;
+  animation?: AnimationState;
 }
 
 /**
@@ -191,6 +267,13 @@ export interface LetterButtonStyleState {
   backgroundColor: string;
   borderStyle: string;
   textColor: string;
+  shadowStyle?: {
+    shadowColor: string;
+    shadowOffset: { width: number; height: number };
+    shadowOpacity: number;
+    shadowRadius: number;
+    elevation?: number;
+  };
 }
 
 /**
@@ -200,6 +283,10 @@ export interface WordImageProps {
   imageUri: string;
   isLearned: boolean;
   isGameWon: boolean;
+  showHint?: boolean;
+  onHintPress?: () => void;
+  hintsRemaining?: number;
+  animation?: AnimationState;
 }
 
 /**
@@ -209,6 +296,13 @@ export interface WordCategoryItemProps {
   item: WordCategory;
   isSelected: boolean;
   onSelect: (categoryId: string) => void;
+  progress?: {
+    completed: number;
+    total: number;
+    accuracy: number;
+  };
+  disabled?: boolean;
+  animation?: AnimationState;
 }
 
 /**
@@ -218,6 +312,10 @@ export interface WordItemProps {
   item: Word;
   onPress: (word: Word, category: string) => void;
   category: string;
+  progress?: WordProgress;
+  showProgress?: boolean;
+  disabled?: boolean;
+  animation?: AnimationState;
 }
 
 /**
@@ -225,4 +323,18 @@ export interface WordItemProps {
  */
 export interface WordsScreenState {
   selectedCategory: string;
+  searchQuery: string;
+  sortBy: "alphabetical" | "difficulty" | "progress" | "recent";
+  filterBy: {
+    difficulty?: "easy" | "medium" | "hard";
+    mastered?: boolean;
+    category?: string;
+  };
+  viewMode: "grid" | "list";
+  showProgress: boolean;
+  showSearch: boolean;
+  showFilters: boolean;
+  showSort: boolean;
+  isLoading: boolean;
+  error: string | null;
 }

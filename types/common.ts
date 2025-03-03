@@ -15,18 +15,24 @@ export type IconName = ComponentProps<typeof Ionicons>["name"];
 export type Difficulty = "easy" | "medium" | "hard";
 
 /**
+ * Color type for consistent color usage across the app
+ */
+export type AppColor = string;
+
+/**
  * Base interface for all activities (learning paths, math, shapes)
  */
 export interface Activity {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   route: string;
   icon: IconName;
-  color: string;
-  backgroundColor: string;
+  color: AppColor;
+  backgroundColor: AppColor;
   difficulty: Difficulty;
   available: boolean;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -36,6 +42,8 @@ export interface CategoryStats {
   attempted: number;
   correct: number;
   accuracy: number;
+  lastAttempted?: string;
+  streak?: number;
 }
 
 /**
@@ -47,6 +55,16 @@ export type Chore = {
   icon: string;
   xp: number;
   completed?: boolean;
+  assignedAt?: string;
+  completedAt?: string;
+  category: string;
+  description?: string;
+  difficulty?: Difficulty;
+  recurring?: boolean;
+  recurringSchedule?: {
+    frequency: "daily" | "weekly" | "monthly";
+    days?: number[];
+  };
 };
 
 /**
@@ -127,6 +145,9 @@ export type XPValues = {
   dailyStreak: number;
   completeChore: number;
   completeAllChores: number;
+  fiveLetterWord: number;
+  tenLetterWord: number;
+  hintPenalty: number;
 };
 
 /**

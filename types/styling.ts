@@ -7,12 +7,72 @@ import { ImageSourcePropType } from "react-native";
 export type AppImageSource = ImageSourcePropType;
 
 /**
+ * Theme colors for consistent styling
+ */
+export interface ThemeColors {
+  primary: string;
+  secondary: string;
+  background: string;
+  surface: string;
+  text: string;
+  textSecondary: string;
+  error: string;
+  success: string;
+  warning: string;
+  info: string;
+  border: string;
+  shadow: string;
+}
+
+/**
+ * Theme spacing for consistent layout
+ */
+export interface ThemeSpacing {
+  xs: number;
+  sm: number;
+  md: number;
+  lg: number;
+  xl: number;
+  xxl: number;
+}
+
+/**
+ * Theme typography for consistent text styling
+ */
+export interface ThemeTypography {
+  h1: TextStyle;
+  h2: TextStyle;
+  h3: TextStyle;
+  body: TextStyle;
+  caption: TextStyle;
+  button: TextStyle;
+}
+
+/**
+ * Complete theme interface
+ */
+export interface Theme {
+  colors: ThemeColors;
+  spacing: ThemeSpacing;
+  typography: ThemeTypography;
+  borderRadius: {
+    sm: number;
+    md: number;
+    lg: number;
+    xl: number;
+    round: number;
+  };
+}
+
+/**
  * Interface for application background styles
  */
 export interface BackgroundStyle {
   backgroundColor: string;
   borderRadius?: number;
   opacity?: number;
+  padding?: number | number[];
+  margin?: number | number[];
 }
 
 /**
@@ -34,6 +94,9 @@ export interface TextStyle {
     | "800"
     | "900";
   textAlign?: "auto" | "left" | "right" | "center" | "justify";
+  letterSpacing?: number;
+  lineHeight?: number;
+  textTransform?: "none" | "capitalize" | "uppercase" | "lowercase";
 }
 
 /**
@@ -44,6 +107,10 @@ export interface BorderStyle {
   borderColor: string;
   borderRadius?: number;
   borderStyle?: "solid" | "dotted" | "dashed";
+  borderTopWidth?: number;
+  borderRightWidth?: number;
+  borderBottomWidth?: number;
+  borderLeftWidth?: number;
 }
 
 /**
@@ -66,11 +133,20 @@ export interface ShadowStyle {
 export interface ButtonStyle {
   container: {
     backgroundColor: string;
-    padding?: number;
-    margin?: number;
+    padding?: number | number[];
+    margin?: number | number[];
     width?: number | string;
     height?: number;
     borderRadius?: number;
+    flexDirection?: "row" | "column";
+    alignItems?: "flex-start" | "flex-end" | "center" | "stretch" | "baseline";
+    justifyContent?:
+      | "flex-start"
+      | "flex-end"
+      | "center"
+      | "space-between"
+      | "space-around"
+      | "space-evenly";
   };
   text: TextStyle;
   border?: BorderStyle;
@@ -78,6 +154,15 @@ export interface ButtonStyle {
   disabled?: {
     backgroundColor: string;
     opacity: number;
+  };
+  pressed?: {
+    backgroundColor: string;
+    opacity: number;
+  };
+  icon?: {
+    size: number;
+    color: string;
+    margin?: number;
   };
 }
 
@@ -89,6 +174,14 @@ export interface BadgeStyle {
     backgroundColor: string;
     padding: number[];
     borderRadius: number;
+    minWidth?: number;
+    minHeight?: number;
+    alignItems?: "center";
+    justifyContent?: "center";
   };
   text: TextStyle;
+  dot?: {
+    size: number;
+    color: string;
+  };
 }

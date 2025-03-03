@@ -71,9 +71,7 @@ export default function NumbersScreen() {
           <TouchableOpacity
             key={activity.id}
             className={`rounded-xl mb-4 p-4 shadow-sm ${
-              activity.backgroundColor
-                ? `bg-[${activity.backgroundColor}]`
-                : "bg-white"
+              activity.available ? "bg-white" : "bg-slate-100"
             }`}
             onPress={() => handleActivityPress(activity)}
             activeOpacity={0.7}
@@ -81,7 +79,7 @@ export default function NumbersScreen() {
             <View className="flex-row items-center">
               <View
                 className={`w-12 h-12 rounded-full justify-center items-center mr-4 ${
-                  activity.color ? `bg-[${activity.color}]` : "bg-blue-500"
+                  activity.available ? "bg-blue-500" : "bg-slate-300"
                 }`}
               >
                 <Ionicons name={activity.icon} size={28} color="white" />
