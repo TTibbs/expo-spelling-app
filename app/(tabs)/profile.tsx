@@ -8,12 +8,12 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { playerLevels } from "@/lib/data";
 import { LearnedWord, UserProfile, PlayerLevel } from "@/types/common";
 import { MathStats } from "@/types/numbers";
+import { getData, StorageKeys } from "@/lib/storage";
 
 export default function ProfileScreen(): JSX.Element {
   const [learnedWords, setLearnedWords] = useState<LearnedWord[]>([]);
@@ -62,40 +62,30 @@ export default function ProfileScreen(): JSX.Element {
     try {
       setIsLoading(true);
 
-      // Load learned words
-      const storedWords = await AsyncStorage.getItem("learnedWords");
+      // Load learned words using type-safe storage
+      const storedWords = await getData(StorageKeys.LEARNED_WORDS);
       if (storedWords) {
-        setLearnedWords(JSON.parse(storedWords));
+        setLearnedWords(storedWords);
       }
 
-      // Load user profile
-      const userProfileStr = await AsyncStorage.getItem("userProfile");
-      if (userProfileStr) {
-        setUserProfile(JSON.parse(userProfileStr));
+      // Load user profile using type-safe storage
+      const userProfile = await getData(StorageKeys.USER_PROFILE);
+      if (userProfile) {
+        setUserProfile(userProfile);
       }
 
-      // Load math stats if they exist
-      const mathStatsStr = await AsyncStorage.getItem("mathStats");
-      if (mathStatsStr) {
-        setMathStats(JSON.parse(mathStatsStr));
-      } else {
-        // Initialize with some mock data (in a real app, this would come from actual gameplay)
-        const mockMathStats: MathStats = {
-          totalProblems: 27,
-          correctAnswers: 21,
-          streak: 3,
-          highestStreak: 8,
-          addition: { attempted: 12, correct: 9, accuracy: 75 },
-          subtraction: { attempted: 9, correct: 6, accuracy: 67 },
-          counting: { attempted: 6, correct: 6, accuracy: 100 },
-        };
-        setMathStats(mockMathStats);
-        // In a real implementation, we would save this to AsyncStorage
-        // await AsyncStorage.setItem("mathStats", JSON.stringify(mockMathStats));
+      // Load math stats using type-safe storage
+      const mathStats = await getData(StorageKeys.MATH_STATS);
+      if (mathStats) {
+        setMathStats(mathStats);
       }
+
+      setIsLoading(false);
     } catch (error) {
-      console.error("Failed to load user data:", error);
-    } finally {
+      console.error(
+        "Error loading user data:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
       setIsLoading(false);
     }
   }, []);

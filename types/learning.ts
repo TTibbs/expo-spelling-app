@@ -8,7 +8,7 @@ import { Activity, IconName } from "./common";
  * @extends Activity
  */
 export interface LearningPath extends Activity {
-  iconColor: string; // Specific to learning paths
+  iconColor: string; // Specific to learning paths - only keep the unique property
 }
 
 // Re-export IconName for convenience

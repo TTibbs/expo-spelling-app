@@ -12,10 +12,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { triangles } from "@/lib/data";
+import { TriangleType } from "@/types/shapes";
+import { updateShapeCategoryStats, ShapeStorageError } from "@/lib/shapeUtils";
+import { getData, storeData, StorageKeys } from "@/lib/storage";
 
-export default function TrianglesScreen() {
+export default function TrianglesScreen(): JSX.Element {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -24,72 +26,52 @@ export default function TrianglesScreen() {
   const [answerAnimation] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    // Load progress from AsyncStorage
-    const loadProgress = async () => {
+    // Load progress from storage using type-safe functions
+    const loadProgress = async (): Promise<void> => {
       try {
-        const shapeStatsStr = await AsyncStorage.getItem("shapeStats");
-        if (shapeStatsStr) {
-          const shapeStats = JSON.parse(shapeStatsStr);
-          setCompleted(shapeStats.triangles?.completed || 0);
+        const shapeStats = await getData(StorageKeys.SHAPE_STATS);
+        if (shapeStats) {
+          setCompleted(shapeStats.triangles.completed || 0);
         }
       } catch (error) {
-        console.error("Error loading shape progress:", error);
+        console.error(
+          "Error loading shape progress:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     };
 
     loadProgress();
   }, []);
 
-  const saveProgress = async () => {
+  const saveProgress = async (): Promise<void> => {
     try {
-      // Update user profile XP
-      const userProfileStr = await AsyncStorage.getItem("userProfile");
-      if (userProfileStr) {
-        const userProfile = JSON.parse(userProfileStr);
+      // Update user profile XP with type-safe storage
+      const userProfile = await getData(StorageKeys.USER_PROFILE);
+      if (userProfile) {
         const updatedXp = (userProfile.xp || 0) + 5;
         const updatedProfile = {
           ...userProfile,
           xp: updatedXp,
         };
-        await AsyncStorage.setItem(
-          "userProfile",
-          JSON.stringify(updatedProfile)
-        );
+        await storeData(StorageKeys.USER_PROFILE, updatedProfile);
       }
 
-      // Update shape statistics
-      const shapeStatsStr = await AsyncStorage.getItem("shapeStats");
-      let shapeStats = shapeStatsStr
-        ? JSON.parse(shapeStatsStr)
-        : {
-            totalShapes: 0,
-            circles: { completed: 0, accuracy: 0 },
-            squares: { completed: 0, accuracy: 0 },
-            triangles: { completed: 0, accuracy: 0 },
-          };
-
-      // Update triangles stats
-      shapeStats.totalShapes = (shapeStats.totalShapes || 0) + 1;
-      shapeStats.triangles = shapeStats.triangles || {
-        completed: 0,
-        accuracy: 0,
-      };
-      shapeStats.triangles.completed =
-        (shapeStats.triangles.completed || 0) + 1;
-
-      // Calculate new accuracy (if we had questions)
-      shapeStats.triangles.accuracy = Math.round(
-        ((shapeStats.triangles.accuracy || 100) + 100) / 2
-      );
-
-      await AsyncStorage.setItem("shapeStats", JSON.stringify(shapeStats));
+      // Update shape statistics using our utility function
+      const shapeStats = await updateShapeCategoryStats("triangles");
       setCompleted(shapeStats.triangles.completed);
     } catch (error) {
-      console.error("Error saving progress:", error);
+      const errorMessage =
+        error instanceof ShapeStorageError
+          ? error.message
+          : "Unknown error saving progress";
+
+      console.error("Failed to save progress:", errorMessage);
+      Alert.alert("Error", "Failed to save your progress.");
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (): void => {
     if (currentIndex < triangles.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setShowAnswer(false);
@@ -102,7 +84,7 @@ export default function TrianglesScreen() {
     }
   };
 
-  const handleShowProperties = () => {
+  const handleShowProperties = (): void => {
     setShowAnswer(true);
     setScore(score + 5);
     saveProgress();
@@ -117,7 +99,7 @@ export default function TrianglesScreen() {
   const currentShape = triangles[currentIndex];
 
   // Get color based on triangle type
-  const getTypeColor = (type: string) => {
+  const getTypeColor = (type: TriangleType): string => {
     switch (type) {
       case "equilateral":
         return "#10B981";
@@ -131,7 +113,7 @@ export default function TrianglesScreen() {
     }
   };
 
-  const getTypeText = (type: string) => {
+  const getTypeText = (type: TriangleType): string => {
     switch (type) {
       case "equilateral":
         return "Equilateral";

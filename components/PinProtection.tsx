@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import PinModal from "./PinModal";
+import PinModal from "@/components/PinModal";
 
 interface PinProtectionProps {
   children: React.ReactNode;

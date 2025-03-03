@@ -12,10 +12,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { circles } from "@/lib/data";
+import { CircleType } from "@/types/shapes";
+import {
+  updateShapeCategoryStats,
+  loadShapeStats,
+  ShapeStorageError,
+} from "@/lib/shapeUtils";
+import { getData, storeData, StorageKeys } from "@/lib/storage";
 
-export default function CirclesScreen() {
+export default function CirclesScreen(): JSX.Element {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -24,68 +30,59 @@ export default function CirclesScreen() {
   const [answerAnimation] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    // Load progress from AsyncStorage
-    const loadProgress = async () => {
+    // Load progress using the updated loadShapeStats function
+    const loadProgress = async (): Promise<void> => {
       try {
-        const shapeStatsStr = await AsyncStorage.getItem("shapeStats");
-        if (shapeStatsStr) {
-          const shapeStats = JSON.parse(shapeStatsStr);
-          setCompleted(shapeStats.circles?.completed || 0);
-        }
+        const shapeStats = await loadShapeStats();
+        setCompleted(shapeStats.circles.completed);
       } catch (error) {
-        console.error("Error loading shape progress:", error);
+        const errorMessage =
+          error instanceof ShapeStorageError
+            ? error.message
+            : error instanceof Error
+            ? error.message
+            : "Unknown error";
+
+        console.error("Error loading shape progress:", errorMessage);
       }
     };
 
     loadProgress();
   }, []);
 
-  const saveProgress = async () => {
+  const saveProgress = async (): Promise<void> => {
     try {
-      // Update user profile XP
-      const userProfileStr = await AsyncStorage.getItem("userProfile");
-      if (userProfileStr) {
-        const userProfile = JSON.parse(userProfileStr);
+      // Update user profile XP using type-safe storage
+      const userProfile = await getData(StorageKeys.USER_PROFILE);
+      if (userProfile) {
         const updatedXp = (userProfile.xp || 0) + 5;
         const updatedProfile = {
           ...userProfile,
           xp: updatedXp,
         };
-        await AsyncStorage.setItem(
-          "userProfile",
-          JSON.stringify(updatedProfile)
-        );
+        await storeData(StorageKeys.USER_PROFILE, updatedProfile);
       }
 
-      // Update shape statistics
-      const shapeStatsStr = await AsyncStorage.getItem("shapeStats");
-      let shapeStats = shapeStatsStr
-        ? JSON.parse(shapeStatsStr)
-        : {
-            totalShapes: 0,
-            circles: { completed: 0, accuracy: 0 },
-            squares: { completed: 0, accuracy: 0 },
-            triangles: { completed: 0, accuracy: 0 },
-          };
-
-      // Update circles stats
-      shapeStats.totalShapes = (shapeStats.totalShapes || 0) + 1;
-      shapeStats.circles = shapeStats.circles || { completed: 0, accuracy: 0 };
-      shapeStats.circles.completed = (shapeStats.circles.completed || 0) + 1;
-
-      // Calculate new accuracy (if we had questions)
-      shapeStats.circles.accuracy = Math.round(
-        ((shapeStats.circles.accuracy || 100) + 100) / 2
-      );
-
-      await AsyncStorage.setItem("shapeStats", JSON.stringify(shapeStats));
+      // Update shape statistics using our utility function
+      const shapeStats = await updateShapeCategoryStats("circles");
       setCompleted(shapeStats.circles.completed);
     } catch (error) {
-      console.error("Error saving progress:", error);
+      const errorMessage =
+        error instanceof ShapeStorageError
+          ? error.message
+          : error instanceof Error
+          ? error.message
+          : "Unknown error";
+
+      console.error("Error saving progress:", errorMessage);
+      Alert.alert(
+        "Error",
+        "There was a problem saving your progress. Please try again."
+      );
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (): void => {
     if (currentIndex < circles.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setShowAnswer(false);
@@ -100,7 +97,7 @@ export default function CirclesScreen() {
     }
   };
 
-  const handleShowProperties = () => {
+  const handleShowProperties = (): void => {
     setShowAnswer(true);
     setScore(score + 5);
     saveProgress();
@@ -112,7 +109,31 @@ export default function CirclesScreen() {
     }).start();
   };
 
+  // Get the current shape
   const currentShape = circles[currentIndex];
+
+  // Get color based on circle type
+  const getTypeColor = (type: CircleType): string => {
+    switch (type) {
+      case "circle":
+        return "#10B981";
+      case "oval":
+        return "#3B82F6";
+      default:
+        return "#EC4899";
+    }
+  };
+
+  const getTypeText = (type: CircleType): string => {
+    switch (type) {
+      case "circle":
+        return "Circle";
+      case "oval":
+        return "Oval";
+      default:
+        return "Unknown";
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -145,13 +166,12 @@ export default function CirclesScreen() {
               style={[
                 styles.typeTag,
                 {
-                  backgroundColor:
-                    currentShape.type === "circle" ? "#EC4899" : "#8B5CF6",
+                  backgroundColor: getTypeColor(currentShape.type),
                 },
               ]}
             >
               <Text style={styles.typeText}>
-                {currentShape.type === "circle" ? "Circle" : "Oval"}
+                {getTypeText(currentShape.type)}
               </Text>
             </View>
           </View>
@@ -186,7 +206,11 @@ export default function CirclesScreen() {
             >
               {currentShape.properties.map((property, index) => (
                 <View key={index} style={styles.propertyItem}>
-                  <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={20}
+                    color={getTypeColor(currentShape.type)}
+                  />
                   <Text style={styles.propertyText}>{property}</Text>
                 </View>
               ))}
@@ -204,7 +228,10 @@ export default function CirclesScreen() {
         {/* Navigation buttons */}
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
-            style={[styles.navButton, { backgroundColor: "#F59E0B" }]}
+            style={[
+              styles.navButton,
+              { backgroundColor: getTypeColor(currentShape.type) },
+            ]}
             onPress={handleNext}
           >
             <Text style={styles.navButtonText}>

@@ -8,8 +8,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Audio } from "expo-av";
 import { AdditionEquationProps, MathEquation } from "@/types/numbers";
+import { getData, storeData, StorageKeys } from "@/lib/storage";
 
 const Equation = ({
   num1,
@@ -94,12 +95,13 @@ export default function AdditionScreen() {
     answer: 2,
   });
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [level, setLevel] = useState(1);
   const [showCelebration, setShowCelebration] = useState(false);
   const scaleAnim = useState(new Animated.Value(1))[0];
+  const [soundEffect, setSoundEffect] = useState<Audio.Sound | null>(null);
 
   useEffect(() => {
     generateNewEquation();
@@ -119,11 +121,46 @@ export default function AdditionScreen() {
     setIsCorrect(null);
   };
 
+  // Play sound effect
+  const playSound = async (type: "correct" | "incorrect") => {
+    try {
+      // Unload previous sound if exists
+      if (soundEffect) {
+        await soundEffect.unloadAsync();
+      }
+
+      // Select the appropriate sound file
+      const soundFile =
+        type === "correct"
+          ? require("../../../assets/sounds/correct.mp3")
+          : require("../../../assets/sounds/incorrect.mp3");
+
+      // Load and play the sound
+      const { sound } = await Audio.Sound.createAsync(soundFile);
+      setSoundEffect(sound);
+      await sound.playAsync();
+    } catch (error) {
+      console.error("Failed to play sound:", error);
+    }
+  };
+
+  // Clean up sound effect on unmount
+  useEffect(() => {
+    return () => {
+      if (soundEffect) {
+        soundEffect.unloadAsync();
+      }
+    };
+  }, [soundEffect]);
+
   const handleAnswerSelect = async (answer: number) => {
+    if (!currentEquation) return;
+
     const correct = answer === currentEquation.answer;
     setIsCorrect(correct);
 
     if (correct) {
+      playSound("correct");
       setScore(score + 10);
       setStreak(streak + 1);
 
@@ -148,46 +185,39 @@ export default function AdditionScreen() {
         setTimeout(() => setShowCelebration(false), 3000);
       }
 
-      // Save progress - updated to store more detailed statistics
+      // Save progress using type-safe storage
       try {
         // Update user profile XP
-        const userProfileStr = await AsyncStorage.getItem("userProfile");
-        if (userProfileStr) {
-          const userProfile = JSON.parse(userProfileStr);
+        const userProfile = await getData(StorageKeys.USER_PROFILE);
+        if (userProfile) {
           const updatedXp = (userProfile.xp || 0) + 10;
           const updatedProfile = {
             ...userProfile,
             xp: updatedXp,
           };
-          await AsyncStorage.setItem(
-            "userProfile",
-            JSON.stringify(updatedProfile)
-          );
+          await storeData(StorageKeys.USER_PROFILE, updatedProfile);
         }
 
         // Update math statistics
-        const mathStatsStr = await AsyncStorage.getItem("mathStats");
-        let mathStats = mathStatsStr
-          ? JSON.parse(mathStatsStr)
-          : {
-              totalProblems: 0,
-              correctAnswers: 0,
-              highestStreak: 0,
-              addition: { completed: 0, accuracy: 0 },
-              subtraction: { completed: 0, accuracy: 0 },
-              counting: { completed: 0, accuracy: 0 },
-            };
+        const mathStats = (await getData(StorageKeys.MATH_STATS)) || {
+          totalProblems: 0,
+          correctAnswers: 0,
+          streak: 0,
+          highestStreak: 0,
+          addition: { attempted: 0, correct: 0, accuracy: 0 },
+          subtraction: { attempted: 0, correct: 0, accuracy: 0 },
+          counting: { attempted: 0, correct: 0, accuracy: 0 },
+        };
 
         // Update addition stats
         mathStats.totalProblems += 1;
         mathStats.correctAnswers += 1;
-        mathStats.addition.completed += 1;
+        mathStats.addition.attempted += 1;
+        mathStats.addition.correct += 1;
 
         // Calculate new accuracy
         const additionAccuracy = Math.round(
-          (mathStats.addition.completed /
-            (mathStats.addition.completed + (correct ? 0 : 1))) *
-            100
+          (mathStats.addition.correct / mathStats.addition.attempted) * 100
         );
         mathStats.addition.accuracy = additionAccuracy;
 
@@ -195,39 +225,51 @@ export default function AdditionScreen() {
         if (streak > mathStats.highestStreak) {
           mathStats.highestStreak = streak;
         }
+        mathStats.streak = streak;
 
         // Save updated math stats
-        await AsyncStorage.setItem("mathStats", JSON.stringify(mathStats));
+        await storeData(StorageKeys.MATH_STATS, mathStats);
       } catch (error) {
-        console.error("Failed to update stats:", error);
+        console.error(
+          "Failed to update stats:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     } else {
+      playSound("incorrect");
       setStreak(0);
 
       // Update math statistics for incorrect answer
       try {
-        const mathStatsStr = await AsyncStorage.getItem("mathStats");
-        if (mathStatsStr) {
-          const mathStats = JSON.parse(mathStatsStr);
-          mathStats.totalProblems += 1;
-          // Don't increment correct answers count
+        const mathStats = (await getData(StorageKeys.MATH_STATS)) || {
+          totalProblems: 0,
+          correctAnswers: 0,
+          streak: 0,
+          highestStreak: 0,
+          addition: { attempted: 0, correct: 0, accuracy: 0 },
+          subtraction: { attempted: 0, correct: 0, accuracy: 0 },
+          counting: { attempted: 0, correct: 0, accuracy: 0 },
+        };
 
-          // Calculate new accuracy
-          const totalAddition = (mathStats.addition.completed || 0) + 1;
-          const correctAddition = mathStats.correctAnswers || 0;
-          const newAccuracy = Math.round(
-            (correctAddition / totalAddition) * 100
-          );
+        // Update addition stats
+        mathStats.totalProblems += 1;
+        mathStats.addition.attempted += 1;
+        // Don't increment correct answers or correct count
 
-          mathStats.addition = {
-            completed: totalAddition,
-            accuracy: newAccuracy,
-          };
+        // Calculate new accuracy
+        const newAccuracy = Math.round(
+          (mathStats.addition.correct / mathStats.addition.attempted) * 100
+        );
+        mathStats.addition.accuracy = newAccuracy;
+        mathStats.streak = 0; // Reset streak on incorrect answer
 
-          await AsyncStorage.setItem("mathStats", JSON.stringify(mathStats));
-        }
+        // Save updated math stats
+        await storeData(StorageKeys.MATH_STATS, mathStats);
       } catch (error) {
-        console.error("Failed to update stats:", error);
+        console.error(
+          "Failed to update stats:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     }
 

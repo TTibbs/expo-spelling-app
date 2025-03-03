@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getData, StorageKeys } from "@/lib/storage";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -17,14 +17,16 @@ export default function HomeScreen(): JSX.Element {
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
-        const userProfileStr = await AsyncStorage.getItem("userProfile");
-        if (userProfileStr) {
-          const userProfile = JSON.parse(userProfileStr);
+        const userProfile = await getData(StorageKeys.USER_PROFILE);
+        if (userProfile) {
           setUserLevel(userProfile.level || "1");
           setXp(userProfile.xp || 0);
         }
       } catch (error) {
-        console.error("Failed to load user profile:", error);
+        console.error(
+          "Failed to load user profile:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     };
 

@@ -10,7 +10,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   choreCategories,
   choresByCategory,
@@ -18,6 +17,7 @@ import {
   playerLevels,
 } from "@/lib/data";
 import { Chore, CompletedChore, UserProfile } from "@/types/common";
+import { getData, storeData, StorageKeys } from "@/lib/storage";
 
 export default function ChoresScreen() {
   const router = useRouter();
@@ -87,14 +87,15 @@ export default function ChoresScreen() {
     setAssignedChores(assignedChores.filter((chore) => chore.id !== id));
   };
 
-  // Update user XP in AsyncStorage
+  // Update user XP using type-safe storage
   const updateUserXp = async (xpToAdd: number): Promise<UserProfile | null> => {
     try {
       // Get current user profile
-      const userProfileStr = await AsyncStorage.getItem("userProfile");
-      let userProfile: UserProfile = userProfileStr
-        ? JSON.parse(userProfileStr)
-        : { xp: 0, level: "1", lastPlayed: null };
+      const userProfile = (await getData(StorageKeys.USER_PROFILE)) || {
+        xp: 0,
+        level: "1",
+        lastPlayed: null,
+      };
 
       // Add XP
       userProfile.xp += xpToAdd;
@@ -109,14 +110,17 @@ export default function ChoresScreen() {
       }
 
       // Save updated profile
-      await AsyncStorage.setItem("userProfile", JSON.stringify(userProfile));
+      await storeData(StorageKeys.USER_PROFILE, userProfile);
 
       console.log(
         `Updated user profile: XP +${xpToAdd}, Total: ${userProfile.xp}, Level: ${userProfile.level}`
       );
       return userProfile;
     } catch (error) {
-      console.error("Failed to update user XP:", error);
+      console.error(
+        "Failed to update user XP:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
       return null;
     }
   };
@@ -124,11 +128,9 @@ export default function ChoresScreen() {
   // Save completed chores to history
   const saveCompletedChores = async (): Promise<boolean> => {
     try {
-      // Get current chore history
-      const storedChores = await AsyncStorage.getItem("completedChores");
-      let completedChores: CompletedChore[] = storedChores
-        ? JSON.parse(storedChores)
-        : [];
+      // Get current chore history using type-safe storage
+      const completedChoresData =
+        (await getData(StorageKeys.COMPLETED_CHORES)) || [];
 
       // Add the new completed chores
       const newCompletedChores: CompletedChore[] = assignedChores.map(
@@ -141,20 +143,23 @@ export default function ChoresScreen() {
         })
       );
 
-      completedChores = [...completedChores, ...newCompletedChores];
+      const updatedCompletedChores = [
+        ...completedChoresData,
+        ...newCompletedChores,
+      ];
 
       // Save back to storage
-      await AsyncStorage.setItem(
-        "completedChores",
-        JSON.stringify(completedChores)
-      );
+      await storeData(StorageKeys.COMPLETED_CHORES, updatedCompletedChores);
 
       console.log(
         `Saved ${newCompletedChores.length} completed chores to history`
       );
       return true;
     } catch (error) {
-      console.error("Failed to save completed chores:", error);
+      console.error(
+        "Failed to save completed chores:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
       return false;
     }
   };

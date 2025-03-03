@@ -1,31 +1,160 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  Alert,
+  Animated,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import Animated, { FlipInYRight } from "react-native-reanimated";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { wordsByCategory, xpValues, playerLevels } from "@/lib/data";
-import { Word, LearnedWord, UserProfile } from "@/types/common";
+import ReAnimated, { FlipInYRight } from "react-native-reanimated";
+import { wordsByCategory, xpValues } from "@/lib/data";
+import { Word } from "@/types/common";
+import {
+  WordGameState,
+  LetterTile,
+  LetterButtonStyleState,
+  WordImageProps,
+} from "@/types/spelling";
+import { AppImageSource } from "@/types/styling";
+import { RouteParams } from "@/types/navigation";
+import { AnimationType, AnimationTiming } from "@/types/animations";
 import { Audio } from "expo-av";
+import { isWordLearned, saveLearnedWord, updateUserXp } from "@/lib/storage";
+import { withErrorBoundary } from "@/components/ErrorBoundary";
 
 // Generate alphabet buttons
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-export default function WordDetailScreen(): JSX.Element {
-  const { id, category } = useLocalSearchParams();
+// Type-safe animation configuration
+const animations = {
+  letterFlip: {
+    type: "flip" as AnimationType,
+    timing: {
+      duration: 300,
+      delay: 100,
+    } as AnimationTiming,
+  },
+  successZoom: {
+    type: "zoom" as AnimationType,
+    timing: {
+      duration: 500,
+      delay: 0,
+    } as AnimationTiming,
+  },
+};
+
+// Create a custom error fallback for word details
+const WordDetailErrorFallback = ({
+  error,
+  resetError,
+  goToHome,
+}: {
+  error: Error | null;
+  resetError: () => void;
+  goToHome: () => void;
+}): JSX.Element => (
+  <SafeAreaView className="flex-1 bg-[#F9F9F9]">
+    <View className="flex-1 justify-center items-center p-5">
+      <Image
+        // source={require("../../assets/images/error-illustration.png")}
+        style={{ width: 200, height: 200, marginBottom: 20 }}
+      />
+      <Text className="text-xl font-bold text-center mb-2">
+        Oops! We couldn't load this word
+      </Text>
+      <Text className="text-base text-gray-600 text-center mb-6">
+        Something went wrong while trying to load this activity.
+      </Text>
+
+      <View className="flex-row">
+        <TouchableOpacity
+          className="bg-purple-500 rounded-lg py-3 px-5 mr-3"
+          onPress={resetError}
+        >
+          <Text className="text-white font-bold">Try Again</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="bg-blue-500 rounded-lg py-3 px-5"
+          onPress={goToHome}
+        >
+          <Text className="text-white font-bold">Choose Another Word</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </SafeAreaView>
+);
+
+// Define the main component without default export
+function WordDetailScreen(): JSX.Element {
+  // Type-safe route parameters
+  const params = useLocalSearchParams<RouteParams["/word/[id]"]>();
   const router = useRouter();
+
+  // Ensure params have the correct type
+  const id = params.id ?? "";
+  const category = params.category ?? "";
+
+  // Initialize animation values
+  const [fadeAnim] = useState<Animated.Value>(new Animated.Value(0));
+  const [scaleAnim] = useState<Animated.Value>(new Animated.Value(1));
 
   // Find the word data
   const wordData: Word | undefined = wordsByCategory[
     category as keyof typeof wordsByCategory
   ]?.find((w) => w.id === id);
 
-  const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
-  const [correctLetters, setCorrectLetters] = useState<string[]>([]);
-  const [incorrectLetters, setIncorrectLetters] = useState<string[]>([]);
-  const [gameWon, setGameWon] = useState<boolean>(false);
-  const [wordAlreadyLearned, setWordAlreadyLearned] = useState<boolean>(false);
+  // Initial game state
+  const [gameState, setGameState] = useState<WordGameState>({
+    wordId: id as string,
+    category: category as string,
+    status: "initial",
+    guessedLetters: [],
+    correctLetters: [],
+    incorrectLetters: [],
+    attempts: 0,
+    gameWon: false,
+    wordAlreadyLearned: false,
+    xpEarned: 0,
+    animations: {
+      main: {
+        letterEntrance: { isActive: false, delay: 100 },
+        wordReveal: { isActive: false, duration: 500 },
+        winAnimation: { isActive: false },
+        value: null,
+      },
+      letterFlip: {
+        letterEntrance: { isActive: false, delay: 0 },
+        wordReveal: { isActive: false, duration: 0 },
+        winAnimation: { isActive: false },
+        value: null,
+      },
+      successAnimation: {
+        letterEntrance: { isActive: false, delay: 0 },
+        wordReveal: { isActive: false, duration: 0 },
+        winAnimation: { isActive: false },
+        value: null,
+      },
+    },
+    sounds: {
+      correct: { sound: null, isLoaded: false, isPlaying: false },
+      incorrect: { sound: null, isLoaded: false, isPlaying: false },
+      winner: { sound: null, isLoaded: false, isPlaying: false },
+    },
+  });
+
+  // Backward compatibility with existing code
+  const {
+    guessedLetters,
+    correctLetters,
+    incorrectLetters,
+    gameWon,
+    wordAlreadyLearned,
+  } = gameState;
   const [soundEffect, setSoundEffect] = useState<Audio.Sound | null>(null);
 
   useEffect(() => {
@@ -48,66 +177,40 @@ export default function WordDetailScreen(): JSX.Element {
           ? require("../../assets/sounds/incorrect.mp3")
           : require("../../assets/sounds/winner.mp3");
 
-      // Load and play the sound
+      // Create and play the sound
       const { sound } = await Audio.Sound.createAsync(soundFile);
       setSoundEffect(sound);
       await sound.playAsync();
+
+      // Update state
+      setGameState((prev) => ({
+        ...prev,
+        sounds: {
+          ...prev.sounds,
+          [type]: {
+            sound,
+            isLoaded: true,
+            isPlaying: true,
+          },
+        },
+      }));
     } catch (error) {
-      console.error("Failed to play sound:", error);
+      console.error("Error playing sound", error);
     }
   }
 
-  useEffect(() => {
-    return () => {
-      if (soundEffect) {
-        soundEffect.unloadAsync();
-      }
-    };
-  }, [soundEffect]);
-
+  // Use our type-safe storage utility to check if word is learned
   const checkIfWordLearned = async (): Promise<void> => {
     try {
-      const storedWords = await AsyncStorage.getItem("learnedWords");
-      if (storedWords) {
-        const learnedWords = JSON.parse(storedWords);
-        const isLearned = learnedWords.some(
-          (word: LearnedWord) => word.id === id && word.category === category
-        );
-        setWordAlreadyLearned(isLearned);
-      }
+      const alreadyLearned = await isWordLearned(id, category);
+
+      setGameState((prev) => ({
+        ...prev,
+        wordAlreadyLearned: alreadyLearned,
+        status: alreadyLearned ? "completed" : "initial",
+      }));
     } catch (error) {
-      console.error("Failed to check learned words:", error);
-    }
-  };
-
-  // Update user XP
-  const updateUserXp = async (xpToAdd: number): Promise<UserProfile | null> => {
-    try {
-      // Get current user profile
-      const userProfileStr = await AsyncStorage.getItem("userProfile");
-      let userProfile: UserProfile = userProfileStr
-        ? JSON.parse(userProfileStr)
-        : { xp: 0, level: "1", lastPlayed: null };
-
-      // Add XP
-      userProfile.xp += xpToAdd;
-      userProfile.lastPlayed = new Date().toISOString();
-
-      // Calculate level based on XP
-      for (const level of playerLevels) {
-        if (userProfile.xp >= level.minXp && userProfile.xp < level.maxXp) {
-          userProfile.level = level.id;
-          break;
-        }
-      }
-
-      // Save updated profile
-      await AsyncStorage.setItem("userProfile", JSON.stringify(userProfile));
-
-      return userProfile;
-    } catch (error) {
-      console.error("Failed to update user XP:", error);
-      return null;
+      console.error("Error checking if word is learned:", error);
     }
   };
 
@@ -116,74 +219,58 @@ export default function WordDetailScreen(): JSX.Element {
     if (!wordData) return 0;
 
     let xp = xpValues.completeWord; // Base XP for completing a word
-    console.log(`Base XP: ${xp}`);
 
     // Bonus XP for perfect game (no incorrect letters)
     if (incorrectLetters.length === 0) {
       xp += xpValues.perfectWord;
-      console.log(`Added perfect game bonus: +${xpValues.perfectWord}`);
     }
 
     // Bonus XP for longer words
     const wordLength = wordData.word.length;
     if (wordLength >= 10) {
       xp += xpValues.tenLetterWord;
-      console.log(
-        `Added bonus for 10+ letter word: +${xpValues.tenLetterWord}`
-      );
     } else if (wordLength >= 5) {
       xp += xpValues.fiveLetterWord;
-      console.log(
-        `Added bonus for 5+ letter word: +${xpValues.fiveLetterWord}`
-      );
     }
 
-    console.log(`Total XP to award: ${xp}`);
     return xp;
   };
 
-  // Save word to learned words and award XP
+  // Save word to learned words and award XP using type-safe storage
   const saveWordAndAwardXp = async (): Promise<number> => {
     if (!wordData) return 0;
 
     try {
-      // Get current learned words
-      const storedWords = await AsyncStorage.getItem("learnedWords");
-      let learnedWords: LearnedWord[] = storedWords
-        ? JSON.parse(storedWords)
-        : [];
-
-      // Check if word is already in the list
-      const wordExists = learnedWords.some(
-        (word: LearnedWord) => word.id === id && word.category === category
-      );
+      // Check if word is already learned with our utility function
+      const alreadyLearned = await isWordLearned(id, category);
 
       // If word already exists, no XP awarded
-      if (wordExists) {
+      if (alreadyLearned) {
         console.log("Word already learned, no XP awarded");
         return 0;
       }
 
       // Calculate XP to award
       const xpToAward = calculateXpEarned();
-      console.log(`Awarding ${xpToAward} XP for word: ${wordData.word}`);
 
-      // Add the new word
-      learnedWords.push({
-        id: wordData.id,
-        word: wordData.word,
-        category: category as string,
-        image: wordData.image,
-        learnedAt: new Date().toISOString(),
-      });
+      // Save the learned word
+      const savedWord = await saveLearnedWord(wordData, category);
 
-      // Save back to storage
-      await AsyncStorage.setItem("learnedWords", JSON.stringify(learnedWords));
+      if (!savedWord) {
+        console.error("Failed to save learned word");
+        return 0;
+      }
 
       // Update user XP
       await updateUserXp(xpToAward);
 
-      setWordAlreadyLearned(true);
+      setGameState((prev) => ({
+        ...prev,
+        wordAlreadyLearned: true,
+        status: "completed",
+        xpEarned: xpToAward,
+      }));
+
       return xpToAward;
     } catch (error) {
       console.error("Failed to save word or award XP:", error);
@@ -193,22 +280,39 @@ export default function WordDetailScreen(): JSX.Element {
 
   // Reset the game
   const resetGame = (): void => {
-    setGuessedLetters([]);
-    setCorrectLetters([]);
-    setIncorrectLetters([]);
-    setGameWon(false);
+    setGameState((prev) => ({
+      ...prev,
+      guessedLetters: [],
+      correctLetters: [],
+      incorrectLetters: [],
+      gameWon: false,
+      status: "initial",
+      attempts: 0,
+      xpEarned: 0,
+    }));
   };
 
   // Handle letter press
   const handleLetterPress = async (letter: string): Promise<void> => {
-    if (guessedLetters.includes(letter) || gameWon) return;
+    if (gameState.guessedLetters.includes(letter) || gameState.gameWon) return;
 
-    const newGuessedLetters = [...guessedLetters, letter];
-    setGuessedLetters(newGuessedLetters);
+    const newGuessedLetters = [...gameState.guessedLetters, letter];
+
+    setGameState((prev) => ({
+      ...prev,
+      guessedLetters: newGuessedLetters,
+      status: "in-progress",
+      attempts: prev.attempts + 1,
+    }));
 
     if (wordData?.word.includes(letter)) {
-      const newCorrectLetters = [...correctLetters, letter];
-      setCorrectLetters(newCorrectLetters);
+      const newCorrectLetters = [...gameState.correctLetters, letter];
+
+      setGameState((prev) => ({
+        ...prev,
+        correctLetters: newCorrectLetters,
+      }));
+
       playSound("correct");
 
       // Check if all letters have been guessed
@@ -224,7 +328,12 @@ export default function WordDetailScreen(): JSX.Element {
           console.log("XP earned:", earnedXpAmount); // Debug log
 
           // Set game won state after XP is calculated
-          setGameWon(true);
+          setGameState((prev) => ({
+            ...prev,
+            gameWon: true,
+            status: "won",
+            xpEarned: earnedXpAmount,
+          }));
 
           // Play winner sound
           playSound("winner");
@@ -238,74 +347,126 @@ export default function WordDetailScreen(): JSX.Element {
             xpMessage = `\n\n✨ You earned ${earnedXpAmount} XP! ✨`;
 
             // Add bonus information if applicable
-            if (incorrectLetters.length === 0) {
-              xpMessage += "\n🌟 Perfect game bonus included! 🌟";
+            if (!gameState.wordAlreadyLearned) {
+              xpMessage += `\n(First time bonus: +${xpValues.completeWord} XP)`;
             }
-
-            if (wordData.word.length >= 10) {
-              xpMessage += "\n📏 10+ letter word bonus included!";
-            } else if (wordData.word.length >= 5) {
-              xpMessage += "\n📏 5+ letter word bonus included!";
-            }
-          } else if (wordAlreadyLearned) {
-            xpMessage = "\n\nYou've already learned this word before.";
+          } else {
+            xpMessage = "\n\nYou've already earned XP for this word.";
           }
 
-          Alert.alert("Congratulations! 🎉", `${message}${xpMessage}`, [
-            { text: "Play Again", onPress: resetGame },
-            { text: "View Profile", onPress: () => router.push("/profile") },
-            { text: "Choose Another Word", onPress: () => router.back() },
-          ]);
-        } catch (error) {
-          console.error("Error handling game completion:", error);
-
-          // Set game won state even if there's an error
-          setGameWon(true);
-
-          Alert.alert(
-            "Congratulations! 🎉",
-            `You've spelled "${wordData.word}" correctly!\n\nUnable to calculate XP at this time.`,
-            [
-              { text: "Play Again", onPress: resetGame },
+          // Show the success alert after a delay
+          setTimeout(() => {
+            Alert.alert("Well Done!", message + xpMessage, [
               { text: "View Profile", onPress: () => router.push("/profile") },
               { text: "Choose Another Word", onPress: () => router.back() },
-            ]
-          );
+            ]);
+          }, 200);
+        } catch (error) {
+          console.error("Error processing word completion:", error);
+          Alert.alert("Error", "There was a problem saving your progress.");
         }
       }
     } else {
-      setIncorrectLetters([...incorrectLetters, letter]);
+      setGameState((prev) => ({
+        ...prev,
+        incorrectLetters: [...prev.incorrectLetters, letter],
+      }));
+
       playSound("incorrect");
     }
   };
+
+  // Create a type-safe animation triggering function
+  const triggerAnimation = (
+    animValue: Animated.Value,
+    config: { toValue: number; duration: number; delay?: number }
+  ): void => {
+    Animated.timing(animValue, {
+      toValue: config.toValue,
+      duration: config.duration,
+      delay: config.delay || 0,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  // When the game is won, trigger animations
+  useEffect(() => {
+    if (gameState.gameWon) {
+      triggerAnimation(fadeAnim, { toValue: 1, duration: 500 });
+      triggerAnimation(scaleAnim, { toValue: 1.2, duration: 300, delay: 200 });
+    }
+  }, [gameState.gameWon]);
 
   // Render word with blanks and guessed letters
   const renderWord = (): JSX.Element | null => {
     if (!wordData) return null;
 
+    // Create letter tiles array for better typing
+    const letterTiles: LetterTile[] = wordData.word
+      .split("")
+      .map((letter, index) => {
+        const isGuessed = gameState.correctLetters.includes(letter);
+        return {
+          id: `${index}-${letter}`,
+          letter,
+          selected: isGuessed,
+          position: index,
+          status: isGuessed ? "correct" : "unused",
+          animation: {
+            letterEntrance: { isActive: isGuessed, delay: index * 100 },
+            wordReveal: { isActive: false, duration: 0 },
+            winAnimation: { isActive: false },
+            value: null,
+            type: "flip",
+            timing: { duration: 300, delay: index * 100 },
+          },
+        };
+      });
+
     return (
       <>
-        {wordData.word.split("").map((letter, index) => {
-          const isGuessed = correctLetters.includes(letter);
-          return (
-            <View
-              key={index}
-              className="mx-[5px] my-[5px] w-[30px] items-center"
-            >
-              {isGuessed ? (
-                <Animated.Text
-                  entering={FlipInYRight.delay(index * 100)}
-                  className="text-2xl font-bold text-[#1E293B]"
-                >
-                  {letter}
-                </Animated.Text>
-              ) : (
-                <Text className="text-2xl font-bold text-[#94A3B8]">_</Text>
-              )}
-            </View>
-          );
-        })}
+        {letterTiles.map((tile) => (
+          <View
+            key={tile.id}
+            className="mx-[5px] my-[5px] w-[30px] items-center"
+          >
+            {tile.selected ? (
+              <ReAnimated.Text
+                entering={FlipInYRight.delay(tile.position * 100)}
+                className="text-2xl font-bold text-[#1E293B]"
+              >
+                {tile.letter}
+              </ReAnimated.Text>
+            ) : (
+              <Text className="text-2xl font-bold text-[#94A3B8]">_</Text>
+            )}
+          </View>
+        ))}
       </>
+    );
+  };
+
+  // Render word image with proper typing
+  const renderWordImage = ({
+    imageUri,
+    isLearned,
+    isGameWon,
+  }: WordImageProps): JSX.Element => {
+    return (
+      <View className="w-full h-[200px] px-5 mb-2 relative">
+        <Image
+          source={{ uri: imageUri } as AppImageSource}
+          className="w-full h-full rounded-2xl"
+          resizeMode="cover"
+        />
+        {isLearned && !isGameWon && (
+          <View className="absolute top-[10px] right-[30px] bg-[rgba(99,102,241,0.9)] py-[5px] px-[10px] rounded-xl">
+            <Text className="text-white font-bold text-xs">
+              Already Learned
+            </Text>
+          </View>
+        )}
+      </View>
     );
   };
 
@@ -334,20 +495,11 @@ export default function WordDetailScreen(): JSX.Element {
         </TouchableOpacity>
       </View>
 
-      <View className="w-full h-[200px] px-5 mb-2 relative">
-        <Image
-          source={{ uri: wordData.image }}
-          className="w-full h-full rounded-2xl"
-          resizeMode="cover"
-        />
-        {wordAlreadyLearned && !gameWon && (
-          <View className="absolute top-[10px] right-[30px] bg-[rgba(99,102,241,0.9)] py-[5px] px-[10px] rounded-xl">
-            <Text className="text-white font-bold text-xs">
-              Already Learned
-            </Text>
-          </View>
-        )}
-      </View>
+      {renderWordImage({
+        imageUri: wordData.image,
+        isLearned: wordAlreadyLearned,
+        isGameWon: gameWon,
+      })}
 
       <View className="flex-row justify-center items-center mb-6 flex-wrap px-5">
         {renderWord()}
@@ -359,35 +511,39 @@ export default function WordDetailScreen(): JSX.Element {
             const isGuessed = guessedLetters.includes(letter);
             const isCorrect = correctLetters.includes(letter);
 
-            // Determine background color based on state
-            const getBgColor = () => {
-              if (isGuessed && isCorrect) return "bg-green-500";
-              if (isGuessed) return "bg-red-500";
-              return "bg-white";
+            // Determine button style based on state with proper typing
+            const getButtonStyle = (): LetterButtonStyleState => {
+              if (isGuessed && isCorrect) {
+                return {
+                  backgroundColor: "bg-green-500",
+                  borderStyle: "border-2 border-green-500",
+                  textColor: "text-white",
+                };
+              }
+              if (isGuessed) {
+                return {
+                  backgroundColor: "bg-red-500",
+                  borderStyle: "border-2 border-red-500",
+                  textColor: "text-white",
+                };
+              }
+              return {
+                backgroundColor: "bg-white",
+                borderStyle: "border border-gray-200",
+                textColor: "text-[#1E293B]",
+              };
             };
 
-            // Determine border based on state
-            const getBorder = () => {
-              if (isGuessed && isCorrect) return "border-2 border-green-500";
-              if (isGuessed) return "border-2 border-red-500";
-              return "border border-gray-200";
-            };
-
-            // Determine text color based on state
-            const getTextColor = () => {
-              if (isGuessed && isCorrect) return "text-white";
-              if (isGuessed) return "text-white";
-              return "text-[#1E293B]";
-            };
+            const buttonStyle = getButtonStyle();
 
             return (
               <TouchableOpacity
                 key={letter}
-                className={`w-[44px] h-[44px] rounded-2xl ${getBgColor()} ${getBorder()} justify-center items-center m-2 shadow-md`}
+                className={`w-[44px] h-[44px] rounded-2xl ${buttonStyle.backgroundColor} ${buttonStyle.borderStyle} justify-center items-center m-2 shadow-md`}
                 onPress={() => handleLetterPress(letter)}
                 disabled={isGuessed || gameWon}
               >
-                <Text className={`text-2xl font-bold ${getTextColor()}`}>
+                <Text className={`text-2xl font-bold ${buttonStyle.textColor}`}>
                   {letter}
                 </Text>
               </TouchableOpacity>
@@ -398,3 +554,19 @@ export default function WordDetailScreen(): JSX.Element {
     </SafeAreaView>
   );
 }
+
+// Export the component wrapped in an error boundary
+export default withErrorBoundary(WordDetailScreen, {
+  onError: (error, errorInfo) => {
+    // Here you could log errors to a service in production
+    console.error("Word Detail Screen Error:", error);
+    console.error("Component Stack:", errorInfo.componentStack);
+  },
+  fallback: (
+    <WordDetailErrorFallback
+      error={null}
+      resetError={() => {}}
+      goToHome={() => {}}
+    />
+  ),
+});

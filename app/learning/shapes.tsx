@@ -10,9 +10,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ShapeActivity } from "@/types/shapes";
 import { shapeActivities } from "@/lib/data";
+import { ShapeActivity } from "@/types/shapes";
+import { getData, StorageKeys } from "@/lib/storage";
 
 // Define the shape activity interface
 export default function ShapesScreen() {
@@ -23,13 +23,12 @@ export default function ShapesScreen() {
     triangles: 0,
   });
 
-  // Load saved progress
+  // Load shape progress from storage
   useEffect(() => {
     const loadProgress = async () => {
       try {
-        const shapeStatsStr = await AsyncStorage.getItem("shapeStats");
-        if (shapeStatsStr) {
-          const shapeStats = JSON.parse(shapeStatsStr);
+        const shapeStats = await getData(StorageKeys.SHAPE_STATS);
+        if (shapeStats) {
           setProgress({
             circles: shapeStats.circles?.completed || 0,
             squares: shapeStats.squares?.completed || 0,
@@ -37,7 +36,10 @@ export default function ShapesScreen() {
           });
         }
       } catch (error) {
-        console.error("Error loading shape progress:", error);
+        console.error(
+          "Error loading shape progress:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     };
 

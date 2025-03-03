@@ -2,6 +2,7 @@
  * Types related to shapes and geometric learning activities
  */
 import { Activity } from "./common";
+import { Animated } from "react-native";
 
 /**
  * Types of circles available in the app
@@ -73,9 +74,33 @@ export interface ShapeStats {
 
 /**
  * Statistics for a specific shape category
- * @extends CategoryStats with a renamed property
+ * @extends Partial<Omit<CategoryStats, "attempted">> to maintain compatibility with existing code
  */
 export interface ShapeCategoryStats {
-  completed: number; // This is equivalent to "attempted" in CategoryStats
+  completed: number; // Equivalent to 'attempted' in CategoryStats
   accuracy: number;
+  correct?: number; // Optional to maintain compatibility with existing code
+}
+
+/**
+ * Interface for shape activity screen progress state
+ * Used to track user progress within shape learning activities
+ */
+export interface ShapeProgressState {
+  currentIndex: number;
+  score: number;
+  completed: number;
+  showAnswer: boolean;
+  answerAnimation: Animated.Value; // Properly typed animation value
+}
+
+/**
+ * Interface for shape storage data structure
+ * Represents the shape statistics as stored in AsyncStorage
+ */
+export interface ShapeStorageData {
+  totalShapes: number;
+  circles: ShapeCategoryStats;
+  squares: ShapeCategoryStats;
+  triangles: ShapeCategoryStats;
 }

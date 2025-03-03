@@ -11,8 +11,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as SecureStore from "expo-secure-store";
-import PinModal from "@/app/components/PinModal";
-import PinProtection from "../components/PinProtection";
+import PinModal from "@/components/PinModal";
+import PinProtection from "@/components/PinProtection";
 
 const PIN_KEY = "parental_control_pin";
 

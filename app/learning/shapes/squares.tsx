@@ -12,10 +12,21 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { rectangles } from "@/lib/data";
+import { RectangleType } from "@/types/shapes";
+import {
+  updateShapeCategoryStats,
+  loadShapeStats,
+  ShapeStorageError,
+} from "@/lib/shapeUtils";
+import { getData, storeData, StorageKeys } from "@/lib/storage";
 
-export default function SquaresScreen() {
+/**
+ * SquaresScreen component - displays educational content about squares and rectangles
+ * Allows users to browse through different rectangle shapes and learn their properties
+ * @returns JSX.Element representing the squares and rectangles learning screen
+ */
+export default function SquaresScreen(): JSX.Element {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -24,68 +35,71 @@ export default function SquaresScreen() {
   const [answerAnimation] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    // Load progress from AsyncStorage
-    const loadProgress = async () => {
+    /**
+     * Loads progress data from storage using our type-safe utilities
+     * Sets the completed state based on existing progress data
+     */
+    const loadProgress = async (): Promise<void> => {
       try {
-        const shapeStatsStr = await AsyncStorage.getItem("shapeStats");
-        if (shapeStatsStr) {
-          const shapeStats = JSON.parse(shapeStatsStr);
-          setCompleted(shapeStats.squares?.completed || 0);
-        }
+        const shapeStats = await loadShapeStats();
+        setCompleted(shapeStats.squares.completed);
       } catch (error) {
-        console.error("Error loading shape progress:", error);
+        const errorMessage =
+          error instanceof ShapeStorageError
+            ? error.message
+            : error instanceof Error
+            ? error.message
+            : "Unknown error";
+
+        console.error("Error loading shape progress:", errorMessage);
       }
     };
 
     loadProgress();
   }, []);
 
-  const saveProgress = async () => {
+  /**
+   * Saves the user's progress and adds XP to their profile
+   * Updates shape statistics using our type-safe storage utilities
+   * @throws ShapeStorageError if there's an issue saving data
+   */
+  const saveProgress = async (): Promise<void> => {
     try {
-      // Update user profile XP
-      const userProfileStr = await AsyncStorage.getItem("userProfile");
-      if (userProfileStr) {
-        const userProfile = JSON.parse(userProfileStr);
+      // Update user profile XP using type-safe storage
+      const userProfile = await getData(StorageKeys.USER_PROFILE);
+      if (userProfile) {
         const updatedXp = (userProfile.xp || 0) + 5;
         const updatedProfile = {
           ...userProfile,
           xp: updatedXp,
         };
-        await AsyncStorage.setItem(
-          "userProfile",
-          JSON.stringify(updatedProfile)
-        );
+        await storeData(StorageKeys.USER_PROFILE, updatedProfile);
       }
 
-      // Update shape statistics
-      const shapeStatsStr = await AsyncStorage.getItem("shapeStats");
-      let shapeStats = shapeStatsStr
-        ? JSON.parse(shapeStatsStr)
-        : {
-            totalShapes: 0,
-            circles: { completed: 0, accuracy: 0 },
-            squares: { completed: 0, accuracy: 0 },
-            triangles: { completed: 0, accuracy: 0 },
-          };
-
-      // Update squares stats
-      shapeStats.totalShapes = (shapeStats.totalShapes || 0) + 1;
-      shapeStats.squares = shapeStats.squares || { completed: 0, accuracy: 0 };
-      shapeStats.squares.completed = (shapeStats.squares.completed || 0) + 1;
-
-      // Calculate new accuracy (if we had questions)
-      shapeStats.squares.accuracy = Math.round(
-        ((shapeStats.squares.accuracy || 100) + 100) / 2
-      );
-
-      await AsyncStorage.setItem("shapeStats", JSON.stringify(shapeStats));
+      // Update shape statistics using our utility function
+      const shapeStats = await updateShapeCategoryStats("squares");
       setCompleted(shapeStats.squares.completed);
     } catch (error) {
-      console.error("Error saving progress:", error);
+      const errorMessage =
+        error instanceof ShapeStorageError
+          ? error.message
+          : error instanceof Error
+          ? error.message
+          : "Unknown error";
+
+      console.error("Error saving progress:", errorMessage);
+      Alert.alert(
+        "Error",
+        "There was a problem saving your progress. Please try again."
+      );
     }
   };
 
-  const handleNext = () => {
+  /**
+   * Handles navigation to the next shape or completes the lesson
+   * Shows completion alert when all shapes have been viewed
+   */
+  const handleNext = (): void => {
     if (currentIndex < rectangles.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setShowAnswer(false);
@@ -100,7 +114,12 @@ export default function SquaresScreen() {
     }
   };
 
-  const handleShowProperties = () => {
+  /**
+   * Handles the "Show Properties" button press
+   * Reveals the shape properties with animation
+   * Saves progress and adds to score
+   */
+  const handleShowProperties = (): void => {
     setShowAnswer(true);
     setScore(score + 5);
     saveProgress();
@@ -110,6 +129,38 @@ export default function SquaresScreen() {
       duration: 500,
       useNativeDriver: true,
     }).start();
+  };
+
+  /**
+   * Returns a color based on the rectangle type
+   * @param type - The type of rectangle
+   * @returns A color hex code
+   */
+  const getTypeColor = (type: RectangleType): string => {
+    switch (type) {
+      case "square":
+        return "#3B82F6";
+      case "rectangle":
+        return "#10B981";
+      default:
+        return "#EC4899";
+    }
+  };
+
+  /**
+   * Returns the display text for a rectangle type
+   * @param type - The type of rectangle
+   * @returns The formatted display text
+   */
+  const getTypeText = (type: RectangleType): string => {
+    switch (type) {
+      case "square":
+        return "Square";
+      case "rectangle":
+        return "Rectangle";
+      default:
+        return "Unknown";
+    }
   };
 
   const currentShape = rectangles[currentIndex];
@@ -145,13 +196,12 @@ export default function SquaresScreen() {
               style={[
                 styles.typeTag,
                 {
-                  backgroundColor:
-                    currentShape.type === "square" ? "#8B5CF6" : "#6366F1",
+                  backgroundColor: getTypeColor(currentShape.type),
                 },
               ]}
             >
               <Text style={styles.typeText}>
-                {currentShape.type === "square" ? "Square" : "Rectangle"}
+                {getTypeText(currentShape.type)}
               </Text>
             </View>
           </View>

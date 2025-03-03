@@ -14,6 +14,8 @@ export const learningPaths: LearningPath[] = [
     backgroundColor: "#EEF2FF",
     route: "/learning/words",
     available: true,
+    color: "#6366F1",
+    difficulty: "easy",
   },
   {
     id: "numbers",
@@ -24,6 +26,8 @@ export const learningPaths: LearningPath[] = [
     backgroundColor: "#ECFDF5",
     route: "/learning/numbers",
     available: true,
+    color: "#10B981",
+    difficulty: "easy",
   },
   {
     id: "shapes",
@@ -34,6 +38,8 @@ export const learningPaths: LearningPath[] = [
     backgroundColor: "#FEF3C7",
     route: "/learning/shapes",
     available: true,
+    color: "#F59E0B",
+    difficulty: "medium",
   },
   {
     id: "phonics",
@@ -44,6 +50,8 @@ export const learningPaths: LearningPath[] = [
     backgroundColor: "#FCE7F3",
     route: "/learning/phonics",
     available: false,
+    color: "#EC4899",
+    difficulty: "medium",
   },
   {
     id: "memory",
@@ -54,6 +62,8 @@ export const learningPaths: LearningPath[] = [
     backgroundColor: "#EDE9FE",
     route: "/learning/memory",
     available: false,
+    color: "#8B5CF6",
+    difficulty: "medium",
   },
   {
     id: "reading",
@@ -64,6 +74,8 @@ export const learningPaths: LearningPath[] = [
     backgroundColor: "#EFF6FF",
     route: "/learning/reading",
     available: false,
+    color: "#3B82F6",
+    difficulty: "hard",
   },
 ];
 
@@ -412,38 +424,73 @@ export const wordCategories: WordCategory[] = [
 export const playerLevels = [
   {
     id: "1",
-    title: "Beginner",
-    description: "Perfect for beginners",
+    title: "Curious Explorer",
+    description: "Taking your first steps into learning",
     minXp: 0,
     maxXp: 100,
   },
   {
     id: "2",
-    title: "Intermediate",
-    description: "Perfect for intermediate learners",
+    title: "Word Wizard",
+    description: "Your spelling skills are growing",
     minXp: 100,
     maxXp: 300,
   },
   {
     id: "3",
-    title: "Advanced",
-    description: "Perfect for advanced learners",
+    title: "Brainy Buddy",
+    description: "You're making impressive progress",
     minXp: 300,
     maxXp: 600,
   },
   {
     id: "4",
-    title: "Expert",
-    description: "Perfect for expert learners",
+    title: "Knowledge Knight",
+    description: "Defending the realm of learning",
     minXp: 600,
     maxXp: 1000,
   },
   {
     id: "5",
-    title: "Master",
-    description: "You've mastered the language!",
+    title: "Scholar Superhero",
+    description: "Your learning powers are phenomenal!",
     minXp: 1000,
-    maxXp: Infinity,
+    maxXp: 1500,
+  },
+  {
+    id: "6",
+    title: "Math Magician",
+    description: "Casting spells of mathematical wisdom",
+    minXp: 1500,
+    maxXp: 2000,
+  },
+  {
+    id: "7",
+    title: "Genius Adventurer",
+    description: "Exploring new frontiers of knowledge",
+    minXp: 2000,
+    maxXp: 2500,
+  },
+  {
+    id: "8",
+    title: "Spelling Superstar",
+    description: "Your spelling skills are out of this world!",
+    minXp: 2500,
+    maxXp: 3000,
+  },
+  {
+    id: "9",
+    title: "Champion Challenger",
+    description: "Taking on the toughest learning challenges",
+    minXp: 3000,
+    maxXp: 3500,
+  },
+  {
+    id: "10",
+    title: "Learning Legend",
+    description: "You've achieved legendary learning status!",
+    minXp: 3500,
+    maxXp: 4000,
   },
 ];
 
