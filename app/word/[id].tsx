@@ -25,6 +25,7 @@ import { AnimationType, AnimationTiming } from "@/types/animations";
 import { Audio } from "expo-av";
 import { isWordLearned, saveLearnedWord, updateUserXp } from "@/lib/storage";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
+import { wordSounds } from "@/lib/data";
 
 // Generate alphabet buttons
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -102,6 +103,8 @@ function WordDetailScreen(): JSX.Element {
   // Initialize animation values
   const [fadeAnim] = useState<Animated.Value>(new Animated.Value(0));
   const [scaleAnim] = useState<Animated.Value>(new Animated.Value(1));
+  const [pronounceAnim] = useState<Animated.Value>(new Animated.Value(1));
+  const [isPronouncing, setIsPronouncing] = useState<boolean>(false);
 
   // Find the word data
   const wordData: Word | undefined = wordsByCategory[
@@ -470,6 +473,96 @@ function WordDetailScreen(): JSX.Element {
     );
   };
 
+  // Define a function to pronounce the word
+  const pronounceWord = async (): Promise<void> => {
+    try {
+      if (isPronouncing) return;
+
+      setIsPronouncing(true);
+
+      // Get the appropriate sound URL for the current word
+      const getSoundUrl = (wordId: string): string => {
+        // First check if we have a specific sound for this word
+        if (wordSounds[wordId]) {
+          return wordSounds[wordId];
+        }
+
+        // If no specific sound, return the default sound
+        return wordSounds.default;
+      };
+
+      const soundUrl = getSoundUrl(id);
+
+      try {
+        // Log which sound is being played (helpful for debugging)
+        console.log(`Playing sound for word: ${id} - URL: ${soundUrl}`);
+
+        const { sound } = await Audio.Sound.createAsync({
+          uri: soundUrl,
+        });
+
+        await sound.playAsync();
+
+        // Unload sound when finished
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            sound.unloadAsync();
+          }
+        });
+      } catch (soundError) {
+        console.error("Error playing sound from URL:", soundError);
+        // Fallback to winner sound if URL fails
+        await playSound("winner");
+      }
+
+      // Create a pulse animation for the pronunciation button
+      Animated.sequence([
+        Animated.timing(pronounceAnim, {
+          toValue: 1.2,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pronounceAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pronounceAnim, {
+          toValue: 1.2,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pronounceAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setIsPronouncing(false);
+      });
+
+      // Add visual feedback for the word
+      triggerAnimation(scaleAnim, {
+        toValue: 1.05,
+        duration: 300,
+      });
+
+      setTimeout(() => {
+        triggerAnimation(scaleAnim, {
+          toValue: 1,
+          duration: 300,
+        });
+      }, 300);
+    } catch (error) {
+      setIsPronouncing(false);
+      console.error("Error pronouncing word:", error);
+      Alert.alert(
+        "Pronunciation Error",
+        "Could not play the word pronunciation."
+      );
+    }
+  };
+
   if (!wordData) {
     return (
       <SafeAreaView className="flex-1 bg-[#F9F9F9]">
@@ -487,12 +580,34 @@ function WordDetailScreen(): JSX.Element {
         >
           <Ionicons name="arrow-back" size={24} color="#1E293B" />
         </TouchableOpacity>
-        <TouchableOpacity
-          className="w-10 h-10 rounded-full bg-[#F1F5F9] justify-center items-center"
-          onPress={resetGame}
-        >
-          <Ionicons name="refresh" size={20} color="#1E293B" />
-        </TouchableOpacity>
+        <View className="flex-row">
+          <Animated.View
+            style={{
+              transform: [{ scale: pronounceAnim }],
+              marginRight: 8,
+            }}
+          >
+            <TouchableOpacity
+              className={`w-10 h-10 rounded-full ${
+                isPronouncing ? "bg-[#6366F1]" : "bg-[#F1F5F9]"
+              } justify-center items-center`}
+              onPress={pronounceWord}
+              disabled={isPronouncing}
+            >
+              <Ionicons
+                name="volume-high"
+                size={20}
+                color={isPronouncing ? "#FFFFFF" : "#1E293B"}
+              />
+            </TouchableOpacity>
+          </Animated.View>
+          <TouchableOpacity
+            className="w-10 h-10 rounded-full bg-[#F1F5F9] justify-center items-center"
+            onPress={resetGame}
+          >
+            <Ionicons name="refresh" size={20} color="#1E293B" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {renderWordImage({

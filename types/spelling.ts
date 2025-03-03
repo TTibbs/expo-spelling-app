@@ -105,6 +105,32 @@ export interface WordProgress {
 }
 
 /**
+ * Supported pronunciation sound types
+ */
+export type PronunciationSoundType = "word" | "letter" | "phonetic";
+
+/**
+ * Interface for pronunciation state management
+ */
+export interface PronunciationState {
+  isPronouncing: boolean;
+  soundType: PronunciationSoundType;
+  animation: Animated.Value;
+  settings: PronunciationSettings;
+}
+
+/**
+ * Interface for user-configurable pronunciation settings
+ */
+export interface PronunciationSettings {
+  enabled: boolean;
+  rate: number; // Speech rate (0.1 to 2.0)
+  voice: string | null; // Voice identifier or null for device default
+  autoPlay: boolean; // Whether to automatically pronounce words when viewed
+  breakdownLongWords: boolean; // Whether to break down words into syllables
+}
+
+/**
  * Interface for the word game state
  * Represents the complete state of a word spelling game session
  */
@@ -128,6 +154,11 @@ export interface WordGameState {
     correct: SoundState;
     incorrect: SoundState;
     winner: SoundState;
+    pronunciation?: SoundState;
+  };
+  pronunciation?: {
+    isPronouncing: boolean;
+    lastPronounced: string | null;
   };
 }
 

@@ -2,7 +2,7 @@ import { LearningPath } from "@/types/learning";
 import { Circle, Rectangle, Triangle } from "@/types/shapes";
 import { MathActivity } from "@/types/numbers";
 import { ShapeActivity } from "@/types/shapes";
-import { WordCategory } from "@/types/common";
+import { Word, WordCategory } from "@/types/common";
 
 export const learningPaths: LearningPath[] = [
   {
@@ -44,7 +44,8 @@ export const learningPaths: LearningPath[] = [
   {
     id: "phonics",
     title: "Phonics",
-    description: "Practice letter sounds and phonics",
+    description:
+      "Advanced sound recognition, blending, and comprehensive phonetic learning",
     icon: "musical-notes-outline",
     iconColor: "#EC4899",
     backgroundColor: "#FCE7F3",
@@ -79,7 +80,7 @@ export const learningPaths: LearningPath[] = [
   },
 ];
 
-export const wordsByCategory = {
+export const wordsByCategory: Record<string, Word[]> = {
   animals: [
     {
       id: "dog",
@@ -420,6 +421,34 @@ export const wordCategories: WordCategory[] = [
   { id: "nature", title: "Nature", icon: "🌲" },
   { id: "sports", title: "Sports", icon: "⚽" },
 ];
+
+export const wordSounds: Record<string, string> = {
+  // Using the cat sound as placeholder for all words for now
+  // Format: wordId: soundUrl
+  default:
+    "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSRvWDP30UekrSKANg6utVqnFThQyHJOCZdp87",
+
+  // Animal sounds
+  dog: "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZShiEpAVMANp2zgGotZdVJT3wsIH4W60qKbv1O",
+  cat: "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSRvWDP30UekrSKANg6utVqnFThQyHJOCZdp87",
+  elephant:
+    "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSj4hac7BnhsGFjivqmwBAdUOJTr7RLVucZ2EI",
+  lion: "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS2KHxj51M4vrZwxQ0N1yhuKXDkFBT9qPA3dsf",
+  tiger:
+    "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSr6MtZTunVQIyJRs3NpATD14KaLM8BGXPvxit",
+  zebra:
+    "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS8rC992ZuSZTnACba4fj2QJtHw06plON7UyRM",
+  panda:
+    "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSJ355QmOQB4UwnSy75ofFml8LZEOgkxC1biXG",
+  monkey:
+    "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSjLScOfnhsGFjivqmwBAdUOJTr7RLVucZ2EIH",
+  giraffe:
+    "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSRvWDP30UekrSKANg6utVqnFThQyHJOCZdp87",
+  kangaroo:
+    "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS8lACQVZuSZTnACba4fj2QJtHw06plON7UyRM",
+  penguin:
+    "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZSOZ7HmYRszmLi8lAQ3o70IuwkSCqF65EbMth4",
+};
 
 export const playerLevels = [
   {

@@ -80,6 +80,14 @@
 - ✅ Add proper typing for animation values and styles
 - ✅ Add type safety for local storage operations with word data
 - ✅ Implement error boundaries with proper TypeScript support
+- ✅ Add pronunciation button to allow users to hear the word being pronounced
+- [ ] Implement text-to-speech functionality using Expo's Speech API
+- ✅ Add visual feedback when pronunciation is playing (e.g., speaker icon animation)
+- ✅ Create proper TypeScript types for the pronunciation feature
+- [ ] Add option to adjust speech rate for younger learners
+- [ ] Implement error handling for text-to-speech failures
+- [ ] Store user preferences for pronunciation settings (voice, speed)
+- [ ] Consider adding phonics breakdown for longer words (syllable-by-syllable pronunciation)
 
 #### words.tsx
 
@@ -95,7 +103,7 @@
 #### spelling.tsx
 
 - ✅ Created `types/spelling.ts` with spelling-related interfaces
-- ✅ Re-exported `Word` and `WordCategory` from `common.ts`
+- ✅ Re-exported `Word` and `WordCategory` from `common.cs`
 - ✅ Added interfaces for `SpellingAttempt`, `SpellingStats`, etc.
 
 #### Global Types (common.ts)
@@ -187,6 +195,7 @@
 - [ ] Add type safety for route navigation
 - [ ] Create interface for learning path statistics
 - [ ] Improve typing for the path selection mechanism
+- ✅ Update phonics learning path to be a future comprehensive feature beyond basic word pronunciation
 
 #### General Improvements
 
@@ -245,8 +254,8 @@
 - [ ] Add timed challenges for math and spelling activities
 - [ ] Create printable worksheets based on completed activities
 - [ ] Add a shape discovery mode where users can find shapes in real-world photos
-- [ ] Implement a word pronunciation feature for vocabulary building
-- [ ] Add progressive learning paths based on user performance
+- ✅ Add word pronunciation button to the word detail screen
+- [ ] Implement progressive learning paths based on user performance
 - [ ] Create interactive quizzes combining shapes, words and numbers
 - [ ] Add parental controls with detailed activity reporting
 - [ ] Create a teacher/parent dashboard for tracking progress
@@ -303,3 +312,9 @@
 - ✅ Implement strict type checking for AsyncStorage access
 - ✅ Create a consistent approach to typing AsyncStorage operations across all components
 - ✅ Implement a common pattern for typing AsyncStorage keys to prevent typos
+- ✅ Create a centralized sound management system in data.ts
+
+### Optional
+
+- [ ] Add a second button for word [id] screen for the sound the word/item makes (with a different icon like a musical note or animal paw). Only show this second button when a sound effect is available for that word.
+- ✅ Implement dynamic sound loading with centralized sound management
