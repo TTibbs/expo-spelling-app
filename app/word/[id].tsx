@@ -6,6 +6,10 @@ import {
   TouchableOpacity,
   Alert,
   Animated,
+  Platform,
+  Modal,
+  ScrollView,
+  Switch,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -22,18 +26,12 @@ import {
 import { AppImageSource } from "@/types/styling";
 import { RouteParams } from "@/types/navigation";
 import { Audio } from "expo-av";
-import {
-  getData,
-  storeData,
-  StorageKeys,
-  loadUserProfile,
-  updateUserXP,
-  isWordLearned,
-  saveLearnedWord,
-} from "@/lib/storage";
+import { updateUserXP, isWordLearned, saveLearnedWord } from "@/lib/storage";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
 import { wordSounds } from "@/lib/data";
 import { useChild } from "@/context/ChildContext";
+import * as Speech from "expo-speech";
+import * as Haptics from "expo-haptics";
 
 // Generate alphabet buttons
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -78,6 +76,121 @@ const WordDetailErrorFallback = ({
   </SafeAreaView>
 );
 
+// Add TTSSettingsModal component above WordDetailScreen
+interface TTSSettingsModalProps {
+  isVisible: boolean;
+  onClose: () => void;
+  availableVoices: Speech.Voice[];
+  selectedVoice: Speech.Voice | null;
+  onVoiceSelect: (voice: Speech.Voice) => void;
+  rate: number;
+  onRateChange: (rate: number) => void;
+  pitch: number;
+  onPitchChange: (pitch: number) => void;
+}
+
+const TTSSettingsModal = ({
+  isVisible,
+  onClose,
+  availableVoices,
+  selectedVoice,
+  onVoiceSelect,
+  rate,
+  onRateChange,
+  pitch,
+  onPitchChange,
+}: TTSSettingsModalProps): JSX.Element => (
+  <Modal
+    animationType="slide"
+    transparent={true}
+    visible={isVisible}
+    onRequestClose={onClose}
+  >
+    <View className="flex-1 justify-end bg-black/50">
+      <View className="bg-white rounded-t-3xl p-6 h-3/4">
+        <View className="flex-row justify-between items-center mb-6">
+          <Text className="text-xl font-bold">Voice Settings</Text>
+          <TouchableOpacity onPress={onClose}>
+            <Ionicons name="close" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView className="flex-1">
+          {/* Rate Slider */}
+          <View className="mb-6">
+            <Text className="text-lg font-semibold mb-2">Speech Rate</Text>
+            <View className="flex-row items-center justify-between">
+              <TouchableOpacity
+                onPress={() => onRateChange(Math.max(0.1, rate - 0.1))}
+                className="bg-gray-200 p-2 rounded-full"
+              >
+                <Ionicons name="remove" size={20} color="#000" />
+              </TouchableOpacity>
+              <Text className="text-base">{rate.toFixed(1)}x</Text>
+              <TouchableOpacity
+                onPress={() => onRateChange(Math.min(2.0, rate + 0.1))}
+                className="bg-gray-200 p-2 rounded-full"
+              >
+                <Ionicons name="add" size={20} color="#000" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Pitch Slider */}
+          <View className="mb-6">
+            <Text className="text-lg font-semibold mb-2">Pitch</Text>
+            <View className="flex-row items-center justify-between">
+              <TouchableOpacity
+                onPress={() => onPitchChange(Math.max(0.5, pitch - 0.1))}
+                className="bg-gray-200 p-2 rounded-full"
+              >
+                <Ionicons name="remove" size={20} color="#000" />
+              </TouchableOpacity>
+              <Text className="text-base">{pitch.toFixed(1)}</Text>
+              <TouchableOpacity
+                onPress={() => onPitchChange(Math.min(2.0, pitch + 0.1))}
+                className="bg-gray-200 p-2 rounded-full"
+              >
+                <Ionicons name="add" size={20} color="#000" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Voice Selection */}
+          <Text className="text-lg font-semibold mb-2">Available Voices</Text>
+          {availableVoices
+            .filter((voice) => voice.language.startsWith("en"))
+            .map((voice) => (
+              <TouchableOpacity
+                key={voice.identifier}
+                onPress={() => onVoiceSelect(voice)}
+                className={`p-4 rounded-lg mb-2 border ${
+                  selectedVoice?.identifier === voice.identifier
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200"
+                }`}
+              >
+                <Text className="font-semibold">
+                  {voice.name} ({voice.language})
+                </Text>
+                <Text className="text-sm text-gray-600">
+                  Quality: {voice.quality}
+                </Text>
+              </TouchableOpacity>
+            ))}
+        </ScrollView>
+
+        <TouchableOpacity
+          onPress={onClose}
+          className="bg-blue-500 py-3 px-6 rounded-lg mt-4"
+        >
+          <Text className="text-white text-center font-bold">Done</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </Modal>
+);
+
 // Define the main component without default export
 function WordDetailScreen(): JSX.Element {
   const { activeChild } = useChild();
@@ -94,6 +207,19 @@ function WordDetailScreen(): JSX.Element {
   const [scaleAnim] = useState<Animated.Value>(new Animated.Value(1));
   const [pronounceAnim] = useState<Animated.Value>(new Animated.Value(1));
   const [isPronouncing, setIsPronouncing] = useState<boolean>(false);
+
+  // Add state for voice selection at the top with other state declarations
+  const [availableVoices, setAvailableVoices] = useState<Speech.Voice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<Speech.Voice | null>(null);
+
+  // Add new state for TTS settings
+  const [showTTSSettings, setShowTTSSettings] = useState<boolean>(false);
+  const [speechRate, setSpeechRate] = useState<number>(0.75);
+  const [speechPitch, setSpeechPitch] = useState<number>(1.0);
+
+  // Add new state for syllable pronunciation
+  const [isSpeakingSyllable, setIsSpeakingSyllable] = useState<boolean>(false);
+  const [syllableAnim] = useState<Animated.Value>(new Animated.Value(1));
 
   // Find the word data
   const wordData: Word | undefined = wordsByCategory[
@@ -174,6 +300,32 @@ function WordDetailScreen(): JSX.Element {
   useEffect(() => {
     // Check if this word has already been learned
     checkIfWordLearned();
+  }, []);
+
+  // Add useEffect to load available voices
+  useEffect(() => {
+    async function loadVoices() {
+      try {
+        const voices = await Speech.getAvailableVoicesAsync();
+        setAvailableVoices(voices);
+
+        // Select the best quality British English voice if available
+        const bestVoice =
+          voices.find(
+            (voice) =>
+              voice.language === "en-GB" &&
+              voice.quality === Speech.VoiceQuality.Enhanced
+          ) || voices.find((voice) => voice.language === "en-GB");
+
+        if (bestVoice) {
+          setSelectedVoice(bestVoice);
+        }
+      } catch (error) {
+        console.error("Error loading voices:", error);
+      }
+    }
+
+    loadVoices();
   }, []);
 
   async function playSound(type: "correct" | "incorrect" | "winner") {
@@ -491,47 +643,12 @@ function WordDetailScreen(): JSX.Element {
     );
   };
 
-  // Define a function to pronounce the word
+  // Update the pronounceWord function to use current settings
   const pronounceWord = async (): Promise<void> => {
     try {
-      if (isPronouncing) return;
+      if (isPronouncing || !wordData) return;
 
       setIsPronouncing(true);
-
-      // Get the appropriate sound URL for the current word
-      const getSoundUrl = (wordId: string): string => {
-        // First check if we have a specific sound for this word
-        if (wordSounds[wordId]) {
-          return wordSounds[wordId];
-        }
-
-        // If no specific sound, return the default sound
-        return wordSounds.default;
-      };
-
-      const soundUrl = getSoundUrl(id);
-
-      try {
-        // Log which sound is being played (helpful for debugging)
-        console.log(`Playing sound for word: ${id} - URL: ${soundUrl}`);
-
-        const { sound } = await Audio.Sound.createAsync({
-          uri: soundUrl,
-        });
-
-        await sound.playAsync();
-
-        // Unload sound when finished
-        sound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded && status.didJustFinish) {
-            sound.unloadAsync();
-          }
-        });
-      } catch (soundError) {
-        console.error("Error playing sound from URL:", soundError);
-        // Fallback to winner sound if URL fails
-        await playSound("winner");
-      }
 
       // Create a pulse animation for the pronunciation button
       Animated.sequence([
@@ -545,19 +662,7 @@ function WordDetailScreen(): JSX.Element {
           duration: 300,
           useNativeDriver: true,
         }),
-        Animated.timing(pronounceAnim, {
-          toValue: 1.2,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pronounceAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setIsPronouncing(false);
-      });
+      ]).start();
 
       // Add visual feedback for the word
       triggerAnimation(scaleAnim, {
@@ -565,15 +670,55 @@ function WordDetailScreen(): JSX.Element {
         duration: 300,
       });
 
-      setTimeout(() => {
-        triggerAnimation(scaleAnim, {
-          toValue: 1,
-          duration: 300,
-        });
-      }, 300);
+      // Check if we're currently speaking
+      const isSpeaking = await Speech.isSpeakingAsync();
+      if (isSpeaking) {
+        await Speech.stop();
+      }
+
+      // Configure speech options with current settings
+      const speechOptions = {
+        language: "en-GB",
+        pitch: speechPitch,
+        rate: speechRate,
+        quality: Speech.VoiceQuality.Enhanced,
+        voice: selectedVoice?.identifier,
+        onStart: () => {
+          console.log("Started speaking");
+          if (Platform.OS === "ios") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+        },
+        onDone: () => {
+          setIsPronouncing(false);
+          triggerAnimation(scaleAnim, {
+            toValue: 1,
+            duration: 300,
+          });
+          if (Platform.OS === "ios") {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+        },
+        onStopped: () => {
+          setIsPronouncing(false);
+        },
+        onError: (error: any) => {
+          console.error("Speech error:", error);
+          setIsPronouncing(false);
+          if (Platform.OS === "ios") {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+          Alert.alert(
+            "Pronunciation Error",
+            "Could not play the word pronunciation."
+          );
+        },
+      };
+
+      await Speech.speak(wordData.word, speechOptions);
     } catch (error) {
-      setIsPronouncing(false);
       console.error("Error pronouncing word:", error);
+      setIsPronouncing(false);
       Alert.alert(
         "Pronunciation Error",
         "Could not play the word pronunciation."
@@ -660,6 +805,137 @@ function WordDetailScreen(): JSX.Element {
     }
   };
 
+  // Add function to break word into syllables (simple implementation)
+  const breakIntoSyllables = (word: string): string[] => {
+    // This is a simple implementation. For production, you'd want to use a proper syllable library
+    return (
+      word
+        .toLowerCase()
+        .match(
+          /[^aeiouy]*[aeiouy]+(?:[^aeiouy]*$|[^aeiouy](?=[^aeiouy]))?/gi
+        ) || [word]
+    );
+  };
+
+  // Add function to pronounce syllables
+  const pronounceSyllables = async (): Promise<void> => {
+    try {
+      if (isSpeakingSyllable || !wordData) return;
+
+      setIsSpeakingSyllable(true);
+
+      // Create a pulse animation for the syllable button
+      Animated.sequence([
+        Animated.timing(syllableAnim, {
+          toValue: 1.2,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(syllableAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Check if we're currently speaking
+      const isSpeaking = await Speech.isSpeakingAsync();
+      if (isSpeaking) {
+        await Speech.stop();
+      }
+
+      const syllables = breakIntoSyllables(wordData.word);
+
+      // Configure speech options with slower rate for syllables
+      const speechOptions = {
+        language: "en-GB",
+        pitch: speechPitch,
+        rate: 0.5, // Slower rate for syllables
+        quality: Speech.VoiceQuality.Enhanced,
+        voice: selectedVoice?.identifier,
+        onStart: () => {
+          console.log("Started speaking syllable");
+          if (Platform.OS === "ios") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+        },
+        onDone: () => {
+          setIsSpeakingSyllable(false);
+          if (Platform.OS === "ios") {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+        },
+        onStopped: () => {
+          setIsSpeakingSyllable(false);
+        },
+        onError: (error: any) => {
+          console.error("Speech error:", error);
+          setIsSpeakingSyllable(false);
+          if (Platform.OS === "ios") {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+          Alert.alert("Pronunciation Error", "Could not pronounce syllables.");
+        },
+      };
+
+      // Pronounce each syllable with a pause between them
+      for (let i = 0; i < syllables.length; i++) {
+        await Speech.speak(syllables[i], speechOptions);
+        if (i < syllables.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 500)); // 500ms pause between syllables
+        }
+      }
+    } catch (error) {
+      console.error("Error pronouncing syllables:", error);
+      setIsSpeakingSyllable(false);
+      Alert.alert("Pronunciation Error", "Could not pronounce syllables.");
+    }
+  };
+
+  // Update the renderPronunciationControls function to include the syllable button
+  const renderPronunciationControls = (): JSX.Element => (
+    <View className="flex-row justify-center items-center gap-2">
+      <TouchableOpacity
+        onPress={pronounceWord}
+        disabled={isPronouncing || isSpeakingSyllable}
+        className="w-10 h-10 rounded-full bg-blue-500 justify-center items-center"
+        style={{
+          transform: [{ scale: pronounceAnim }],
+        }}
+      >
+        <Ionicons
+          name={isPronouncing ? "volume-high" : "volume-medium"}
+          size={20}
+          color="white"
+        />
+      </TouchableOpacity>
+
+      {wordData && wordData.word.length > 3 && (
+        <TouchableOpacity
+          onPress={pronounceSyllables}
+          disabled={isPronouncing || isSpeakingSyllable}
+          className="w-10 h-10 rounded-full bg-purple-500 justify-center items-center"
+          style={{
+            transform: [{ scale: syllableAnim }],
+          }}
+        >
+          <Ionicons
+            name={isSpeakingSyllable ? "text" : "text-outline"}
+            size={20}
+            color="white"
+          />
+        </TouchableOpacity>
+      )}
+
+      <TouchableOpacity
+        onPress={() => setShowTTSSettings(true)}
+        className="w-10 h-10 rounded-full bg-gray-500 justify-center items-center"
+      >
+        <Ionicons name="settings" size={20} color="white" />
+      </TouchableOpacity>
+    </View>
+  );
+
   if (!wordData) {
     return (
       <SafeAreaView className="flex-1 bg-[#F9F9F9]">
@@ -698,26 +974,7 @@ function WordDetailScreen(): JSX.Element {
               </View>
             )}
           </TouchableOpacity>
-          <Animated.View
-            style={{
-              transform: [{ scale: pronounceAnim }],
-              marginRight: 8,
-            }}
-          >
-            <TouchableOpacity
-              className={`w-10 h-10 rounded-full ${
-                isPronouncing ? "bg-[#6366F1]" : "bg-[#F1F5F9]"
-              } justify-center items-center`}
-              onPress={pronounceWord}
-              disabled={isPronouncing}
-            >
-              <Ionicons
-                name="volume-high"
-                size={20}
-                color={isPronouncing ? "#FFFFFF" : "#1E293B"}
-              />
-            </TouchableOpacity>
-          </Animated.View>
+          {renderPronunciationControls()}
           <TouchableOpacity
             className="w-10 h-10 rounded-full bg-[#F1F5F9] justify-center items-center"
             onPress={resetGame}
@@ -791,6 +1048,18 @@ function WordDetailScreen(): JSX.Element {
           })}
         </View>
       </View>
+
+      <TTSSettingsModal
+        isVisible={showTTSSettings}
+        onClose={() => setShowTTSSettings(false)}
+        availableVoices={availableVoices}
+        selectedVoice={selectedVoice}
+        onVoiceSelect={setSelectedVoice}
+        rate={speechRate}
+        onRateChange={setSpeechRate}
+        pitch={speechPitch}
+        onPitchChange={setSpeechPitch}
+      />
     </SafeAreaView>
   );
 }

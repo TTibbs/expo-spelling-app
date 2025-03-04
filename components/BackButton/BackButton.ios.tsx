@@ -1,6 +1,6 @@
 import React from "react";
-import { TouchableOpacity, Platform } from "react-native";
-import { useRouter } from "expo-router";
+import { TouchableOpacity } from "react-native";
+import { useRouter, useNavigation } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 interface BackButtonProps {
@@ -13,10 +13,13 @@ export default function BackButton({
   color = "#6366F1",
 }: BackButtonProps) {
   const router = useRouter();
+  const navigation = useNavigation();
 
   const handlePress = () => {
     if (onPress) {
       onPress();
+    } else if (navigation.canGoBack()) {
+      navigation.goBack();
     } else {
       router.back();
     }

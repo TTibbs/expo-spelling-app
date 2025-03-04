@@ -11,6 +11,13 @@ export default function LearningLayout() {
         headerTitleStyle: {
           fontWeight: Platform.OS === "android" ? "bold" : "normal",
         },
+        headerBackVisible: false,
+        animation: Platform.OS === "android" ? "slide_from_right" : "default",
+        presentation: "card",
+        gestureEnabled: Platform.OS === "ios",
+        gestureDirection: "horizontal",
+        animationTypeForReplace: "push",
+        headerTitleAlign: Platform.OS === "android" ? "center" : "left",
       }}
     >
       <Stack.Screen
