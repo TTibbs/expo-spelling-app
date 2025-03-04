@@ -362,8 +362,10 @@ export async function updateUserXP(
  */
 export async function loadUserProfile(): Promise<UserProfile> {
   try {
+    console.log("Loading user profile from storage...");
     // Get user profile from storage
     const userProfile = await getData(StorageKeys.USER_PROFILE);
+    console.log("Raw user profile from storage:", userProfile);
 
     if (userProfile) {
       // Validate profile by ensuring level is correct for current XP
@@ -387,11 +389,19 @@ export async function loadUserProfile(): Promise<UserProfile> {
 
       // If level was updated, save the profile back to storage
       if (updatedProfile.level !== userProfile.level) {
+        console.log(
+          "Updating profile level from",
+          userProfile.level,
+          "to",
+          updatedProfile.level
+        );
         await storeData(StorageKeys.USER_PROFILE, updatedProfile);
       }
 
+      console.log("Returning updated profile:", updatedProfile);
       return updatedProfile;
     } else {
+      console.log("No profile found, creating default profile");
       // Create a default profile if none exists
       const defaultProfile: UserProfile = {
         id: "default",

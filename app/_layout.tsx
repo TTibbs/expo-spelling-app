@@ -24,7 +24,7 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",
-          contentStyle: { backgroundColor: "#F9F9F9" },
+          contentStyle: { backgroundColor: "#101124" },
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

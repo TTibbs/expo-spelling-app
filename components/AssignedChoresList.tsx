@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, FlatList } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Chore, AssignedChoresListProps } from "@/types/common";
 
@@ -9,7 +9,7 @@ const AssignedChoresList: React.FC<AssignedChoresListProps> = ({
   removeChore,
 }) => {
   // Render an assigned chore item
-  const renderAssignedChoreItem = ({ item }: { item: Chore }): JSX.Element => (
+  const renderAssignedChoreItem = (item: Chore): JSX.Element => (
     <View className="bg-white mb-3 rounded-lg overflow-hidden shadow-sm">
       <View className="flex-row items-center p-4">
         <TouchableOpacity
@@ -57,13 +57,11 @@ const AssignedChoresList: React.FC<AssignedChoresListProps> = ({
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={assignedChores}
-          renderItem={renderAssignedChoreItem}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={true}
-          showsVerticalScrollIndicator={true}
-        />
+        <View>
+          {assignedChores.map((item) => (
+            <View key={item.id}>{renderAssignedChoreItem(item)}</View>
+          ))}
+        </View>
       )}
     </View>
   );

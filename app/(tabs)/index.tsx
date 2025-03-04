@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -6,63 +6,120 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { learningPaths } from "@/lib/data";
 import { useChild } from "@/context/ChildContext";
 import { useProfileData } from "@/hooks/useProfileData";
+import { PageHeader } from "@/components/PageHeader";
+
+// Extracted components for better organization and reusability
+const ProfileBadge: React.FC<{
+  level: string;
+  xp: number;
+  onPress: () => void;
+}> = React.memo(({ level, xp, onPress }) => (
+  <TouchableOpacity className="bg-[#EEF2FF] p-2 rounded-xl" onPress={onPress}>
+    <View className="flex-row items-center">
+      <Ionicons name="star" color="#6366F1" size={18} />
+      <Text className="ml-1 font-bold text-[#6366F1]">Level {level}</Text>
+    </View>
+    <Text className="text-xs text-[#64748B] text-center mt-1">{xp} XP</Text>
+  </TouchableOpacity>
+));
+
+const HeaderBanner: React.FC<{ onPress: () => void }> = React.memo(
+  ({ onPress }) => (
+    <View className="mx-5 my-4 rounded-2xl overflow-hidden h-[180px]">
+      <Image
+        source={{
+          uri: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop",
+        }}
+        className="w-full h-full"
+        resizeMode="cover"
+      />
+      <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-5">
+        <Text className="text-white text-lg font-bold mb-2.5">
+          Unlock all learning adventures!
+        </Text>
+        <TouchableOpacity
+          className="bg-[#6366F1] py-2.5 px-5 rounded-lg self-start"
+          onPress={onPress}
+        >
+          <Text className="text-white font-bold">Start Learning</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  )
+);
+
+const LearningPathCard: React.FC<{
+  path: (typeof learningPaths)[0];
+  onPress: (path: (typeof learningPaths)[0]) => void;
+}> = React.memo(({ path, onPress }) => (
+  <TouchableOpacity className="mr-4 items-center" onPress={() => onPress(path)}>
+    <View
+      className="w-16 h-16 rounded-full items-center justify-center mb-2"
+      style={{ backgroundColor: path.color }}
+    >
+      <Ionicons name={path.icon} size={28} color={path.color} />
+      {!path.available && (
+        <View className="absolute right-0 bottom-0 bg-[#94A3B8] rounded-full w-6 h-6 items-center justify-center">
+          <Ionicons name="lock-closed" size={12} color="white" />
+        </View>
+      )}
+    </View>
+    <Text className="text-sm font-medium text-[#334155]">{path.title}</Text>
+  </TouchableOpacity>
+));
+
+const FunFactCard: React.FC<{
+  icon: string;
+  iconColor: string;
+  title: string;
+  description: string;
+}> = React.memo(({ icon, iconColor, title, description }) => (
+  <View className="bg-white rounded-xl p-4 mb-3 flex-row items-center shadow-sm">
+    <View
+      className="w-12 h-12 rounded-full justify-center items-center mr-4"
+      style={{ backgroundColor: iconColor }}
+    >
+      <Ionicons name={icon as any} color={iconColor} size={24} />
+    </View>
+    <View className="flex-1">
+      <Text className="text-base font-bold text-[#1E293B] mb-1">{title}</Text>
+      <Text className="text-sm text-[#64748B] leading-5">{description}</Text>
+    </View>
+  </View>
+));
 
 export default function HomeScreen(): JSX.Element {
   const router = useRouter();
-  const { activeChild, isLoading: isChildLoading } = useChild();
+  const { activeChild } = useChild();
   const { userLevel, xp } = useProfileData();
-  const [userName, setUserName] = useState<string>("Learner");
+
+  const handlePathPress = useCallback(
+    (path: (typeof learningPaths)[0]) => {
+      if (path.available) {
+        if (path.id === "spelling") {
+          router.push("/learning/words");
+        } else if (path.id === "numbers") {
+          router.push("/learning/numbers");
+        } else {
+          alert("Coming soon! This adventure is still being created.");
+        }
+      } else {
+        alert("Coming soon! This adventure is still being created.");
+      }
+    },
+    [router]
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
       <ScrollView className="pb-[30px]">
-        {/* Header with level badge */}
-        <View className="flex-row justify-between items-center px-5 pt-5 pb-2.5">
-          <View>
-            <Text className="text-3xl font-bold text-[#1E293B]">
-              Hey {activeChild ? activeChild.name : "there"}! 👋
-            </Text>
-            <Text className="text-base text-[#64748B] mt-1.5">
-              Ready for some fun learning?
-            </Text>
-          </View>
-          <TouchableOpacity
-            className="bg-[#EEF2FF] p-2 rounded-xl"
-            onPress={() => router.push("/profile")}
-          >
-            <View className="flex-row items-center">
-              <Ionicons name="star" color="#6366F1" size={18} />
-              <Text className="ml-1 font-bold text-[#6366F1]">
-                Level {userLevel}
-              </Text>
-            </View>
-            <Text className="text-xs text-[#64748B] text-center mt-1">
-              {xp} XP
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <PageHeader
+          title={`Hey ${activeChild ? activeChild.name : "there"}! 👋`}
+          subtitle="Ready for some fun learning?"
+        />
 
         {/* Banner with cool image */}
-        <View className="mx-5 my-4 rounded-2xl overflow-hidden h-[180px]">
-          <Image
-            source={{
-              uri: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop",
-            }}
-            className="w-full h-full"
-            resizeMode="cover"
-          />
-          <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-5">
-            <Text className="text-white text-lg font-bold mb-2.5">
-              Unlock all learning adventures!
-            </Text>
-            <TouchableOpacity
-              className="bg-[#6366F1] py-2.5 px-5 rounded-lg self-start"
-              onPress={() => router.push("/learning")}
-            >
-              <Text className="text-white font-bold">Start Learning</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <HeaderBanner onPress={() => router.push("/learning")} />
 
         {/* Quick access to learning paths */}
         <View className="px-5 mb-4">
@@ -71,43 +128,11 @@ export default function HomeScreen(): JSX.Element {
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {learningPaths.map((path) => (
-              <TouchableOpacity
+              <LearningPathCard
                 key={path.id}
-                className="mr-4 items-center"
-                onPress={() => {
-                  if (path.available) {
-                    if (path.id === "spelling") {
-                      router.push("/learning/words");
-                    } else if (path.id === "numbers") {
-                      router.push("/learning/numbers");
-                    } else {
-                      // For other paths, show coming soon message
-                      alert(
-                        "Coming soon! This adventure is still being created."
-                      );
-                    }
-                  } else {
-                    alert(
-                      "Coming soon! This adventure is still being created."
-                    );
-                  }
-                }}
-              >
-                <View
-                  className="w-16 h-16 rounded-full items-center justify-center mb-2"
-                  style={{ backgroundColor: path.color }}
-                >
-                  <Ionicons name={path.icon} size={28} color={path.color} />
-                  {!path.available && (
-                    <View className="absolute right-0 bottom-0 bg-[#94A3B8] rounded-full w-6 h-6 items-center justify-center">
-                      <Ionicons name="lock-closed" size={12} color="white" />
-                    </View>
-                  )}
-                </View>
-                <Text className="text-sm font-medium text-[#334155]">
-                  {path.title}
-                </Text>
-              </TouchableOpacity>
+                path={path}
+                onPress={handlePathPress}
+              />
             ))}
           </ScrollView>
         </View>
@@ -137,50 +162,26 @@ export default function HomeScreen(): JSX.Element {
             Did you know? 🧠
           </Text>
 
-          <View className="bg-white rounded-xl p-4 mb-3 flex-row items-center shadow-sm">
-            <View className="w-12 h-12 rounded-full bg-[#FCE7F3] justify-center items-center mr-4">
-              <Ionicons name="bulb-outline" color="#EC4899" size={24} />
-            </View>
-            <View className="flex-1">
-              <Text className="text-base font-bold text-[#1E293B] mb-1">
-                Supercharge Your Brain!
-              </Text>
-              <Text className="text-sm text-[#64748B] leading-5">
-                Learning new words can make your brain stronger and help you
-                become a better reader!
-              </Text>
-            </View>
-          </View>
+          <FunFactCard
+            icon="bulb-outline"
+            iconColor="#FCE7F3"
+            title="Supercharge Your Brain!"
+            description="Learning new words can make your brain stronger and help you become a better reader!"
+          />
 
-          <View className="bg-white rounded-xl p-4 mb-3 flex-row items-center shadow-sm">
-            <View className="w-12 h-12 rounded-full bg-[#ECFDF5] justify-center items-center mr-4">
-              <Ionicons name="trophy-outline" color="#10B981" size={24} />
-            </View>
-            <View className="flex-1">
-              <Text className="text-base font-bold text-[#1E293B] mb-1">
-                Earn XP, Level Up!
-              </Text>
-              <Text className="text-sm text-[#64748B] leading-5">
-                Complete challenges to collect XP and unlock new levels and
-                achievements!
-              </Text>
-            </View>
-          </View>
+          <FunFactCard
+            icon="trophy-outline"
+            iconColor="#ECFDF5"
+            title="Earn XP, Level Up!"
+            description="Complete challenges to collect XP and unlock new levels and achievements!"
+          />
 
-          <View className="bg-white rounded-xl p-4 mb-3 flex-row items-center shadow-sm">
-            <View className="w-12 h-12 rounded-full bg-[#EDE9FE] justify-center items-center mr-4">
-              <Ionicons name="list-outline" color="#8B5CF6" size={24} />
-            </View>
-            <View className="flex-1">
-              <Text className="text-base font-bold text-[#1E293B] mb-1">
-                Complete Chores, Get Rewards!
-              </Text>
-              <Text className="text-sm text-[#64748B] leading-5">
-                Finish your tasks to earn bonus points and unlock more fun
-                activities!
-              </Text>
-            </View>
-          </View>
+          <FunFactCard
+            icon="list-outline"
+            iconColor="#EDE9FE"
+            title="Complete Chores, Get Rewards!"
+            description="Finish your tasks to earn bonus points and unlock more fun activities!"
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

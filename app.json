@@ -4,7 +4,7 @@
     "slug": "expo-spelling-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/splash-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -17,8 +17,9 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/splash-icon.png",
+        "backgroundColor": "#101124",
+        "backgroundImage": "./assets/images/splash-icon.png"
       },
       "package": "com.spellingbee.app"
     },
@@ -32,13 +33,14 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#232323",
+          "backgroundColor": "#101124",
           "image": "./assets/images/splash-icon.png",
           "dark": {
             "image": "./assets/images/splash-icon-dark.png",
             "backgroundColor": "#000000"
           },
-          "imageWidth": 200
+          "resizeMode": "cover",
+          "imageResizeMode": "cover"
         }
       ],
       "expo-secure-store"
@@ -54,6 +56,11 @@
         "projectId": "f235a3a4-95e3-48cc-9bb8-8bba3581bef7"
       }
     },
-    "owner": "ttibbs"
+    "owner": "ttibbs",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#101124"
+    }
   }
 }
