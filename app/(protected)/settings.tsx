@@ -57,7 +57,7 @@ const AddChildModal = memo(
             autoFocus={true}
             keyboardType="default"
             returnKeyType="done"
-            blurOnSubmit={true}
+            submitBehavior="submit"
           />
           <View className="flex-row justify-end gap-3">
             <TouchableOpacity
@@ -92,7 +92,6 @@ export default function ProtectedSettingsScreen(): JSX.Element {
   const [showPinModal, setShowPinModal] = useState<boolean>(false);
   const [childProfiles, setChildProfiles] = useState<ChildProfile[]>([]);
   const [showAddChildModal, setShowAddChildModal] = useState<boolean>(false);
-  const [newChildName, setNewChildName] = useState<string>("");
 
   const handlePinFailure = useCallback(async () => {
     try {

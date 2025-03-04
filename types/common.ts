@@ -155,6 +155,12 @@ export type PlayerLevel = {
   maxXp: number;
 };
 
+export interface LevelProgressBarProps {
+  currentLevel: PlayerLevel;
+  nextLevel?: PlayerLevel;
+  currentXP: number;
+}
+
 /**
  * Represents the XP values for different actions in the app
  */

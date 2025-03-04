@@ -1,12 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { PlayerLevel } from "@/types/common";
-
-interface LevelProgressBarProps {
-  currentLevel: PlayerLevel;
-  nextLevel?: PlayerLevel;
-  currentXP: number;
-}
+import { LevelProgressBarProps } from "@/types/common";
 
 export const LevelProgressBar: React.FC<LevelProgressBarProps> = React.memo(
   ({ currentLevel, nextLevel, currentXP }) => {
