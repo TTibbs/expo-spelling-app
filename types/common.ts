@@ -232,3 +232,10 @@ export interface PinProtectionProps {
   onAccessDenied?: () => void;
   setupMode?: boolean;
 }
+
+/**
+ * Props for the DifficultyBadge component
+ */
+export interface DifficultyBadgeProps {
+  difficulty: Difficulty;
+}

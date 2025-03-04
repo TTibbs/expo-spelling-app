@@ -1,15 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { MathActivity } from "@/types/numbers";
+import { MathActivity, MathStats } from "@/types/numbers";
 import { mathActivities } from "@/lib/data";
+import { getMathStats } from "@/lib/storage";
+import { DifficultyBadgeProps } from "@/types/common";
 
-export default function NumbersScreen() {
+export default function NumbersScreen(): JSX.Element {
   const router = useRouter();
+  const [mathStats, setMathStats] = useState<MathStats | null>(null);
 
-  const handleActivityPress = (activity: MathActivity) => {
+  // Load math stats on component mount
+  useEffect(() => {
+    const loadMathStats = async () => {
+      const stats = await getMathStats();
+      setMathStats(stats);
+    };
+    loadMathStats();
+  }, []);
+
+  const handleActivityPress = (activity: MathActivity): void => {
     if (activity.available) {
       router.push(activity.route as any);
     } else {
@@ -17,8 +29,25 @@ export default function NumbersScreen() {
     }
   };
 
+  // Get progress for an activity
+  const getActivityProgress = (activity: MathActivity) => {
+    if (!mathStats) return { attempted: 0, accuracy: 0 };
+
+    const categoryStats =
+      mathStats[activity.category as keyof typeof mathStats];
+    if (typeof categoryStats === "object" && "attempted" in categoryStats) {
+      return {
+        attempted: categoryStats.attempted || 0,
+        accuracy: categoryStats.accuracy || 0,
+      };
+    }
+    return { attempted: 0, accuracy: 0 };
+  };
+
   // Difficulty badge component
-  const DifficultyBadge = ({ difficulty }: { difficulty: string }) => {
+  const DifficultyBadge = ({
+    difficulty,
+  }: DifficultyBadgeProps): JSX.Element => {
     let color = "text-emerald-500"; // Default green for easy
     let backgroundColor = "bg-emerald-50";
     let label = "Easy";
@@ -67,46 +96,58 @@ export default function NumbersScreen() {
           Choose Your Activity
         </Text>
 
-        {mathActivities.map((activity) => (
-          <TouchableOpacity
-            key={activity.id}
-            className={`rounded-xl mb-4 p-4 shadow-sm ${
-              activity.available ? "bg-white" : "bg-slate-100"
-            }`}
-            onPress={() => handleActivityPress(activity)}
-            activeOpacity={0.7}
-          >
-            <View className="flex-row items-center">
-              <View
-                className={`w-12 h-12 rounded-full justify-center items-center mr-4 ${
-                  activity.available ? "bg-blue-500" : "bg-slate-300"
-                }`}
-              >
-                <Ionicons name={activity.icon} size={28} color="white" />
-              </View>
+        {mathActivities.map((activity) => {
+          const progress = getActivityProgress(activity);
 
-              <View className="flex-1">
-                <View className="flex-row items-center mb-1">
-                  <Text className="text-base font-bold text-slate-800 mr-2">
-                    {activity.title}
+          return (
+            <TouchableOpacity
+              key={activity.id}
+              className={`rounded-xl mb-4 p-4 shadow-sm ${
+                activity.available ? "bg-white" : "bg-slate-100"
+              }`}
+              onPress={() => handleActivityPress(activity)}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center">
+                <View
+                  className={`w-12 h-12 rounded-full justify-center items-center mr-4 ${
+                    activity.available ? "bg-blue-500" : "bg-slate-300"
+                  }`}
+                >
+                  <Ionicons name={activity.icon} size={28} color="white" />
+                </View>
+
+                <View className="flex-1">
+                  <View className="flex-row items-center mb-1">
+                    <Text className="text-base font-bold text-slate-800 mr-2">
+                      {activity.title}
+                    </Text>
+                    <DifficultyBadge difficulty={activity.difficulty} />
+                  </View>
+                  <Text className="text-sm text-slate-500">
+                    {activity.description}
                   </Text>
-                  <DifficultyBadge difficulty={activity.difficulty} />
+                  {activity.available && progress.attempted > 0 && (
+                    <View className="mt-2 flex-row items-center">
+                      <Text className="text-xs text-slate-400">
+                        Attempted: {progress.attempted} • Accuracy:{" "}
+                        {Math.round(progress.accuracy)}%
+                      </Text>
+                    </View>
+                  )}
                 </View>
-                <Text className="text-sm text-slate-500">
-                  {activity.description}
-                </Text>
+
+                {!activity.available && (
+                  <View className="mr-2">
+                    <Ionicons name="lock-closed" size={20} color="#94A3B8" />
+                  </View>
+                )}
+
+                <Ionicons name="chevron-forward" size={24} color="#64748B" />
               </View>
-
-              {!activity.available && (
-                <View className="mr-2">
-                  <Ionicons name="lock-closed" size={20} color="#94A3B8" />
-                </View>
-              )}
-
-              <Ionicons name="chevron-forward" size={24} color="#64748B" />
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );

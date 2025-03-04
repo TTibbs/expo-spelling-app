@@ -261,11 +261,13 @@
 
 #### numbers.tsx
 
-- [ ] Define return types for all component functions
-- [ ] Create a dedicated interface for the difficulty badge props instead of using inline type
-- [ ] Add a proper interface for progress tracking
-- [ ] Type the dropdown/selection mechanisms
-- [ ] Add stronger type safety for route navigation with proper path typing
+- ✅ Define return types for all component functions
+- ✅ Create a dedicated interface for the difficulty badge props instead of using inline type
+- ✅ Add a proper interface for progress tracking
+- ✅ Add stronger type safety for route navigation with proper path typing
+- ✅ Import and use `MathActivity` interface from types/numbers
+- ✅ Add proper typing for the `handleActivityPress` function with `MathActivity` parameter
+- ✅ Used string literals for difficulty level in `DifficultyBadge` component
 
 #### shapes.tsx
 
