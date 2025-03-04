@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,67 @@ import { generateUniqueId } from "@/lib/utils";
 import { useChild } from "@/context/ChildContext";
 
 const PIN_KEY = "parental_control_pin";
+
+// Add Child Modal Component
+const AddChildModal = memo(
+  ({
+    isVisible,
+    onClose,
+    onAdd,
+  }: {
+    isVisible: boolean;
+    onClose: () => void;
+    onAdd: (name: string) => void;
+  }) => {
+    const [name, setName] = useState("");
+
+    const handleAdd = useCallback(() => {
+      if (name.trim()) {
+        onAdd(name);
+        setName("");
+      }
+    }, [name, onAdd]);
+
+    if (!isVisible) return null;
+
+    return (
+      <View className="absolute inset-0 bg-black/50 justify-center items-center">
+        <View className="bg-white rounded-xl p-6 w-[80%]">
+          <Text className="text-xl font-bold text-[#1E293B] mb-4">
+            Add Child Profile
+          </Text>
+          <TextInput
+            className="border border-[#E2E8F0] rounded-lg p-3 mb-4"
+            placeholder="Enter child's name"
+            value={name}
+            onChangeText={setName}
+            autoFocus={true}
+            keyboardType="default"
+            returnKeyType="done"
+            blurOnSubmit={true}
+          />
+          <View className="flex-row justify-end gap-3">
+            <TouchableOpacity
+              className="px-4 py-2 rounded-lg bg-[#E2E8F0]"
+              onPress={() => {
+                setName("");
+                onClose();
+              }}
+            >
+              <Text className="text-[#64748B]">Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="px-4 py-2 rounded-lg bg-[#6366F1]"
+              onPress={handleAdd}
+            >
+              <Text className="text-white">Add</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
+);
 
 export default function ProtectedSettingsScreen(): JSX.Element {
   const router = useRouter();
@@ -77,56 +138,54 @@ export default function ProtectedSettingsScreen(): JSX.Element {
     }
   };
 
-  const handleAddChild = async () => {
-    if (!newChildName.trim()) {
-      Alert.alert("Error", "Please enter a name for the child");
-      return;
-    }
-
-    try {
-      // Create new child profile
-      const newChild: ChildProfile = {
-        id: generateUniqueId(),
-        name: newChildName.trim(),
-        xp: 0,
-        level: "1",
-        lastPlayed: null,
-        createdAt: new Date().toISOString(),
-      };
-
-      // Get current child profiles
-      const currentProfiles = (await getData(StorageKeys.CHILD_PROFILES)) || [];
-      const updatedProfiles = [...currentProfiles, newChild];
-
-      // Save updated child profiles
-      await storeData(StorageKeys.CHILD_PROFILES, updatedProfiles);
-
-      // Update user profile to mark as parent if not already
-      const userProfile = await getData(StorageKeys.USER_PROFILE);
-      if (userProfile && !userProfile.isParent) {
-        const updatedUserProfile = {
-          ...userProfile,
-          isParent: true,
+  const handleAddChild = useCallback(
+    async (name: string) => {
+      try {
+        // Create new child profile
+        const newChild: ChildProfile = {
+          id: generateUniqueId(),
+          name: name.trim(),
+          xp: 0,
+          level: "1",
+          lastPlayed: null,
+          createdAt: new Date().toISOString(),
         };
-        await storeData(StorageKeys.USER_PROFILE, updatedUserProfile);
+
+        // Get current child profiles
+        const currentProfiles =
+          (await getData(StorageKeys.CHILD_PROFILES)) || [];
+        const updatedProfiles = [...currentProfiles, newChild];
+
+        // Save updated child profiles
+        await storeData(StorageKeys.CHILD_PROFILES, updatedProfiles);
+
+        // Update user profile to mark as parent if not already
+        const userProfile = await getData(StorageKeys.USER_PROFILE);
+        if (userProfile && !userProfile.isParent) {
+          const updatedUserProfile = {
+            ...userProfile,
+            isParent: true,
+          };
+          await storeData(StorageKeys.USER_PROFILE, updatedUserProfile);
+        }
+
+        // Set the new child as active if it's the first one
+        if (!activeChild) {
+          setActiveChild(newChild);
+        }
+
+        // Update local state
+        setChildProfiles(updatedProfiles);
+        setShowAddChildModal(false);
+
+        Alert.alert("Success", "Child profile added successfully!");
+      } catch (error) {
+        console.error("Error adding child profile:", error);
+        Alert.alert("Error", "Failed to add child profile. Please try again.");
       }
-
-      // Set the new child as active if it's the first one
-      if (!activeChild) {
-        setActiveChild(newChild);
-      }
-
-      // Update local state
-      setChildProfiles(updatedProfiles);
-      setNewChildName("");
-      setShowAddChildModal(false);
-
-      Alert.alert("Success", "Child profile added successfully!");
-    } catch (error) {
-      console.error("Error adding child profile:", error);
-      Alert.alert("Error", "Failed to add child profile. Please try again.");
-    }
-  };
+    },
+    [activeChild, setActiveChild]
+  );
 
   const handleDeleteChild = async (childId: string) => {
     Alert.alert(
@@ -400,43 +459,11 @@ export default function ProtectedSettingsScreen(): JSX.Element {
         </View>
       </ScrollView>
 
-      {/* Add Child Modal */}
-      {showAddChildModal && (
-        <View className="absolute inset-0 bg-black/50 justify-center items-center">
-          <View className="bg-white rounded-xl p-6 w-[80%]">
-            <Text className="text-xl font-bold text-[#1E293B] mb-4">
-              Add Child Profile
-            </Text>
-            <TextInput
-              className="border border-[#E2E8F0] rounded-lg p-3 mb-4"
-              placeholder="Enter child's name"
-              value={newChildName}
-              onChangeText={setNewChildName}
-              autoFocus={true}
-              keyboardType="default"
-              returnKeyType="done"
-              blurOnSubmit={true}
-            />
-            <View className="flex-row justify-end gap-3">
-              <TouchableOpacity
-                className="px-4 py-2 rounded-lg bg-[#E2E8F0]"
-                onPress={() => {
-                  setShowAddChildModal(false);
-                  setNewChildName("");
-                }}
-              >
-                <Text className="text-[#64748B]">Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="px-4 py-2 rounded-lg bg-[#6366F1]"
-                onPress={handleAddChild}
-              >
-                <Text className="text-white">Add</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
+      <AddChildModal
+        isVisible={showAddChildModal}
+        onClose={() => setShowAddChildModal(false)}
+        onAdd={handleAddChild}
+      />
 
       <PinModal
         isVisible={showPinModal}
