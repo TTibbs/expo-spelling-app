@@ -11,6 +11,7 @@ import {
   updateUserXP,
 } from "@/lib/storage";
 import { useChild } from "@/context/ChildContext";
+import { useProfileData } from "@/hooks/useProfileData";
 
 // Import newly created components
 import ProfileHeader from "@/components/ProfileHeader";
@@ -21,14 +22,12 @@ import ChoreActionButtons from "@/components/ChoreActionButtons";
 
 export default function ChoresScreen() {
   const { activeChild, isLoading: isChildLoading } = useChild();
+  const { refreshProfile } = useProfileData();
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
   const [assignedChores, setAssignedChores] = useState<Chore[]>([]);
   const [completionModalVisible, setCompletionModalVisible] =
     useState<boolean>(false);
   const [totalXp, setTotalXp] = useState<number>(0);
-  // User profile state
-  const [userLevel, setUserLevel] = useState<string>("1");
-  const [xp, setXp] = useState<number>(0);
 
   // Dropdown state
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
@@ -40,25 +39,6 @@ export default function ChoresScreen() {
 
   // Feedback message for adding/removing chores
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-
-  // Load user profile data
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        // Use the centralized loadUserProfile function to get a validated profile
-        const profile = await loadUserProfile();
-        setUserLevel(activeChild ? activeChild.level : profile.level);
-        setXp(activeChild ? activeChild.xp : profile.xp);
-      } catch (error) {
-        console.error(
-          "Failed to load user profile:",
-          error instanceof Error ? error.message : "Unknown error"
-        );
-      }
-    };
-
-    fetchUserProfile();
-  }, [activeChild]);
 
   // Clear feedback message after a short delay
   useEffect(() => {
@@ -211,9 +191,8 @@ export default function ChoresScreen() {
       const updatedProfile = await updateUserXP(xpToAward, activeChild?.id);
 
       if (updatedProfile) {
-        // Update local state
-        setUserLevel(updatedProfile.level);
-        setXp(updatedProfile.xp);
+        // Refresh profile data to show updated XP and level
+        await refreshProfile();
 
         // Show success message
         Alert.alert("Chores Completed!", `You've earned ${xpToAward} XP!`, [
