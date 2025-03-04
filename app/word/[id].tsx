@@ -26,7 +26,12 @@ import {
 import { AppImageSource } from "@/types/styling";
 import { RouteParams } from "@/types/navigation";
 import { Audio } from "expo-av";
-import { updateUserXP, isWordLearned, saveLearnedWord } from "@/lib/storage";
+import {
+  updateUserXP,
+  isWordLearned,
+  saveLearnedWord,
+  updateRewardProgress,
+} from "@/lib/storage";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
 import { wordSounds } from "@/lib/data";
 import { useChild } from "@/context/ChildContext";
@@ -410,32 +415,30 @@ function WordDetailScreen(): JSX.Element {
     if (!wordData) return 0;
 
     try {
+      // Calculate XP earned
+      const xpEarned = calculateXpEarned();
+
       // Save the word as learned
       const wordSaved = await saveLearnedWord(
-        {
-          id: wordData.id,
-          word: wordData.word,
-          image: wordData.image,
-        },
+        wordData,
         category,
         activeChild?.id
       );
 
       if (!wordSaved) {
-        console.error("Failed to save learned word");
+        console.error("Failed to save word");
         return 0;
       }
 
-      // Calculate XP to award
-      const xpEarned = calculateXpEarned();
-
-      // Award XP to the appropriate profile
+      // Update user XP
       const updatedProfile = await updateUserXP(xpEarned, activeChild?.id);
-
       if (!updatedProfile) {
         console.error("Failed to update XP");
         return 0;
       }
+
+      // Update reward progress for word challenges
+      await updateRewardProgress("word_challenges", 1, activeChild?.id);
 
       setGameState((prev) => ({
         ...prev,
@@ -486,8 +489,6 @@ function WordDetailScreen(): JSX.Element {
         correctLetters: newCorrectLetters,
       }));
 
-      playSound("correct");
-
       // Check if all letters have been guessed
       const uniqueLettersInWord = [...new Set(wordData.word.split(""))];
       const allLettersGuessed = uniqueLettersInWord.every((l) =>
@@ -496,48 +497,34 @@ function WordDetailScreen(): JSX.Element {
 
       if (allLettersGuessed) {
         try {
+          // Play win sound before saving progress
+          await playSound("winner");
+
           // Save the word and award XP - wait for it to complete
           const earnedXpAmount = await saveWordAndAwardXp();
           console.log("XP earned:", earnedXpAmount); // Debug log
 
-          // Set game won state after XP is calculated
-          setGameState((prev) => ({
-            ...prev,
-            gameWon: true,
-            status: "won",
-            xpEarned: earnedXpAmount,
-          }));
-
-          // Play winner sound
-          playSound("winner");
-
-          // Show the alert with XP information immediately
-          const message = `You've spelled "${wordData.word}" correctly!`;
-
-          // Create a more prominent XP message
-          let xpMessage = "";
-          if (earnedXpAmount > 0) {
-            xpMessage = `\n\n✨ You earned ${earnedXpAmount} XP! ✨`;
-
-            // Add bonus information if applicable
-            if (!gameState.wordAlreadyLearned) {
-              xpMessage += `\n(First time bonus: +${xpValues.completeWord} XP)`;
-            }
-          } else {
-            xpMessage = "\n\nYou've already earned XP for this word.";
-          }
-
           // Show the success alert after a delay
           setTimeout(() => {
-            Alert.alert("Well Done!", message + xpMessage, [
-              { text: "View Profile", onPress: () => router.push("/profile") },
-              { text: "Choose Another Word", onPress: () => router.back() },
-            ]);
+            Alert.alert(
+              "Well Done!",
+              `You've spelled "${wordData.word}" correctly!`,
+              [
+                {
+                  text: "View Profile",
+                  onPress: () => router.push("/profile"),
+                },
+                { text: "Choose Another Word", onPress: () => router.back() },
+              ]
+            );
           }, 200);
         } catch (error) {
           console.error("Error processing word completion:", error);
           Alert.alert("Error", "There was a problem saving your progress.");
         }
+      } else {
+        // Only play correct sound if not winning
+        playSound("correct");
       }
     } else {
       setGameState((prev) => ({
@@ -605,7 +592,9 @@ function WordDetailScreen(): JSX.Element {
           >
             {tile.selected ? (
               <ReAnimated.Text
-                entering={FlipInYRight.delay(tile.position * 100)}
+                entering={FlipInYRight.springify()
+                  .damping(12)
+                  .delay(tile.position * 50)}
                 className="text-2xl font-bold text-[#1E293B]"
               >
                 {tile.letter}

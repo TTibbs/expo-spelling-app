@@ -12,6 +12,7 @@ import {
   Difficulty,
   CompletedChore,
   ChildProfile,
+  RewardProgress,
 } from "@/types/common";
 import { WordProgress, SpellingStats } from "@/types/spelling";
 import { MathStats } from "@/types/numbers";
@@ -35,6 +36,8 @@ export enum ValidationStorageKeys {
   CHILD_SHAPE_STATS = "childShapeStats",
   CHILD_COMPLETED_CHORES = "childCompletedChores",
   PIN_VERIFICATION = "pinVerification",
+  REWARD_PROGRESS = "rewardProgress",
+  CHILD_REWARD_PROGRESS = "childRewardProgress",
 }
 
 // Define storage data interface to avoid circular import
@@ -59,6 +62,10 @@ export interface ValidationStorageData {
     [childId: string]: CompletedChore[];
   };
   [ValidationStorageKeys.PIN_VERIFICATION]: boolean;
+  [ValidationStorageKeys.REWARD_PROGRESS]: RewardProgress;
+  [ValidationStorageKeys.CHILD_REWARD_PROGRESS]: {
+    [childId: string]: RewardProgress;
+  };
 }
 
 /**
@@ -296,6 +303,62 @@ export function isChildProfile(data: unknown): data is ChildProfile {
 }
 
 /**
+ * Type guard for RewardProgress
+ */
+export function isRewardProgress(data: unknown): data is RewardProgress {
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    !("userId" in data) ||
+    !("rewards" in data) ||
+    !("dailyProgress" in data) ||
+    !("weeklyProgress" in data)
+  ) {
+    return false;
+  }
+
+  const progress = data as RewardProgress;
+
+  // Check daily progress
+  if (
+    typeof progress.dailyProgress !== "object" ||
+    !("date" in progress.dailyProgress) ||
+    !("points" in progress.dailyProgress) ||
+    !("completed" in progress.dailyProgress) ||
+    !Array.isArray(progress.dailyProgress.completed)
+  ) {
+    return false;
+  }
+
+  // Check weekly progress
+  if (
+    typeof progress.weeklyProgress !== "object" ||
+    !("weekStart" in progress.weeklyProgress) ||
+    !("points" in progress.weeklyProgress) ||
+    !("completed" in progress.weeklyProgress) ||
+    !Array.isArray(progress.weeklyProgress.completed)
+  ) {
+    return false;
+  }
+
+  // Check rewards object structure
+  if (typeof progress.rewards !== "object") return false;
+
+  // Validate each reward entry
+  return Object.values(progress.rewards).every(
+    (reward) =>
+      typeof reward === "object" &&
+      reward !== null &&
+      "isCompleted" in reward &&
+      typeof reward.isCompleted === "boolean" &&
+      "progress" in reward &&
+      typeof reward.progress === "number" &&
+      "requirements" in reward &&
+      typeof reward.requirements === "object"
+  );
+}
+
+/**
  * Validate data from storage based on key
  * @param key Storage key
  * @param data Data to validate
@@ -403,6 +466,19 @@ export function validateStorageData<K extends keyof ValidationStorageData>(
 
     case ValidationStorageKeys.PIN_VERIFICATION:
       return typeof data === "boolean"
+        ? (data as ValidationStorageData[K])
+        : null;
+
+    case ValidationStorageKeys.REWARD_PROGRESS:
+      return isRewardProgress(data) ? (data as ValidationStorageData[K]) : null;
+
+    case ValidationStorageKeys.CHILD_REWARD_PROGRESS:
+      return typeof data === "object" &&
+        data !== null &&
+        Object.values(data).every(
+          (childProgress) =>
+            typeof childProgress === "object" && isRewardProgress(childProgress)
+        )
         ? (data as ValidationStorageData[K])
         : null;
 

@@ -5,6 +5,9 @@ import {
   UserProfile,
   CompletedChore,
   ChildProfile,
+  RewardProgress,
+  Reward,
+  RewardRequirement,
 } from "@/types/common";
 import { MathStats } from "@/types/numbers";
 import { ShapeStats } from "@/types/shapes";
@@ -13,7 +16,8 @@ import {
   ValidationStorageKeys,
   ValidationStorageData,
 } from "@/lib/validation";
-import { playerLevels } from "@/lib/data";
+import { playerLevels, rewards } from "@/lib/data";
+import { initializeRewardProgress, getWeekStart } from "@/lib/utils";
 
 /**
  * Storage keys used throughout the app
@@ -35,6 +39,8 @@ export enum StorageKeys {
   CHILD_SHAPE_STATS = "childShapeStats",
   CHILD_COMPLETED_CHORES = "childCompletedChores",
   PIN_VERIFICATION = "pinVerification",
+  REWARD_PROGRESS = "rewardProgress",
+  CHILD_REWARD_PROGRESS = "childRewardProgress",
 }
 
 /**
@@ -57,6 +63,8 @@ export interface StorageData {
   [StorageKeys.CHILD_SHAPE_STATS]: { [childId: string]: ShapeStats };
   [StorageKeys.CHILD_COMPLETED_CHORES]: { [childId: string]: CompletedChore[] };
   [StorageKeys.PIN_VERIFICATION]: boolean;
+  [StorageKeys.REWARD_PROGRESS]: RewardProgress;
+  [StorageKeys.CHILD_REWARD_PROGRESS]: { [childId: string]: RewardProgress };
 }
 
 /**
@@ -98,6 +106,10 @@ const storageKeyToValidationKey = (key: StorageKeys): ValidationStorageKeys => {
       return ValidationStorageKeys.CHILD_COMPLETED_CHORES;
     case StorageKeys.PIN_VERIFICATION:
       return ValidationStorageKeys.PIN_VERIFICATION;
+    case StorageKeys.REWARD_PROGRESS:
+      return ValidationStorageKeys.REWARD_PROGRESS;
+    case StorageKeys.CHILD_REWARD_PROGRESS:
+      return ValidationStorageKeys.CHILD_REWARD_PROGRESS;
     default:
       const exhaustiveCheck: never = key;
       throw new Error(`Unhandled storage key: ${exhaustiveCheck}`);
@@ -764,6 +776,197 @@ export async function saveShapeStats(
     }
   } catch (error) {
     console.error("Error saving shape stats:", error);
+    return false;
+  }
+}
+
+/**
+ * Get reward progress for a user
+ */
+export async function getRewardProgress(
+  childId?: string
+): Promise<RewardProgress | null> {
+  try {
+    const key = childId
+      ? StorageKeys.CHILD_REWARD_PROGRESS
+      : StorageKeys.REWARD_PROGRESS;
+    const data = await getData(key);
+
+    if (childId && data) {
+      return (data as { [key: string]: RewardProgress })[childId] || null;
+    }
+
+    return data as RewardProgress | null;
+  } catch (error) {
+    console.error("Failed to get reward progress:", error);
+    return null;
+  }
+}
+
+/**
+ * Save reward progress for a user
+ */
+export async function saveRewardProgress(
+  progress: RewardProgress,
+  childId?: string
+): Promise<boolean> {
+  try {
+    const key = childId
+      ? StorageKeys.CHILD_REWARD_PROGRESS
+      : StorageKeys.REWARD_PROGRESS;
+
+    if (childId) {
+      const allProgress = ((await getData(key)) || {}) as {
+        [key: string]: RewardProgress;
+      };
+      allProgress[childId] = progress;
+      return await storeData(key, allProgress);
+    }
+
+    return await storeData(key, progress);
+  } catch (error) {
+    console.error("Failed to save reward progress:", error);
+    return false;
+  }
+}
+
+interface ProgressEntry {
+  word_challenges: number;
+  math_problems: number;
+  shapes: number;
+  total_points: number;
+}
+
+interface RewardProgressData {
+  dailyProgress: Record<string, ProgressEntry>;
+  weeklyProgress: Record<string, ProgressEntry>;
+  rewardRequirements: Record<string, Record<string, number>>;
+  rewardProgress: Record<
+    string,
+    {
+      progress: number;
+      completed: boolean;
+      dateCompleted: string | null;
+    }
+  >;
+}
+
+export async function updateRewardProgress(
+  activityType: string,
+  value: number,
+  childId?: string
+): Promise<boolean> {
+  try {
+    // Get current progress
+    let currentProgress = await getRewardProgress(childId);
+
+    // Initialize if no progress exists
+    if (!currentProgress) {
+      currentProgress = initializeRewardProgress(childId || "default");
+    }
+
+    if (!currentProgress) {
+      console.error("Failed to initialize reward progress");
+      return false;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const weekStart = getWeekStart(today);
+
+    // Update daily progress
+    if (
+      !currentProgress.dailyProgress ||
+      currentProgress.dailyProgress.date !== today
+    ) {
+      currentProgress.dailyProgress = {
+        date: today,
+        points: 0,
+        completed: [],
+      };
+    }
+    currentProgress.dailyProgress.points += value;
+
+    // Update weekly progress
+    if (
+      !currentProgress.weeklyProgress ||
+      currentProgress.weeklyProgress.weekStart !== weekStart
+    ) {
+      currentProgress.weeklyProgress = {
+        weekStart,
+        points: 0,
+        completed: [],
+      };
+    }
+    currentProgress.weeklyProgress.points += value;
+
+    // Update rewards progress
+    rewards.forEach((reward) => {
+      if (!currentProgress.rewards[reward.id]) {
+        currentProgress.rewards[reward.id] = {
+          isCompleted: false,
+          progress: 0,
+          requirements: {},
+        };
+      }
+
+      reward.requirements.forEach((req) => {
+        if (req.type === activityType) {
+          if (!currentProgress.rewards[reward.id].requirements[req.type]) {
+            currentProgress.rewards[reward.id].requirements[req.type] = {
+              current: 0,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+
+          // Update current value
+          currentProgress.rewards[reward.id].requirements[req.type].current +=
+            value;
+          currentProgress.rewards[reward.id].requirements[req.type].updatedAt =
+            new Date().toISOString();
+
+          // Calculate progress percentage
+          const totalProgress = reward.requirements.reduce(
+            (sum, requirement) => {
+              const reqProgress =
+                currentProgress.rewards[reward.id].requirements[
+                  requirement.type
+                ];
+              if (!reqProgress) return sum;
+              const progress = (reqProgress.current / requirement.target) * 100;
+              return sum + Math.min(progress, 100);
+            },
+            0
+          );
+
+          // Update overall progress
+          currentProgress.rewards[reward.id].progress = Math.round(
+            totalProgress / reward.requirements.length
+          );
+
+          // Check if reward is completed
+          if (
+            currentProgress.rewards[reward.id].progress >= 100 &&
+            !currentProgress.rewards[reward.id].isCompleted
+          ) {
+            currentProgress.rewards[reward.id].isCompleted = true;
+            currentProgress.rewards[reward.id].completedAt =
+              new Date().toISOString();
+
+            // Add to completed list and add points
+            if (reward.type === "daily") {
+              currentProgress.dailyProgress.completed.push(reward.id);
+              currentProgress.dailyProgress.points += reward.points;
+              currentProgress.weeklyProgress.points += reward.points;
+            }
+          }
+        }
+      });
+    });
+
+    // Save the updated progress
+    return await saveRewardProgress(currentProgress, childId);
+  } catch (error) {
+    console.error("Error updating reward progress:", error);
     return false;
   }
 }

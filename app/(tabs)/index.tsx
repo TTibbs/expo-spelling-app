@@ -5,23 +5,7 @@ import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { learningPaths } from "@/lib/data";
 import { useChild } from "@/context/ChildContext";
-import { useProfileData } from "@/hooks/useProfileData";
 import { PageHeader } from "@/components/PageHeader";
-
-// Extracted components for better organization and reusability
-const ProfileBadge: React.FC<{
-  level: string;
-  xp: number;
-  onPress: () => void;
-}> = React.memo(({ level, xp, onPress }) => (
-  <TouchableOpacity className="bg-[#EEF2FF] p-2 rounded-xl" onPress={onPress}>
-    <View className="flex-row items-center">
-      <Ionicons name="star" color="#6366F1" size={18} />
-      <Text className="ml-1 font-bold text-[#6366F1]">Level {level}</Text>
-    </View>
-    <Text className="text-xs text-[#64748B] text-center mt-1">{xp} XP</Text>
-  </TouchableOpacity>
-));
 
 const HeaderBanner: React.FC<{ onPress: () => void }> = React.memo(
   ({ onPress }) => (
@@ -55,7 +39,7 @@ const LearningPathCard: React.FC<{
   <TouchableOpacity className="mr-4 items-center" onPress={() => onPress(path)}>
     <View
       className="w-16 h-16 rounded-full items-center justify-center mb-2"
-      style={{ backgroundColor: path.color }}
+      style={{ backgroundColor: `${path.color}20` }}
     >
       <Ionicons name={path.icon} size={28} color={path.color} />
       {!path.available && (
@@ -71,27 +55,37 @@ const LearningPathCard: React.FC<{
 const FunFactCard: React.FC<{
   icon: string;
   iconColor: string;
+  bgColor: string;
   title: string;
   description: string;
-}> = React.memo(({ icon, iconColor, title, description }) => (
-  <View className="bg-white rounded-xl p-4 mb-3 flex-row items-center shadow-sm">
-    <View
-      className="w-12 h-12 rounded-full justify-center items-center mr-4"
-      style={{ backgroundColor: iconColor }}
-    >
-      <Ionicons name={icon as any} color={iconColor} size={24} />
+  onPress: () => void;
+}> = React.memo(({ icon, iconColor, bgColor, title, description, onPress }) => (
+  <TouchableOpacity
+    className="mb-4 overflow-hidden rounded-2xl"
+    style={{ backgroundColor: bgColor }}
+    onPress={onPress}
+  >
+    <View className="p-5">
+      <View className="flex-row items-center justify-between mb-3">
+        <View className="flex-row items-center">
+          <View
+            className="w-10 h-10 rounded-full justify-center items-center mr-3"
+            style={{ backgroundColor: iconColor }}
+          >
+            <Ionicons name={icon as any} color="white" size={20} />
+          </View>
+          <Text className="text-lg font-bold text-[#1E293B]">{title}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+      </View>
+      <Text className="text-[#64748B] leading-5 pr-4">{description}</Text>
     </View>
-    <View className="flex-1">
-      <Text className="text-base font-bold text-[#1E293B] mb-1">{title}</Text>
-      <Text className="text-sm text-[#64748B] leading-5">{description}</Text>
-    </View>
-  </View>
+  </TouchableOpacity>
 ));
 
 export default function HomeScreen(): JSX.Element {
   const router = useRouter();
   const { activeChild } = useChild();
-  const { userLevel, xp } = useProfileData();
 
   const handlePathPress = useCallback(
     (path: (typeof learningPaths)[0]) => {
@@ -100,11 +94,32 @@ export default function HomeScreen(): JSX.Element {
           router.push("/learning/words");
         } else if (path.id === "numbers") {
           router.push("/learning/numbers");
+        } else if (path.id === "shapes") {
+          router.push("/learning/shapes");
         } else {
           alert("Coming soon! This adventure is still being created.");
         }
       } else {
         alert("Coming soon! This adventure is still being created.");
+      }
+    },
+    [router]
+  );
+
+  const handleFunFactPress = useCallback(
+    (type: string) => {
+      switch (type) {
+        case "brain":
+          router.push("/learning");
+          break;
+        case "achievements":
+          router.push("/profile");
+          break;
+        case "rewards":
+          router.push("/rewards");
+          break;
+        default:
+          break;
       }
     },
     [router]
@@ -137,50 +152,42 @@ export default function HomeScreen(): JSX.Element {
           </ScrollView>
         </View>
 
-        {/* Daily challenge */}
-        <View className="mx-5 mb-5 bg-[#EEF2FF] p-4 rounded-xl">
-          <View className="flex-row items-center mb-2">
-            <Ionicons name="calendar" size={20} color="#6366F1" />
-            <Text className="text-base font-bold text-[#1E293B] ml-2">
-              Daily Challenge
-            </Text>
-          </View>
-          <Text className="text-[#64748B] mb-3">
-            Complete today's tasks to earn bonus XP!
-          </Text>
-          <TouchableOpacity
-            className="bg-[#6366F1] py-2 rounded-lg items-center"
-            onPress={() => router.push("/chores")}
-          >
-            <Text className="text-white font-bold">View Challenges</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Fun facts about learning */}
-        <View className="p-5">
-          <Text className="text-xl font-bold text-[#1E293B] mb-4">
-            Did you know? 🧠
-          </Text>
+        <View className="px-5">
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-xl font-bold text-[#1E293B]">
+              Discover More! 🎯
+            </Text>
+            <TouchableOpacity>
+              <Text className="text-[#6366F1] font-medium">See All</Text>
+            </TouchableOpacity>
+          </View>
 
           <FunFactCard
             icon="bulb-outline"
-            iconColor="#FCE7F3"
-            title="Supercharge Your Brain!"
-            description="Learning new words can make your brain stronger and help you become a better reader!"
+            iconColor="#EC4899"
+            bgColor="#FDF2F8"
+            title="Power Up Your Mind!"
+            description="Every new word you learn creates new connections in your brain. Let's make your brain super strong! 🧠✨"
+            onPress={() => handleFunFactPress("brain")}
           />
 
           <FunFactCard
-            icon="trophy-outline"
-            iconColor="#ECFDF5"
-            title="Earn XP, Level Up!"
-            description="Complete challenges to collect XP and unlock new levels and achievements!"
+            icon="trophy"
+            iconColor="#10B981"
+            bgColor="#ECFDF5"
+            title="Unlock Achievements!"
+            description="Complete challenges to earn special badges and watch your progress soar to new heights! 🏆"
+            onPress={() => handleFunFactPress("achievements")}
           />
 
           <FunFactCard
-            icon="list-outline"
-            iconColor="#EDE9FE"
-            title="Complete Chores, Get Rewards!"
-            description="Finish your tasks to earn bonus points and unlock more fun activities!"
+            icon="gift"
+            iconColor="#8B5CF6"
+            bgColor="#F5F3FF"
+            title="Earn Cool Rewards!"
+            description="Turn your learning adventures into awesome rewards! What will you unlock next? 🎁"
+            onPress={() => handleFunFactPress("rewards")}
           />
         </View>
       </ScrollView>

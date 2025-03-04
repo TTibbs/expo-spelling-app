@@ -20,19 +20,15 @@ export const MathActivityCard: React.FC<MathActivityCardProps> = React.memo(
         >
           <Ionicons name={icon as any} color={iconColor} size={20} />
         </View>
-        <Text className="font-bold text-[#1E293B]">{title}</Text>
+        <Text className="font-bold text-[#151515]">{title}</Text>
       </View>
       <View className="flex-row justify-between items-center">
-        <Text className="text-xs text-[#64748B]">Problems</Text>
-        <Text className="text-sm font-bold" style={{ color: iconColor }}>
-          {problems}
-        </Text>
+        <Text className="text-xs text-[#151515]">Problems</Text>
+        <Text className="text-sm font-bold text-[#151515]">{problems}</Text>
       </View>
       <View className="flex-row justify-between items-center mt-1">
-        <Text className="text-xs text-[#64748B]">Accuracy</Text>
-        <Text className="text-sm font-bold" style={{ color: iconColor }}>
-          {accuracy}%
-        </Text>
+        <Text className="text-xs text-[#151515]">Accuracy</Text>
+        <Text className="text-sm font-bold text-[#151515]">{accuracy}%</Text>
       </View>
     </View>
   )

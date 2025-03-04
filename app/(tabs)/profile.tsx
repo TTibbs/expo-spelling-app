@@ -16,9 +16,15 @@ import {
   UserProfile,
   PlayerLevel,
   ChildProfile,
+  RewardProgress,
 } from "@/types/common";
 import { MathStats as MathStatsType } from "@/types/numbers";
-import { getData, StorageKeys, storeData } from "@/lib/storage";
+import {
+  getData,
+  StorageKeys,
+  storeData,
+  getRewardProgress,
+} from "@/lib/storage";
 import { useChild } from "@/context/ChildContext";
 import { PageHeader } from "@/components/PageHeader";
 import { ChildProfileCard } from "@/components/ChildProfileCard";
@@ -27,6 +33,7 @@ import { StatsCard } from "@/components/StatsCard";
 import { WordCard } from "@/components/WordCard";
 import { EmptyState } from "@/components/EmptyState";
 import { MathStats } from "@/components/MathStats";
+import { initializeRewardProgress } from "@/lib/utils";
 
 export default function ProfileScreen(): JSX.Element {
   const router = useRouter();
@@ -109,6 +116,9 @@ export default function ProfileScreen(): JSX.Element {
     achievements: [],
   });
   const [refreshing, setRefreshing] = React.useState(false);
+  const [rewardProgress, setRewardProgress] = useState<RewardProgress>(() =>
+    initializeRewardProgress(activeChild?.id || "default")
+  );
 
   // Stats for the profile
   const totalWords = learnedWords.length;
@@ -133,6 +143,21 @@ export default function ProfileScreen(): JSX.Element {
   const loadUserData = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
+
+      // Load reward progress
+      if (activeChild) {
+        const childRewardProgress = await getData(
+          StorageKeys.CHILD_REWARD_PROGRESS
+        );
+        if (childRewardProgress && childRewardProgress[activeChild.id]) {
+          setRewardProgress(childRewardProgress[activeChild.id]);
+        }
+      } else {
+        const userRewardProgress = await getData(StorageKeys.REWARD_PROGRESS);
+        if (userRewardProgress) {
+          setRewardProgress(userRewardProgress);
+        }
+      }
 
       // Load data based on whether we're viewing a child's profile or the parent's profile
       if (activeChild) {
@@ -346,6 +371,29 @@ export default function ProfileScreen(): JSX.Element {
     }, [loadUserData])
   );
 
+  // Load reward progress
+  const loadRewardProgress = useCallback(async () => {
+    try {
+      const progress = await getRewardProgress(activeChild?.id);
+      if (progress) {
+        setRewardProgress(progress);
+      } else {
+        setRewardProgress(
+          initializeRewardProgress(activeChild?.id || "default")
+        );
+      }
+    } catch (error) {
+      console.error("Error loading reward progress:", error);
+    }
+  }, [activeChild?.id]);
+
+  // Use focus effect to reload reward progress when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadRewardProgress();
+    }, [loadRewardProgress])
+  );
+
   const handleWordPress = (word: LearnedWord): void => {
     router.push({
       pathname: "/word/[id]",
@@ -503,14 +551,29 @@ export default function ProfileScreen(): JSX.Element {
             label="Math Problems"
           />
           <StatsCard
-            icon="star-outline"
-            iconColor="#EEF2FF"
-            value={`Level ${
-              activeChild ? activeChild.level : userProfile.level
-            }`}
-            label={currentLevel.title}
+            icon="gift-outline"
+            iconColor="#FDF2F8"
+            value={rewardProgress.dailyProgress.points}
+            label="Daily Points"
           />
         </View>
+
+        {/* Rewards quick access */}
+        <TouchableOpacity
+          className="mx-5 mb-5 bg-[#6366F1] p-4 rounded-xl flex-row items-center justify-between"
+          onPress={() => router.push("/rewards")}
+        >
+          <View className="flex-row items-center">
+            <Ionicons name="gift" size={24} color="white" />
+            <Text className="text-white font-bold text-lg ml-3">
+              View Rewards
+            </Text>
+          </View>
+          <View className="flex-row items-center">
+            <Text className="text-white mr-2">Check Progress</Text>
+            <Ionicons name="chevron-forward" size={20} color="white" />
+          </View>
+        </TouchableOpacity>
 
         {/* Learning path tabs */}
         <View className="flex-row px-5 mb-4">

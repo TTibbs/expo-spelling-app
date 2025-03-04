@@ -5,7 +5,13 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Audio } from "expo-av";
 import { NumberItemProps, NumberVisualProps } from "@/types/numbers";
 import { themes } from "@/lib/data";
-import { getData, storeData, StorageKeys } from "@/lib/storage";
+import {
+  getData,
+  storeData,
+  StorageKeys,
+  updateRewardProgress,
+} from "@/lib/storage";
+import { useChild } from "@/context/ChildContext";
 
 // Number item component
 const NumberItem = ({
@@ -51,6 +57,7 @@ const NumberVisual = ({ count, icon, color }: NumberVisualProps) => {
 };
 
 export default function CountingScreen() {
+  const { activeChild } = useChild();
   const [currentNumber, setCurrentNumber] = useState(1);
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -119,6 +126,9 @@ export default function CountingScreen() {
       setScore(score + 5);
       setStreak(streak + 1);
 
+      // Update reward progress
+      await updateRewardProgress("math_problems", 1, activeChild?.id);
+
       // Animate on correct answer
       Animated.sequence([
         Animated.timing(scaleAnim, {
@@ -147,70 +157,137 @@ export default function CountingScreen() {
         }
 
         // Update math statistics
-        const mathStats = (await getData(StorageKeys.MATH_STATS)) || {
-          totalProblems: 0,
-          correctAnswers: 0,
-          streak: 0,
-          highestStreak: 0,
-          addition: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          subtraction: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          counting: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          multiplication: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          division: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          averageTimePerProblem: 0,
-          lastPlayed: "",
-          achievements: [],
-        };
+        const mathStats = activeChild
+          ? ((await getData(StorageKeys.CHILD_MATH_STATS)) || {})[
+              activeChild.id
+            ] || {
+              totalProblems: 0,
+              correctAnswers: 0,
+              streak: 0,
+              highestStreak: 0,
+              addition: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              subtraction: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              counting: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              multiplication: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              division: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              averageTimePerProblem: 0,
+              lastPlayed: "",
+              achievements: [],
+            }
+          : (await getData(StorageKeys.MATH_STATS)) || {
+              totalProblems: 0,
+              correctAnswers: 0,
+              streak: 0,
+              highestStreak: 0,
+              addition: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              subtraction: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              counting: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              multiplication: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              division: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              averageTimePerProblem: 0,
+              lastPlayed: "",
+              achievements: [],
+            };
 
         // Update counting stats
         mathStats.totalProblems += 1;
@@ -225,13 +302,20 @@ export default function CountingScreen() {
         mathStats.counting.accuracy = countingAccuracy;
 
         // Update highest streak if current streak is higher
-        if (streak > mathStats.highestStreak) {
-          mathStats.highestStreak = streak;
+        if (streak + 1 > mathStats.highestStreak) {
+          mathStats.highestStreak = streak + 1;
         }
         mathStats.streak = streak;
 
         // Save updated math stats
-        await storeData(StorageKeys.MATH_STATS, mathStats);
+        if (activeChild) {
+          const childMathStats =
+            (await getData(StorageKeys.CHILD_MATH_STATS)) || {};
+          childMathStats[activeChild.id] = mathStats;
+          await storeData(StorageKeys.CHILD_MATH_STATS, childMathStats);
+        } else {
+          await storeData(StorageKeys.MATH_STATS, mathStats);
+        }
       } catch (error) {
         console.error(
           "Failed to update stats:",
@@ -250,70 +334,137 @@ export default function CountingScreen() {
 
       // Update math statistics for incorrect answer
       try {
-        const mathStats = (await getData(StorageKeys.MATH_STATS)) || {
-          totalProblems: 0,
-          correctAnswers: 0,
-          streak: 0,
-          highestStreak: 0,
-          addition: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          subtraction: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          counting: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          multiplication: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          division: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          averageTimePerProblem: 0,
-          lastPlayed: "",
-          achievements: [],
-        };
+        const mathStats = activeChild
+          ? ((await getData(StorageKeys.CHILD_MATH_STATS)) || {})[
+              activeChild.id
+            ] || {
+              totalProblems: 0,
+              correctAnswers: 0,
+              streak: 0,
+              highestStreak: 0,
+              addition: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              subtraction: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              counting: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              multiplication: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              division: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              averageTimePerProblem: 0,
+              lastPlayed: "",
+              achievements: [],
+            }
+          : (await getData(StorageKeys.MATH_STATS)) || {
+              totalProblems: 0,
+              correctAnswers: 0,
+              streak: 0,
+              highestStreak: 0,
+              addition: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              subtraction: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              counting: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              multiplication: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              division: {
+                attempted: 0,
+                correct: 0,
+                accuracy: 0,
+                timeSpent: 0,
+                averageTime: 0,
+                highestScore: 0,
+                perfectScores: 0,
+                hintsUsed: 0,
+                strategies: {},
+              },
+              averageTimePerProblem: 0,
+              lastPlayed: "",
+              achievements: [],
+            };
 
         mathStats.totalProblems += 1;
         mathStats.counting.attempted += 1;
@@ -327,7 +478,15 @@ export default function CountingScreen() {
         mathStats.counting.accuracy = newAccuracy;
         mathStats.streak = 0; // Reset streak on incorrect answer
 
-        await storeData(StorageKeys.MATH_STATS, mathStats);
+        // Save updated math stats
+        if (activeChild) {
+          const childMathStats =
+            (await getData(StorageKeys.CHILD_MATH_STATS)) || {};
+          childMathStats[activeChild.id] = mathStats;
+          await storeData(StorageKeys.CHILD_MATH_STATS, childMathStats);
+        } else {
+          await storeData(StorageKeys.MATH_STATS, mathStats);
+        }
       } catch (error) {
         console.error(
           "Failed to update stats:",

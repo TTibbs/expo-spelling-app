@@ -245,3 +245,67 @@ export interface PinProtectionProps {
 export interface DifficultyBadgeProps {
   difficulty: Difficulty;
 }
+
+/**
+ * Represents a reward that can be earned
+ */
+export type Reward = {
+  id: string;
+  title: string;
+  description: string;
+  points: number;
+  icon: IconName;
+  color: AppColor;
+  type: "daily" | "achievement" | "special";
+  requirements: RewardRequirement[];
+  isLocked: boolean;
+  completedAt?: string;
+  progress?: number;
+};
+
+/**
+ * Represents a requirement for earning a reward
+ */
+export type RewardRequirement = {
+  type:
+    | "word_challenges"
+    | "math_problems"
+    | "shapes"
+    | "streak"
+    | "xp"
+    | "time";
+  target: number;
+  current: number;
+  activity?: string;
+  timeframe?: "daily" | "weekly" | "monthly" | "all_time";
+};
+
+/**
+ * Represents the user's reward progress
+ */
+export type RewardProgress = {
+  userId: string;
+  rewards: {
+    [rewardId: string]: {
+      isCompleted: boolean;
+      progress: number;
+      completedAt?: string;
+      requirements: {
+        [requirementType: string]: {
+          current: number;
+          updatedAt: string;
+        };
+      };
+    };
+  };
+  dailyProgress: {
+    date: string;
+    points: number;
+    completed: string[];
+  };
+  weeklyProgress: {
+    weekStart: string;
+    points: number;
+    completed: string[];
+  };
+};

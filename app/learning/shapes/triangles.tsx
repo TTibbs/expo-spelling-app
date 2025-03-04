@@ -14,7 +14,12 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { triangles } from "@/lib/data";
 import { TriangleType } from "@/types/shapes";
 import { updateShapeCategoryStats, ShapeStorageError } from "@/lib/shapeUtils";
-import { getData, storeData, StorageKeys } from "@/lib/storage";
+import {
+  getData,
+  storeData,
+  StorageKeys,
+  updateRewardProgress,
+} from "@/lib/storage";
 import { useChild } from "@/context/ChildContext";
 import { getShapeStats, saveShapeStats, updateUserXP } from "@/lib/storage";
 import { ShapeStats } from "@/types/shapes";
@@ -214,6 +219,9 @@ export default function TrianglesScreen(): JSX.Element {
   const handleShowProperties = async (): Promise<void> => {
     setShowAnswer(true);
     setScore(score + 5);
+
+    // Update reward progress
+    await updateRewardProgress("shapes", 1, activeChild?.id);
 
     const newStats: ShapeStats = {
       ...shapeStats,

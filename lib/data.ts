@@ -2,12 +2,12 @@ import { LearningPath } from "@/types/learning";
 import { Circle, Rectangle, Triangle } from "@/types/shapes";
 import { MathActivity } from "@/types/numbers";
 import { ShapeActivity } from "@/types/shapes";
-import { Word, WordCategory, Chore } from "@/types/common";
+import { Word, WordCategory, Chore, Reward } from "@/types/common";
 
 export const learningPaths: LearningPath[] = [
   {
     id: "spelling",
-    title: "Spelling & Words",
+    title: "Spelling",
     description: "Learn to spell words with fun pictures",
     icon: "book-outline",
     iconColor: "#6366F1",
@@ -23,7 +23,7 @@ export const learningPaths: LearningPath[] = [
   },
   {
     id: "numbers",
-    title: "Numbers & Math",
+    title: "Numbers",
     description: "Count, add, subtract and more!",
     icon: "calculator-outline",
     iconColor: "#10B981",
@@ -54,6 +54,22 @@ export const learningPaths: LearningPath[] = [
     tags: ["shapes", "geometry", "patterns"],
   },
   {
+    id: "memory",
+    title: "Memory Games",
+    description: "Test and improve your memory skills",
+    icon: "extension-puzzle-outline",
+    iconColor: "#8B5CF6",
+    backgroundColor: "#EDE9FE",
+    route: "/learning/memory",
+    available: false,
+    color: "#8B5CF6",
+    difficulty: "medium",
+    totalLessons: 20,
+    completedLessons: 0,
+    estimatedDuration: 40,
+    tags: ["memory", "cognitive", "games"],
+  },
+  {
     id: "phonics",
     title: "Phonics",
     description:
@@ -69,22 +85,6 @@ export const learningPaths: LearningPath[] = [
     completedLessons: 0,
     estimatedDuration: 60,
     tags: ["phonics", "sounds", "reading"],
-  },
-  {
-    id: "memory",
-    title: "Memory Games",
-    description: "Test and improve your memory skills",
-    icon: "extension-puzzle-outline",
-    iconColor: "#8B5CF6",
-    backgroundColor: "#EDE9FE",
-    route: "/learning/memory",
-    available: false,
-    color: "#8B5CF6",
-    difficulty: "medium",
-    totalLessons: 20,
-    completedLessons: 0,
-    estimatedDuration: 40,
-    tags: ["memory", "cognitive", "games"],
   },
   {
     id: "reading",
@@ -948,5 +948,116 @@ export const shapeActivities: ShapeActivity[] = [
     available: false,
     category: "polygon",
     totalShapes: 10,
+  },
+];
+
+export const rewards: Reward[] = [
+  {
+    id: "word-master",
+    title: "Word Master",
+    description: "Complete 5 spelling challenges today",
+    points: 50,
+    icon: "book",
+    color: "#6366F1",
+    type: "daily",
+    requirements: [
+      {
+        type: "word_challenges",
+        target: 5,
+        current: 0,
+        timeframe: "daily",
+      },
+    ],
+    isLocked: false,
+  },
+  {
+    id: "math-genius",
+    title: "Math Genius",
+    description: "Solve 10 math problems correctly",
+    points: 75,
+    icon: "calculator",
+    color: "#EC4899",
+    type: "daily",
+    requirements: [
+      {
+        type: "math_problems",
+        target: 10,
+        current: 0,
+        timeframe: "daily",
+      },
+    ],
+    isLocked: false,
+  },
+  {
+    id: "shape-explorer",
+    title: "Shape Explorer",
+    description: "Learn all basic shapes",
+    points: 100,
+    icon: "shapes",
+    color: "#10B981",
+    type: "achievement",
+    requirements: [
+      {
+        type: "shapes",
+        target: 10,
+        current: 0,
+        timeframe: "all_time",
+      },
+    ],
+    isLocked: false,
+  },
+  {
+    id: "super-scholar",
+    title: "Super Scholar",
+    description: "Complete all daily challenges for 7 days",
+    points: 500,
+    icon: "trophy",
+    color: "#8B5CF6",
+    type: "special",
+    requirements: [
+      {
+        type: "streak",
+        target: 7,
+        current: 0,
+        timeframe: "daily",
+      },
+    ],
+    isLocked: true,
+  },
+  {
+    id: "learning-champion",
+    title: "Learning Champion",
+    description: "Earn 1000 points this week",
+    points: 1000,
+    icon: "ribbon",
+    color: "#F59E0B",
+    type: "special",
+    requirements: [
+      {
+        type: "xp",
+        target: 1000,
+        current: 0,
+        timeframe: "weekly",
+      },
+    ],
+    isLocked: true,
+  },
+  {
+    id: "first-steps",
+    title: "First Steps",
+    description: "Complete your first learning challenge",
+    points: 25,
+    icon: "checkmark-circle",
+    color: "#10B981",
+    type: "achievement",
+    requirements: [
+      {
+        type: "word_challenges",
+        target: 1,
+        current: 1,
+        timeframe: "all_time",
+      },
+    ],
+    isLocked: false,
   },
 ];
