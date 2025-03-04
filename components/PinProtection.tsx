@@ -29,12 +29,15 @@ const PinProtection: React.FC<PinProtectionProps> = ({
         setIsPinSetup(!!pin);
         setIsPinVerified(!!verification);
 
-        // Only show PIN modal if:
-        // 1. Content is protected AND
-        // 2. Either:
-        //    a. We're in setup mode (explicitly setting/changing PIN) OR
-        //    b. We're not verified and need to verify
-        if (isProtected && (setupMode || (!verification && !!pin))) {
+        // Show PIN modal in these cases:
+        // 1. We're in setup mode (explicitly setting/changing PIN)
+        // 2. Content is protected AND we need to verify (no verification and PIN exists)
+        // 3. Content is protected AND no PIN exists (need to set up)
+        if (
+          setupMode ||
+          (isProtected && !verification && !!pin) ||
+          (isProtected && !pin)
+        ) {
           setShowPinModal(true);
         }
       } catch (error) {
@@ -68,20 +71,21 @@ const PinProtection: React.FC<PinProtectionProps> = ({
     setShowPinModal(false);
   };
 
-  if (!isProtected || isPinVerified) {
-    return <>{children}</>;
+  // Only render children if we're not showing the PIN modal
+  if (showPinModal) {
+    return (
+      <View style={{ flex: 1 }}>
+        <PinModal
+          isVisible={showPinModal}
+          onClose={handleCloseModal}
+          onSuccess={handlePinSuccess}
+          setupMode={setupMode || !isPinSetup}
+        />
+      </View>
+    );
   }
 
-  return (
-    <View style={{ flex: 1 }}>
-      <PinModal
-        isVisible={showPinModal}
-        onClose={handleCloseModal}
-        onSuccess={handlePinSuccess}
-        setupMode={setupMode}
-      />
-    </View>
-  );
+  return <View style={{ flex: 1 }}>{children}</View>;
 };
 
 export default PinProtection;

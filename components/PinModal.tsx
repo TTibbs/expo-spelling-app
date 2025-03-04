@@ -9,12 +9,14 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { PinModalProps } from "@/types/common";
 
 const PIN_KEY = "parental_control_pin";
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const PinModal: React.FC<PinModalProps> = ({
   isVisible,
@@ -128,73 +130,77 @@ export const PinModal: React.FC<PinModalProps> = ({
     <Modal
       visible={isVisible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.centeredView}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <View style={styles.modalView}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Ionicons name="close" size={24} color="#64748B" />
-          </TouchableOpacity>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Ionicons name="close" size={24} color="#64748B" />
+            </TouchableOpacity>
 
-          <View style={styles.iconContainer}>
-            <Ionicons name="lock-closed" size={40} color="#6366F1" />
-          </View>
+            <View style={styles.iconContainer}>
+              <Ionicons name="lock-closed" size={40} color="#6366F1" />
+            </View>
 
-          <Text style={styles.title}>
-            {isSettingUp ? "Set Parental PIN" : "Enter Parental PIN"}
-          </Text>
+            <Text style={styles.title}>
+              {isSettingUp ? "Set Parental PIN" : "Enter Parental PIN"}
+            </Text>
 
-          <Text style={styles.subtitle}>
-            {isSettingUp
-              ? "Create a PIN to protect parental control settings"
-              : "Enter your PIN to access parental controls"}
-          </Text>
+            <Text style={styles.subtitle}>
+              {isSettingUp
+                ? "Create a PIN to protect parental control settings"
+                : "Enter your PIN to access parental controls"}
+            </Text>
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              ref={pinInputRef}
-              style={styles.input}
-              value={pin}
-              onChangeText={handlePinChange}
-              maxLength={4}
-              keyboardType="number-pad"
-              secureTextEntry
-              placeholder="Enter PIN"
-              placeholderTextColor="#94A3B8"
-            />
-
-            {isSettingUp && (
+            <View style={styles.inputContainer}>
               <TextInput
-                ref={confirmPinInputRef}
+                ref={pinInputRef}
                 style={styles.input}
-                value={confirmPin}
-                onChangeText={handleConfirmPinChange}
+                value={pin}
+                onChangeText={handlePinChange}
                 maxLength={4}
                 keyboardType="number-pad"
                 secureTextEntry
-                placeholder="Confirm PIN"
+                placeholder="Enter PIN"
                 placeholderTextColor="#94A3B8"
               />
+
+              {isSettingUp && (
+                <TextInput
+                  ref={confirmPinInputRef}
+                  style={styles.input}
+                  value={confirmPin}
+                  onChangeText={handleConfirmPinChange}
+                  maxLength={4}
+                  keyboardType="number-pad"
+                  secureTextEntry
+                  placeholder="Confirm PIN"
+                  placeholderTextColor="#94A3B8"
+                />
+              )}
+            </View>
+
+            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+              <Text style={styles.buttonText}>
+                {isSettingUp ? "Set PIN" : "Submit"}
+              </Text>
+            </TouchableOpacity>
+
+            {!isSettingUp && (
+              <TouchableOpacity onPress={resetPin} style={styles.resetButton}>
+                <Text style={styles.resetText}>Reset PIN</Text>
+              </TouchableOpacity>
             )}
           </View>
-
-          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>
-              {isSettingUp ? "Set PIN" : "Submit"}
-            </Text>
-          </TouchableOpacity>
-
-          {!isSettingUp && (
-            <TouchableOpacity onPress={resetPin} style={styles.resetButton}>
-              <Text style={styles.resetText}>Reset PIN</Text>
-            </TouchableOpacity>
-          )}
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -208,8 +214,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
+  modalOverlay: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
   modalView: {
     width: "80%",
+    maxWidth: 400,
     backgroundColor: "white",
     borderRadius: 20,
     padding: 25,
@@ -222,6 +236,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    marginHorizontal: 20,
+    zIndex: 1000,
   },
   closeButton: {
     position: "absolute",

@@ -2,9 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
-  ListRenderItemInfo,
   ScrollView,
   RefreshControl,
   Alert,

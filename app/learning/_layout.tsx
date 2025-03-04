@@ -1,8 +1,13 @@
 import { Stack } from "expo-router";
+import BackButton from "../../components/BackButton";
 
 export default function LearningLayout() {
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerLeft: () => <BackButton />,
+      }}
+    >
       <Stack.Screen
         name="words"
         options={{
