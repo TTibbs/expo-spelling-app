@@ -22,9 +22,18 @@ import {
 import { AppImageSource } from "@/types/styling";
 import { RouteParams } from "@/types/navigation";
 import { Audio } from "expo-av";
-import { isWordLearned, saveLearnedWord, updateUserXp } from "@/lib/storage";
+import {
+  getData,
+  storeData,
+  StorageKeys,
+  loadUserProfile,
+  updateUserXP,
+  isWordLearned,
+  saveLearnedWord,
+} from "@/lib/storage";
 import { withErrorBoundary } from "@/components/ErrorBoundary";
 import { wordSounds } from "@/lib/data";
+import { useChild } from "@/context/ChildContext";
 
 // Generate alphabet buttons
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -71,6 +80,7 @@ const WordDetailErrorFallback = ({
 
 // Define the main component without default export
 function WordDetailScreen(): JSX.Element {
+  const { activeChild } = useChild();
   // Type-safe route parameters
   const params = useLocalSearchParams<RouteParams["/word/[id]"]>();
   const router = useRouter();
@@ -206,12 +216,11 @@ function WordDetailScreen(): JSX.Element {
   // Use our type-safe storage utility to check if word is learned
   const checkIfWordLearned = async (): Promise<void> => {
     try {
-      const alreadyLearned = await isWordLearned(id, category);
-
+      const isLearned = await isWordLearned(id, category, activeChild?.id);
       setGameState((prev) => ({
         ...prev,
-        wordAlreadyLearned: alreadyLearned,
-        status: alreadyLearned ? "completed" : "initial",
+        wordAlreadyLearned: isLearned,
+        status: isLearned ? "completed" : "initial",
       }));
     } catch (error) {
       console.error("Error checking if word is learned:", error);
@@ -249,39 +258,43 @@ function WordDetailScreen(): JSX.Element {
     if (!wordData) return 0;
 
     try {
-      // Check if word is already learned with our utility function
-      const alreadyLearned = await isWordLearned(id, category);
+      // Save the word as learned
+      const wordSaved = await saveLearnedWord(
+        {
+          id: wordData.id,
+          word: wordData.word,
+          image: wordData.image,
+        },
+        category,
+        activeChild?.id
+      );
 
-      // If word already exists, no XP awarded
-      if (alreadyLearned) {
-        console.log("Word already learned, no XP awarded");
-        return 0;
-      }
-
-      // Calculate XP to award
-      const xpToAward = calculateXpEarned();
-
-      // Save the learned word
-      const savedWord = await saveLearnedWord(wordData, category);
-
-      if (!savedWord) {
+      if (!wordSaved) {
         console.error("Failed to save learned word");
         return 0;
       }
 
-      // Update user XP
-      await updateUserXp(xpToAward);
+      // Calculate XP to award
+      const xpEarned = calculateXpEarned();
+
+      // Award XP to the appropriate profile
+      const updatedProfile = await updateUserXP(xpEarned, activeChild?.id);
+
+      if (!updatedProfile) {
+        console.error("Failed to update XP");
+        return 0;
+      }
 
       setGameState((prev) => ({
         ...prev,
         wordAlreadyLearned: true,
         status: "completed",
-        xpEarned: xpToAward,
+        xpEarned: xpEarned,
       }));
 
-      return xpToAward;
+      return xpEarned;
     } catch (error) {
-      console.error("Failed to save word or award XP:", error);
+      console.error("Error saving word and awarding XP:", error);
       return 0;
     }
   };

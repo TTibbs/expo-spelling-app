@@ -1,11 +1,34 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { ProfileHeaderProps } from "@/types/common";
+import { useChild } from "@/context/ChildContext";
+import { loadUserProfile } from "@/lib/storage";
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userLevel, xp }) => {
+const ProfileHeader: React.FC = () => {
   const router = useRouter();
+  const { activeChild, isLoading: isChildLoading } = useChild();
+  const [userLevel, setUserLevel] = useState<string>("1");
+  const [xp, setXp] = useState<number>(0);
+
+  // Load user profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        // Use the centralized loadUserProfile function to get a validated profile
+        const profile = await loadUserProfile();
+        setUserLevel(activeChild ? activeChild.level : profile.level);
+        setXp(activeChild ? activeChild.xp : profile.xp);
+      } catch (error) {
+        console.error(
+          "Failed to load user profile:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
+      }
+    };
+
+    fetchUserProfile();
+  }, [activeChild]);
 
   return (
     <View className="flex-row justify-between items-center px-5 pt-3 pb-1">

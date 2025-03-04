@@ -1,5 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Word, LearnedWord, UserProfile, CompletedChore } from "@/types/common";
+import {
+  Word,
+  LearnedWord,
+  UserProfile,
+  CompletedChore,
+  ChildProfile,
+} from "@/types/common";
 import { MathStats } from "@/types/numbers";
 import { ShapeStats } from "@/types/shapes";
 import {
@@ -23,6 +29,12 @@ export enum StorageKeys {
   THEME_SETTINGS = "themeSettings",
   SOUND_SETTINGS = "soundSettings",
   COMPLETED_CHORES = "completedChores",
+  CHILD_PROFILES = "childProfiles",
+  CHILD_LEARNED_WORDS = "childLearnedWords",
+  CHILD_MATH_STATS = "childMathStats",
+  CHILD_SHAPE_STATS = "childShapeStats",
+  CHILD_COMPLETED_CHORES = "childCompletedChores",
+  PIN_VERIFICATION = "pinVerification",
 }
 
 /**
@@ -39,6 +51,12 @@ export interface StorageData {
   [StorageKeys.THEME_SETTINGS]: { darkMode: boolean };
   [StorageKeys.SOUND_SETTINGS]: { enabled: boolean; volume: number };
   [StorageKeys.COMPLETED_CHORES]: CompletedChore[];
+  [StorageKeys.CHILD_PROFILES]: ChildProfile[];
+  [StorageKeys.CHILD_LEARNED_WORDS]: { [childId: string]: LearnedWord[] };
+  [StorageKeys.CHILD_MATH_STATS]: { [childId: string]: MathStats };
+  [StorageKeys.CHILD_SHAPE_STATS]: { [childId: string]: ShapeStats };
+  [StorageKeys.CHILD_COMPLETED_CHORES]: { [childId: string]: CompletedChore[] };
+  [StorageKeys.PIN_VERIFICATION]: boolean;
 }
 
 /**
@@ -68,6 +86,18 @@ const storageKeyToValidationKey = (key: StorageKeys): ValidationStorageKeys => {
       return ValidationStorageKeys.SOUND_SETTINGS;
     case StorageKeys.COMPLETED_CHORES:
       return ValidationStorageKeys.COMPLETED_CHORES;
+    case StorageKeys.CHILD_PROFILES:
+      return ValidationStorageKeys.CHILD_PROFILES;
+    case StorageKeys.CHILD_LEARNED_WORDS:
+      return ValidationStorageKeys.CHILD_LEARNED_WORDS;
+    case StorageKeys.CHILD_MATH_STATS:
+      return ValidationStorageKeys.CHILD_MATH_STATS;
+    case StorageKeys.CHILD_SHAPE_STATS:
+      return ValidationStorageKeys.CHILD_SHAPE_STATS;
+    case StorageKeys.CHILD_COMPLETED_CHORES:
+      return ValidationStorageKeys.CHILD_COMPLETED_CHORES;
+    case StorageKeys.PIN_VERIFICATION:
+      return ValidationStorageKeys.PIN_VERIFICATION;
     default:
       const exhaustiveCheck: never = key;
       throw new Error(`Unhandled storage key: ${exhaustiveCheck}`);
@@ -141,22 +171,36 @@ export async function removeData(key: keyof StorageData): Promise<boolean> {
 }
 
 /**
- * Get learned word status
+ * Get learned word status for a specific child or user
  * @param wordId Word ID to check
  * @param category Word category
+ * @param childId Optional child ID to check for
  * @returns Promise<boolean> indicating if the word is learned
  */
 export async function isWordLearned(
   wordId: string,
-  category: string
+  category: string,
+  childId?: string
 ): Promise<boolean> {
   try {
-    const learnedWords = await getData(StorageKeys.LEARNED_WORDS);
-    if (!learnedWords) return false;
+    if (childId) {
+      // Check child-specific learned words
+      const childLearnedWords = await getData(StorageKeys.CHILD_LEARNED_WORDS);
+      if (!childLearnedWords) return false;
 
-    return learnedWords.some(
-      (word) => word.id === wordId && word.category === category
-    );
+      const childWords = childLearnedWords[childId] || [];
+      return childWords.some(
+        (word) => word.id === wordId && word.category === category
+      );
+    } else {
+      // Check user's learned words
+      const learnedWords = await getData(StorageKeys.LEARNED_WORDS);
+      if (!learnedWords) return false;
+
+      return learnedWords.some(
+        (word) => word.id === wordId && word.category === category
+      );
+    }
   } catch (error) {
     console.error("Error checking if word is learned:", error);
     return false;
@@ -164,36 +208,69 @@ export async function isWordLearned(
 }
 
 /**
- * Save a learned word
+ * Save a learned word for a specific child or user
  * @param word Word object to save
  * @param category Word category
+ * @param childId Optional child ID to save for
  * @returns Promise<boolean> indicating success or failure
  */
 export async function saveLearnedWord(
   word: Word,
-  category: string
+  category: string,
+  childId?: string
 ): Promise<boolean> {
   try {
-    const learnedWords = (await getData(StorageKeys.LEARNED_WORDS)) || [];
+    if (childId) {
+      // Save to child-specific learned words
+      const childLearnedWords =
+        (await getData(StorageKeys.CHILD_LEARNED_WORDS)) || {};
+      const childWords = childLearnedWords[childId] || [];
 
-    // Check if word is already learned
-    const wordExists = learnedWords.some(
-      (w) => w.id === word.id && w.category === category
-    );
+      // Check if word is already learned
+      const wordExists = childWords.some(
+        (w) => w.id === word.id && w.category === category
+      );
 
-    if (wordExists) return true;
+      if (wordExists) return true;
 
-    // Add the new word
-    const newLearnedWord: LearnedWord = {
-      id: word.id,
-      word: word.word,
-      category,
-      image: word.image,
-      learnedAt: new Date().toISOString(),
-    };
+      // Add the new word
+      const newLearnedWord: LearnedWord = {
+        id: word.id,
+        word: word.word,
+        category,
+        image: word.image,
+        learnedAt: new Date().toISOString(),
+      };
 
-    learnedWords.push(newLearnedWord);
-    return await storeData(StorageKeys.LEARNED_WORDS, learnedWords);
+      childWords.push(newLearnedWord);
+      childLearnedWords[childId] = childWords;
+      return await storeData(
+        StorageKeys.CHILD_LEARNED_WORDS,
+        childLearnedWords
+      );
+    } else {
+      // Save to user's learned words
+      const learnedWords = (await getData(StorageKeys.LEARNED_WORDS)) || [];
+
+      // Check if word is already learned
+      const wordExists = learnedWords.some(
+        (w) => w.id === word.id && w.category === category
+      );
+
+      if (wordExists) return true;
+
+      // Add the new word
+      const newLearnedWord: LearnedWord = {
+        id: word.id,
+        word: word.word,
+        category,
+        image: word.image,
+        learnedAt: new Date().toISOString(),
+      };
+
+      learnedWords.push(newLearnedWord);
+      return await storeData(StorageKeys.LEARNED_WORDS, learnedWords);
+    }
   } catch (error) {
     console.error("Error saving learned word:", error);
     return false;
@@ -201,42 +278,80 @@ export async function saveLearnedWord(
 }
 
 /**
- * Update user profile with XP
+ * Update XP for a specific child or user
  * @param xpToAdd Amount of XP to add
- * @returns Promise with updated user profile or null on failure
+ * @param childId Optional child ID to update XP for
+ * @returns Promise with updated profile or null on failure
  */
-export async function updateUserXp(
-  xpToAdd: number
-): Promise<UserProfile | null> {
+export async function updateUserXP(
+  xpToAdd: number,
+  childId?: string
+): Promise<UserProfile | ChildProfile | null> {
   try {
-    const userProfile = (await getData(StorageKeys.USER_PROFILE)) || {
-      xp: 0,
-      level: "1",
-      lastPlayed: null,
-    };
+    if (childId) {
+      // Update child profile XP
+      const childProfiles = await getData(StorageKeys.CHILD_PROFILES);
+      if (!childProfiles) return null;
 
-    // Add XP
-    userProfile.xp += xpToAdd;
-    userProfile.lastPlayed = new Date().toISOString();
+      const childIndex = childProfiles.findIndex(
+        (child) => child.id === childId
+      );
+      if (childIndex === -1) return null;
 
-    // Calculate level based on updated XP
-    for (const level of playerLevels) {
-      if (userProfile.xp >= level.minXp && userProfile.xp < level.maxXp) {
-        userProfile.level = level.id;
-        break;
+      const updatedChild: ChildProfile = {
+        ...childProfiles[childIndex],
+        xp: Math.max(0, childProfiles[childIndex].xp + xpToAdd),
+        lastPlayed: new Date().toISOString(),
+      };
+
+      // Find the appropriate level based on XP
+      for (const level of playerLevels) {
+        if (updatedChild.xp >= level.minXp && updatedChild.xp < level.maxXp) {
+          updatedChild.level = level.id;
+          break;
+        }
       }
-    }
 
-    // Handle case where XP exceeds the highest level
-    if (userProfile.xp >= playerLevels[playerLevels.length - 1].maxXp) {
-      userProfile.level = playerLevels[playerLevels.length - 1].id;
-    }
+      // Handle case where XP exceeds the highest level
+      if (updatedChild.xp >= playerLevels[playerLevels.length - 1].maxXp) {
+        updatedChild.level = playerLevels[playerLevels.length - 1].id;
+      }
 
-    // Save updated profile
-    const success = await storeData(StorageKeys.USER_PROFILE, userProfile);
-    return success ? userProfile : null;
+      // Update the child's profile in the array
+      childProfiles[childIndex] = updatedChild;
+      await storeData(StorageKeys.CHILD_PROFILES, childProfiles);
+
+      return updatedChild;
+    } else {
+      // Update user profile XP
+      const userProfile = await loadUserProfile();
+      const updatedProfile: UserProfile = {
+        ...userProfile,
+        xp: Math.max(0, userProfile.xp + xpToAdd),
+        lastPlayed: new Date().toISOString(),
+      };
+
+      // Find the appropriate level based on XP
+      for (const level of playerLevels) {
+        if (
+          updatedProfile.xp >= level.minXp &&
+          updatedProfile.xp < level.maxXp
+        ) {
+          updatedProfile.level = level.id;
+          break;
+        }
+      }
+
+      // Handle case where XP exceeds the highest level
+      if (updatedProfile.xp >= playerLevels[playerLevels.length - 1].maxXp) {
+        updatedProfile.level = playerLevels[playerLevels.length - 1].id;
+      }
+
+      const success = await storeData(StorageKeys.USER_PROFILE, updatedProfile);
+      return success ? updatedProfile : null;
+    }
   } catch (error) {
-    console.error("Error updating user XP:", error);
+    console.error("Error updating XP:", error);
     return null;
   }
 }
@@ -279,9 +394,13 @@ export async function loadUserProfile(): Promise<UserProfile> {
     } else {
       // Create a default profile if none exists
       const defaultProfile: UserProfile = {
+        id: "default",
+        name: "Default User",
         xp: 0,
         level: "1",
         lastPlayed: new Date().toISOString(),
+        isParent: false,
+        createdAt: new Date().toISOString(),
       };
 
       // Save the default profile
@@ -292,9 +411,349 @@ export async function loadUserProfile(): Promise<UserProfile> {
     console.error("Failed to load user profile:", error);
     // Return a default profile in case of error
     return {
+      id: "default",
+      name: "Default User",
       xp: 0,
       level: "1",
       lastPlayed: null,
+      isParent: false,
+      createdAt: new Date().toISOString(),
     };
+  }
+}
+
+/**
+ * Get math stats for a specific child or user
+ * @param childId Optional child ID to get stats for
+ * @returns Promise with math stats
+ */
+export async function getMathStats(childId?: string): Promise<MathStats> {
+  try {
+    if (childId) {
+      const childMathStats = await getData(StorageKeys.CHILD_MATH_STATS);
+      if (childMathStats && childMathStats[childId]) {
+        return childMathStats[childId];
+      }
+    } else {
+      const mathStats = await getData(StorageKeys.MATH_STATS);
+      if (mathStats) {
+        return mathStats;
+      }
+    }
+
+    // Return default stats if none found
+    return {
+      totalProblems: 0,
+      correctAnswers: 0,
+      streak: 0,
+      highestStreak: 0,
+      addition: {
+        attempted: 0,
+        correct: 0,
+        accuracy: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        strategies: {},
+      },
+      subtraction: {
+        attempted: 0,
+        correct: 0,
+        accuracy: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        strategies: {},
+      },
+      counting: {
+        attempted: 0,
+        correct: 0,
+        accuracy: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        strategies: {},
+      },
+      multiplication: {
+        attempted: 0,
+        correct: 0,
+        accuracy: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        strategies: {},
+      },
+      division: {
+        attempted: 0,
+        correct: 0,
+        accuracy: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        strategies: {},
+      },
+      averageTimePerProblem: 0,
+      lastPlayed: new Date().toISOString(),
+      achievements: [],
+    };
+  } catch (error) {
+    console.error("Error getting math stats:", error);
+    return {
+      totalProblems: 0,
+      correctAnswers: 0,
+      streak: 0,
+      highestStreak: 0,
+      addition: {
+        attempted: 0,
+        correct: 0,
+        accuracy: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        strategies: {},
+      },
+      subtraction: {
+        attempted: 0,
+        correct: 0,
+        accuracy: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        strategies: {},
+      },
+      counting: {
+        attempted: 0,
+        correct: 0,
+        accuracy: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        strategies: {},
+      },
+      multiplication: {
+        attempted: 0,
+        correct: 0,
+        accuracy: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        strategies: {},
+      },
+      division: {
+        attempted: 0,
+        correct: 0,
+        accuracy: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        strategies: {},
+      },
+      averageTimePerProblem: 0,
+      lastPlayed: new Date().toISOString(),
+      achievements: [],
+    };
+  }
+}
+
+/**
+ * Save math stats for a specific child or user
+ * @param stats Math stats to save
+ * @param childId Optional child ID to save stats for
+ * @returns Promise<boolean> indicating success or failure
+ */
+export async function saveMathStats(
+  stats: MathStats,
+  childId?: string
+): Promise<boolean> {
+  try {
+    if (childId) {
+      const childMathStats =
+        (await getData(StorageKeys.CHILD_MATH_STATS)) || {};
+      childMathStats[childId] = stats;
+      return await storeData(StorageKeys.CHILD_MATH_STATS, childMathStats);
+    } else {
+      return await storeData(StorageKeys.MATH_STATS, stats);
+    }
+  } catch (error) {
+    console.error("Error saving math stats:", error);
+    return false;
+  }
+}
+
+/**
+ * Get shape stats for a specific child or user
+ * @param childId Optional child ID to get stats for
+ * @returns Promise with shape stats
+ */
+export async function getShapeStats(childId?: string): Promise<ShapeStats> {
+  try {
+    if (childId) {
+      const childShapeStats = await getData(StorageKeys.CHILD_SHAPE_STATS);
+      if (childShapeStats && childShapeStats[childId]) {
+        return childShapeStats[childId];
+      }
+    } else {
+      const shapeStats = await getData(StorageKeys.SHAPE_STATS);
+      if (shapeStats) {
+        return shapeStats;
+      }
+    }
+
+    // Return default stats if none found
+    return {
+      totalShapes: 0,
+      circles: {
+        completed: 0,
+        accuracy: 0,
+        correct: 0,
+        attempts: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        propertiesLearned: [],
+      },
+      squares: {
+        completed: 0,
+        accuracy: 0,
+        correct: 0,
+        attempts: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        propertiesLearned: [],
+      },
+      triangles: {
+        completed: 0,
+        accuracy: 0,
+        correct: 0,
+        attempts: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        propertiesLearned: [],
+      },
+      polygons: {
+        completed: 0,
+        accuracy: 0,
+        correct: 0,
+        attempts: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        propertiesLearned: [],
+      },
+      averageTimePerShape: 0,
+      lastPlayed: new Date().toISOString(),
+      achievements: [],
+    };
+  } catch (error) {
+    console.error("Error getting shape stats:", error);
+    return {
+      totalShapes: 0,
+      circles: {
+        completed: 0,
+        accuracy: 0,
+        correct: 0,
+        attempts: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        propertiesLearned: [],
+      },
+      squares: {
+        completed: 0,
+        accuracy: 0,
+        correct: 0,
+        attempts: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        propertiesLearned: [],
+      },
+      triangles: {
+        completed: 0,
+        accuracy: 0,
+        correct: 0,
+        attempts: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        propertiesLearned: [],
+      },
+      polygons: {
+        completed: 0,
+        accuracy: 0,
+        correct: 0,
+        attempts: 0,
+        timeSpent: 0,
+        averageTime: 0,
+        highestScore: 0,
+        perfectScores: 0,
+        hintsUsed: 0,
+        propertiesLearned: [],
+      },
+      averageTimePerShape: 0,
+      lastPlayed: new Date().toISOString(),
+      achievements: [],
+    };
+  }
+}
+
+/**
+ * Save shape stats for a specific child or user
+ * @param stats Shape stats to save
+ * @param childId Optional child ID to save stats for
+ * @returns Promise<boolean> indicating success or failure
+ */
+export async function saveShapeStats(
+  stats: ShapeStats,
+  childId?: string
+): Promise<boolean> {
+  try {
+    if (childId) {
+      const childShapeStats =
+        (await getData(StorageKeys.CHILD_SHAPE_STATS)) || {};
+      childShapeStats[childId] = stats;
+      return await storeData(StorageKeys.CHILD_SHAPE_STATS, childShapeStats);
+    } else {
+      return await storeData(StorageKeys.SHAPE_STATS, stats);
+    }
+  } catch (error) {
+    console.error("Error saving shape stats:", error);
+    return false;
   }
 }

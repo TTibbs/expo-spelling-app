@@ -8,8 +8,9 @@ import {
   storeData,
   StorageKeys,
   loadUserProfile,
-  updateUserXp,
+  updateUserXP,
 } from "@/lib/storage";
+import { useChild } from "@/context/ChildContext";
 
 // Import newly created components
 import ProfileHeader from "@/components/ProfileHeader";
@@ -19,6 +20,7 @@ import AssignedChoresList from "@/components/AssignedChoresList";
 import ChoreActionButtons from "@/components/ChoreActionButtons";
 
 export default function ChoresScreen() {
+  const { activeChild, isLoading: isChildLoading } = useChild();
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
   const [assignedChores, setAssignedChores] = useState<Chore[]>([]);
   const [completionModalVisible, setCompletionModalVisible] =
@@ -45,8 +47,8 @@ export default function ChoresScreen() {
       try {
         // Use the centralized loadUserProfile function to get a validated profile
         const profile = await loadUserProfile();
-        setUserLevel(profile.level);
-        setXp(profile.xp);
+        setUserLevel(activeChild ? activeChild.level : profile.level);
+        setXp(activeChild ? activeChild.xp : profile.xp);
       } catch (error) {
         console.error(
           "Failed to load user profile:",
@@ -56,7 +58,7 @@ export default function ChoresScreen() {
     };
 
     fetchUserProfile();
-  }, []);
+  }, [activeChild]);
 
   // Clear feedback message after a short delay
   useEffect(() => {
@@ -139,17 +141,36 @@ export default function ChoresScreen() {
         return false;
       }
 
-      // Get existing completed chores
-      const existingCompletedChores = await getData(
-        StorageKeys.COMPLETED_CHORES
-      );
+      // Get existing completed chores based on whether we're in child mode
+      const storageKey = activeChild
+        ? StorageKeys.CHILD_COMPLETED_CHORES
+        : StorageKeys.COMPLETED_CHORES;
 
-      const updatedCompletedChores = existingCompletedChores
-        ? [...existingCompletedChores, ...completedChores]
-        : completedChores;
+      const existingCompletedChores = await getData(storageKey);
+      let updatedCompletedChores:
+        | CompletedChore[]
+        | { [childId: string]: CompletedChore[] };
+
+      if (activeChild) {
+        // For child mode, we need to handle the child-specific structure
+        const childChores =
+          (existingCompletedChores as {
+            [childId: string]: CompletedChore[];
+          }) || {};
+        const childExistingChores = childChores[activeChild.id] || [];
+        updatedCompletedChores = {
+          ...childChores,
+          [activeChild.id]: [...childExistingChores, ...completedChores],
+        };
+      } else {
+        // For parent mode, use the simple array structure
+        const parentChores =
+          (existingCompletedChores as CompletedChore[]) || [];
+        updatedCompletedChores = [...parentChores, ...completedChores];
+      }
 
       // Store updated completed chores
-      await storeData(StorageKeys.COMPLETED_CHORES, updatedCompletedChores);
+      await storeData(storageKey, updatedCompletedChores);
 
       return true;
     } catch (error) {
@@ -186,8 +207,8 @@ export default function ChoresScreen() {
         return;
       }
 
-      // Award XP to user profile
-      const updatedProfile = await updateUserXp(xpToAward);
+      // Award XP to user profile, passing childId if in child mode
+      const updatedProfile = await updateUserXP(xpToAward, activeChild?.id);
 
       if (updatedProfile) {
         // Update local state
@@ -236,7 +257,7 @@ export default function ChoresScreen() {
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
       {/* Header section */}
-      <ProfileHeader userLevel={userLevel} xp={xp} />
+      <ProfileHeader />
 
       {/* Main content */}
       <View className="flex-1 px-5 pt-1">

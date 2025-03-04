@@ -19,12 +19,33 @@ import {
   ShapeStorageError,
 } from "@/lib/shapeUtils";
 import { getData, storeData, StorageKeys } from "@/lib/storage";
+import { useChild } from "@/context/ChildContext";
+import { getShapeStats, saveShapeStats, updateUserXP } from "@/lib/storage";
+import { ShapeStats } from "@/types/shapes";
 
 // Filter rectangles from shapes array
 const rectangles = shapes.filter(
   (shape): shape is Rectangle =>
     shape.type === "square" || shape.type === "rectangle"
 );
+
+// Utility functions
+const calculateAccuracy = (completed: number, attempts: number): number => {
+  if (attempts === 0) return 0;
+  return Math.round((completed / attempts) * 100);
+};
+
+const calculateXP = (completed: number): number => {
+  // Base XP for completing a shape
+  let xp = 10;
+
+  // Bonus XP for perfect accuracy
+  if (completed % 5 === 0) {
+    xp += 5;
+  }
+
+  return xp;
+};
 
 /**
  * SquaresScreen component - displays educational content about squares and rectangles
@@ -33,70 +54,90 @@ const rectangles = shapes.filter(
  */
 export default function SquaresScreen(): JSX.Element {
   const router = useRouter();
+  const { activeChild } = useChild();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [completed, setCompleted] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [answerAnimation] = useState(new Animated.Value(0));
+  const [shapeStats, setShapeStats] = useState<ShapeStats>({
+    totalShapes: 0,
+    circles: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    squares: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    triangles: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    polygons: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    averageTimePerShape: 0,
+    lastPlayed: new Date().toISOString(),
+    achievements: [],
+  });
 
+  // Load shape stats
   useEffect(() => {
-    /**
-     * Loads progress data from storage using our type-safe utilities
-     * Sets the completed state based on existing progress data
-     */
-    const loadProgress = async (): Promise<void> => {
+    const loadStats = async () => {
       try {
-        const shapeStats = await loadShapeStats();
-        setCompleted(shapeStats.squares.completed);
+        const stats = await getShapeStats(activeChild?.id);
+        setShapeStats(stats);
       } catch (error) {
-        const errorMessage =
-          error instanceof ShapeStorageError
-            ? error.message
-            : error instanceof Error
-            ? error.message
-            : "Unknown error";
-
-        console.error("Error loading shape progress:", errorMessage);
+        console.error("Error loading shape stats:", error);
       }
     };
 
-    loadProgress();
-  }, []);
+    loadStats();
+  }, [activeChild?.id]);
 
-  /**
-   * Saves the user's progress and adds XP to their profile
-   * Updates shape statistics using our type-safe storage utilities
-   * @throws ShapeStorageError if there's an issue saving data
-   */
-  const saveProgress = async (): Promise<void> => {
+  // Save shape stats
+  const saveStats = async (newStats: ShapeStats) => {
     try {
-      // Update user profile XP using type-safe storage
-      const userProfile = await getData(StorageKeys.USER_PROFILE);
-      if (userProfile) {
-        const updatedXp = (userProfile.xp || 0) + 5;
-        const updatedProfile = {
-          ...userProfile,
-          xp: updatedXp,
-        };
-        await storeData(StorageKeys.USER_PROFILE, updatedProfile);
+      const success = await saveShapeStats(newStats, activeChild?.id);
+      if (success) {
+        setShapeStats(newStats);
       }
-
-      // Update shape statistics using our utility function
-      const shapeStats = await updateShapeCategoryStats("squares");
-      setCompleted(shapeStats.squares.completed);
     } catch (error) {
-      const errorMessage =
-        error instanceof ShapeStorageError
-          ? error.message
-          : error instanceof Error
-          ? error.message
-          : "Unknown error";
-
-      console.error("Error saving progress:", errorMessage);
-      Alert.alert(
-        "Error",
-        "There was a problem saving your progress. Please try again."
-      );
+      console.error("Error saving shape stats:", error);
     }
   };
 
@@ -124,10 +165,25 @@ export default function SquaresScreen(): JSX.Element {
    * Reveals the shape properties with animation
    * Saves progress and adds to score
    */
-  const handleShowProperties = (): void => {
+  const handleShowProperties = async (): Promise<void> => {
     setShowAnswer(true);
     setScore(score + 5);
-    saveProgress();
+
+    const newStats: ShapeStats = {
+      ...shapeStats,
+      squares: {
+        ...shapeStats.squares,
+        completed: shapeStats.squares.completed + 1,
+        correct: shapeStats.squares.correct + 1,
+        attempts: shapeStats.squares.attempts + 1,
+        accuracy: calculateAccuracy(
+          shapeStats.squares.completed + 1,
+          shapeStats.squares.attempts + 1
+        ),
+      },
+    };
+
+    await saveStats(newStats);
 
     Animated.timing(answerAnimation, {
       toValue: 1,

@@ -6,9 +6,11 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { learningPaths } from "@/lib/data";
 import { LearningPath } from "@/types/learning";
 import { loadUserProfile } from "@/lib/storage";
+import { useChild } from "@/context/ChildContext";
 
 export default function LearningScreen() {
   const router = useRouter();
+  const { activeChild, isLoading: isChildLoading } = useChild();
   const [userLevel, setUserLevel] = useState<string>("1");
   const [xp, setXp] = useState<number>(0);
 
@@ -18,8 +20,8 @@ export default function LearningScreen() {
       try {
         // Use the centralized loadUserProfile function to get a validated profile
         const profile = await loadUserProfile();
-        setUserLevel(profile.level);
-        setXp(profile.xp);
+        setUserLevel(activeChild ? activeChild.level : profile.level);
+        setXp(activeChild ? activeChild.xp : profile.xp);
       } catch (error) {
         console.error(
           "Failed to load user profile:",
@@ -29,7 +31,7 @@ export default function LearningScreen() {
     };
 
     fetchUserProfile();
-  }, []);
+  }, [activeChild]);
 
   const handlePathPress = (path: LearningPath) => {
     if (path.available) {
@@ -83,7 +85,9 @@ export default function LearningScreen() {
       <View className="px-4 py-4 flex-row justify-between items-center">
         <View>
           <Text className="text-2xl font-bold text-slate-800">
-            Learning Adventures
+            {activeChild
+              ? `${activeChild.name}'s Learning Adventures`
+              : "Learning Adventures"}
           </Text>
           <Text className="text-base text-slate-500 mt-1">
             Pick a path to start learning!

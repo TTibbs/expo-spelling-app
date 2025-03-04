@@ -11,6 +11,7 @@ import {
   LearnedWord,
   Difficulty,
   CompletedChore,
+  ChildProfile,
 } from "@/types/common";
 import { WordProgress, SpellingStats } from "@/types/spelling";
 import { MathStats } from "@/types/numbers";
@@ -28,6 +29,12 @@ export enum ValidationStorageKeys {
   THEME_SETTINGS = "themeSettings",
   SOUND_SETTINGS = "soundSettings",
   COMPLETED_CHORES = "completedChores",
+  CHILD_PROFILES = "childProfiles",
+  CHILD_LEARNED_WORDS = "childLearnedWords",
+  CHILD_MATH_STATS = "childMathStats",
+  CHILD_SHAPE_STATS = "childShapeStats",
+  CHILD_COMPLETED_CHORES = "childCompletedChores",
+  PIN_VERIFICATION = "pinVerification",
 }
 
 // Define storage data interface to avoid circular import
@@ -42,6 +49,16 @@ export interface ValidationStorageData {
   [ValidationStorageKeys.THEME_SETTINGS]: { darkMode: boolean };
   [ValidationStorageKeys.SOUND_SETTINGS]: { enabled: boolean; volume: number };
   [ValidationStorageKeys.COMPLETED_CHORES]: CompletedChore[];
+  [ValidationStorageKeys.CHILD_PROFILES]: ChildProfile[];
+  [ValidationStorageKeys.CHILD_LEARNED_WORDS]: {
+    [childId: string]: LearnedWord[];
+  };
+  [ValidationStorageKeys.CHILD_MATH_STATS]: { [childId: string]: MathStats };
+  [ValidationStorageKeys.CHILD_SHAPE_STATS]: { [childId: string]: ShapeStats };
+  [ValidationStorageKeys.CHILD_COMPLETED_CHORES]: {
+    [childId: string]: CompletedChore[];
+  };
+  [ValidationStorageKeys.PIN_VERIFICATION]: boolean;
 }
 
 /**
@@ -259,6 +276,26 @@ export function isCompletedChore(data: unknown): data is CompletedChore {
 }
 
 /**
+ * Type guard for ChildProfile
+ */
+export function isChildProfile(data: unknown): data is ChildProfile {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "id" in data &&
+    "name" in data &&
+    "xp" in data &&
+    "level" in data &&
+    "createdAt" in data &&
+    typeof (data as ChildProfile).id === "string" &&
+    typeof (data as ChildProfile).name === "string" &&
+    typeof (data as ChildProfile).xp === "number" &&
+    typeof (data as ChildProfile).level === "string" &&
+    typeof (data as ChildProfile).createdAt === "string"
+  );
+}
+
+/**
  * Validate data from storage based on key
  * @param key Storage key
  * @param data Data to validate
@@ -319,7 +356,58 @@ export function validateStorageData<K extends keyof ValidationStorageData>(
         ? (data as ValidationStorageData[K])
         : null;
 
+    case ValidationStorageKeys.CHILD_PROFILES:
+      return Array.isArray(data) && data.every(isChildProfile)
+        ? (data as ValidationStorageData[K])
+        : null;
+
+    case ValidationStorageKeys.CHILD_LEARNED_WORDS:
+      return typeof data === "object" &&
+        data !== null &&
+        Object.values(data).every(
+          (childWords) =>
+            Array.isArray(childWords) && childWords.every(isLearnedWord)
+        )
+        ? (data as ValidationStorageData[K])
+        : null;
+
+    case ValidationStorageKeys.CHILD_MATH_STATS:
+      return typeof data === "object" &&
+        data !== null &&
+        Object.values(data).every(
+          (childStats) =>
+            typeof childStats === "object" && isMathStats(childStats)
+        )
+        ? (data as ValidationStorageData[K])
+        : null;
+
+    case ValidationStorageKeys.CHILD_SHAPE_STATS:
+      return typeof data === "object" &&
+        data !== null &&
+        Object.values(data).every(
+          (childStats) =>
+            typeof childStats === "object" && isShapeStats(childStats)
+        )
+        ? (data as ValidationStorageData[K])
+        : null;
+
+    case ValidationStorageKeys.CHILD_COMPLETED_CHORES:
+      return typeof data === "object" &&
+        data !== null &&
+        Object.values(data).every(
+          (childChores) =>
+            Array.isArray(childChores) && childChores.every(isCompletedChore)
+        )
+        ? (data as ValidationStorageData[K])
+        : null;
+
+    case ValidationStorageKeys.PIN_VERIFICATION:
+      return typeof data === "boolean"
+        ? (data as ValidationStorageData[K])
+        : null;
+
     default:
-      return null;
+      const exhaustiveCheck: never = key;
+      throw new Error(`Unhandled validation key: ${exhaustiveCheck}`);
   }
 }

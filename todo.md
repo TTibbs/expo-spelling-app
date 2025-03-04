@@ -93,6 +93,13 @@
 - [ ] Implement error handling for text-to-speech failures
 - [ ] Store user preferences for pronunciation settings (voice, speed)
 - [ ] Consider adding phonics breakdown for longer words (syllable-by-syllable pronunciation)
+- ✅ Implement hint functionality with proper state management
+- ✅ Add visual feedback for hinted letters in the word display
+- ✅ Update button styling to show green for hinted letters
+- ✅ Add success alert when completing word with hints
+- ✅ Implement proper XP penalty system for hint usage
+- ✅ Add sound effects for hint usage
+- ✅ Ensure consistent game state management between hint and manual letter selection
 
 #### words.tsx
 

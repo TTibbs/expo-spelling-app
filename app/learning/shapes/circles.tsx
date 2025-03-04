@@ -19,19 +19,95 @@ import {
   ShapeStorageError,
 } from "@/lib/shapeUtils";
 import { getData, storeData, StorageKeys } from "@/lib/storage";
+import { useChild } from "@/context/ChildContext";
+import { getShapeStats, saveShapeStats, updateUserXP } from "@/lib/storage";
+import { ShapeStats } from "@/types/shapes";
 
 // Filter circles from shapes array
 const circles = shapes.filter(
   (shape): shape is Circle => shape.type === "circle" || shape.type === "oval"
 );
 
+// Utility functions
+const calculateAccuracy = (completed: number, attempts: number): number => {
+  if (attempts === 0) return 0;
+  return Math.round((completed / attempts) * 100);
+};
+
+const calculateXP = (completed: number): number => {
+  // Base XP for completing a shape
+  let xp = 10;
+
+  // Bonus XP for perfect accuracy
+  if (completed % 5 === 0) {
+    xp += 5;
+  }
+
+  return xp;
+};
+
 export default function CirclesScreen(): JSX.Element {
   const router = useRouter();
+  const { activeChild } = useChild();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [completed, setCompleted] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [answerAnimation] = useState(new Animated.Value(0));
+  const [shapeStats, setShapeStats] = useState<ShapeStats>({
+    totalShapes: 0,
+    circles: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    squares: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    triangles: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    polygons: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    averageTimePerShape: 0,
+    lastPlayed: new Date().toISOString(),
+    achievements: [],
+  });
 
   useEffect(() => {
     // Load progress using the updated loadShapeStats function
@@ -53,6 +129,20 @@ export default function CirclesScreen(): JSX.Element {
 
     loadProgress();
   }, []);
+
+  // Load shape stats
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const stats = await getShapeStats(activeChild?.id);
+        setShapeStats(stats);
+      } catch (error) {
+        console.error("Error loading shape stats:", error);
+      }
+    };
+
+    loadStats();
+  }, [activeChild?.id]);
 
   const saveProgress = async (): Promise<void> => {
     try {
@@ -86,6 +176,18 @@ export default function CirclesScreen(): JSX.Element {
     }
   };
 
+  // Save shape stats
+  const saveStats = async (newStats: ShapeStats) => {
+    try {
+      const success = await saveShapeStats(newStats, activeChild?.id);
+      if (success) {
+        setShapeStats(newStats);
+      }
+    } catch (error) {
+      console.error("Error saving shape stats:", error);
+    }
+  };
+
   const handleNext = (): void => {
     if (currentIndex < circles.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -101,10 +203,25 @@ export default function CirclesScreen(): JSX.Element {
     }
   };
 
-  const handleShowProperties = (): void => {
+  const handleShowProperties = async (): Promise<void> => {
     setShowAnswer(true);
     setScore(score + 5);
-    saveProgress();
+
+    const newStats: ShapeStats = {
+      ...shapeStats,
+      circles: {
+        ...shapeStats.circles,
+        completed: shapeStats.circles.completed + 1,
+        correct: shapeStats.circles.correct + 1,
+        attempts: shapeStats.circles.attempts + 1,
+        accuracy: calculateAccuracy(
+          shapeStats.circles.completed + 1,
+          shapeStats.circles.attempts + 1
+        ),
+      },
+    };
+
+    await saveStats(newStats);
 
     Animated.timing(answerAnimation, {
       toValue: 1,
@@ -137,6 +254,50 @@ export default function CirclesScreen(): JSX.Element {
       default:
         return "Unknown";
     }
+  };
+
+  // Handle correct answer
+  const handleCorrectAnswer = async () => {
+    const newStats: ShapeStats = {
+      ...shapeStats,
+      totalShapes: shapeStats.totalShapes + 1,
+      circles: {
+        ...shapeStats.circles,
+        completed: shapeStats.circles.completed + 1,
+        correct: shapeStats.circles.correct + 1,
+        attempts: shapeStats.circles.attempts + 1,
+        accuracy: calculateAccuracy(
+          shapeStats.circles.completed + 1,
+          shapeStats.circles.attempts + 1
+        ),
+      },
+    };
+
+    await saveStats(newStats);
+
+    // Award XP
+    const xpEarned = calculateXP(shapeStats.circles.completed + 1);
+    await updateUserXP(xpEarned, activeChild?.id);
+
+    // ... rest of the existing handleCorrectAnswer code ...
+  };
+
+  // Handle incorrect answer
+  const handleIncorrectAnswer = async () => {
+    const newStats: ShapeStats = {
+      ...shapeStats,
+      circles: {
+        ...shapeStats.circles,
+        attempts: shapeStats.circles.attempts + 1,
+        accuracy: calculateAccuracy(
+          shapeStats.circles.completed,
+          shapeStats.circles.attempts + 1
+        ),
+      },
+    };
+
+    await saveStats(newStats);
+    // ... rest of the existing handleIncorrectAnswer code ...
   };
 
   return (

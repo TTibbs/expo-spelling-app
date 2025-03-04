@@ -117,12 +117,31 @@ export type WordCategory = {
 };
 
 /**
- * Represents the user's profile information
+ * Represents a child's profile information
  */
-export type UserProfile = {
+export type ChildProfile = {
+  id: string;
+  name: string;
+  avatar?: string;
   xp: number;
   level: string;
   lastPlayed: string | null;
+  createdAt: string;
+};
+
+/**
+ * Represents the user's profile information
+ */
+export type UserProfile = {
+  id: string;
+  name: string;
+  avatar?: string;
+  xp: number;
+  level: string;
+  lastPlayed: string | null;
+  isParent: boolean;
+  children?: ChildProfile[];
+  createdAt: string;
 };
 
 /**
@@ -211,4 +230,5 @@ export interface PinProtectionProps {
   isProtected: boolean;
   onAccessGranted?: () => void;
   onAccessDenied?: () => void;
+  setupMode?: boolean;
 }

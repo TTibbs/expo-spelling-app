@@ -5,9 +5,11 @@ import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { loadUserProfile } from "@/lib/storage";
 import { learningPaths } from "@/lib/data";
+import { useChild } from "@/context/ChildContext";
 
 export default function HomeScreen(): JSX.Element {
   const router = useRouter();
+  const { activeChild, isLoading: isChildLoading } = useChild();
   const [userName, setUserName] = useState<string>("Learner");
   const [userLevel, setUserLevel] = useState<string>("1");
   const [xp, setXp] = useState<number>(0);
@@ -18,10 +20,8 @@ export default function HomeScreen(): JSX.Element {
       try {
         // Use the centralized loadUserProfile function to get a validated profile
         const profile = await loadUserProfile();
-        setUserLevel(profile.level);
-        setXp(profile.xp);
-        // Note: UserProfile doesn't include a name property
-        // We're keeping the default "Learner" name set in useState
+        setUserLevel(activeChild ? activeChild.level : profile.level);
+        setXp(activeChild ? activeChild.xp : profile.xp);
       } catch (error) {
         console.error(
           "Failed to load user profile:",
@@ -31,7 +31,7 @@ export default function HomeScreen(): JSX.Element {
     };
 
     fetchUserProfile();
-  }, []);
+  }, [activeChild]);
 
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
@@ -40,7 +40,7 @@ export default function HomeScreen(): JSX.Element {
         <View className="flex-row justify-between items-center px-5 pt-5 pb-2.5">
           <View>
             <Text className="text-3xl font-bold text-[#1E293B]">
-              Hey there! 👋
+              Hey {activeChild ? activeChild.name : "there"}! 👋
             </Text>
             <Text className="text-base text-[#64748B] mt-1.5">
               Ready for some fun learning?

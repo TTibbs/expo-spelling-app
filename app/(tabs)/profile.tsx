@@ -11,17 +11,30 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { playerLevels } from "@/lib/data";
-import { LearnedWord, UserProfile, PlayerLevel } from "@/types/common";
+import {
+  LearnedWord,
+  UserProfile,
+  PlayerLevel,
+  ChildProfile,
+} from "@/types/common";
 import { MathStats } from "@/types/numbers";
-import { getData, StorageKeys } from "@/lib/storage";
+import { getData, StorageKeys, storeData } from "@/lib/storage";
+import { useChild } from "@/context/ChildContext";
 
 export default function ProfileScreen(): JSX.Element {
+  const router = useRouter();
+  const { activeChild, setActiveChild, isLoading: isChildLoading } = useChild();
   const [learnedWords, setLearnedWords] = useState<LearnedWord[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile>({
+    id: "default",
+    name: "Default User",
     xp: 0,
     level: "1",
     lastPlayed: null,
+    isParent: false,
+    createdAt: new Date().toISOString(),
   });
+  const [childProfiles, setChildProfiles] = useState<ChildProfile[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<"spelling" | "math">("spelling");
   const [mathStats, setMathStats] = useState<MathStats>({
@@ -88,7 +101,6 @@ export default function ProfileScreen(): JSX.Element {
     lastPlayed: "",
     achievements: [],
   });
-  const router = useRouter();
 
   // Stats for the profile
   const totalWords = learnedWords.length;
@@ -97,14 +109,19 @@ export default function ProfileScreen(): JSX.Element {
 
   // Get current level data
   const currentLevel: PlayerLevel =
-    playerLevels.find((level) => level.id === userProfile.level) ||
-    playerLevels[0];
+    playerLevels.find(
+      (level) =>
+        level.id === (activeChild ? activeChild.level : userProfile.level)
+    ) || playerLevels[0];
   const nextLevel: PlayerLevel | undefined = playerLevels.find(
-    (level) => level.id === String(Number(userProfile.level) + 1)
+    (level) =>
+      level.id ===
+      String(Number(activeChild ? activeChild.level : userProfile.level) + 1)
   );
 
   // Calculate XP progress
-  const xpForCurrentLevel: number = userProfile.xp - (currentLevel?.minXp || 0);
+  const currentXP = activeChild ? activeChild.xp : userProfile.xp;
+  const xpForCurrentLevel: number = currentXP - (currentLevel?.minXp || 0);
   const xpRequiredForNextLevel: number = nextLevel
     ? nextLevel.minXp - (currentLevel?.minXp || 0)
     : 100; // Default to 100 if at max level
@@ -117,22 +134,180 @@ export default function ProfileScreen(): JSX.Element {
     try {
       setIsLoading(true);
 
-      // Load learned words using type-safe storage
-      const storedWords = await getData(StorageKeys.LEARNED_WORDS);
-      if (storedWords) {
-        setLearnedWords(storedWords);
+      // Load data based on whether we're viewing a child's profile or the parent's profile
+      if (activeChild) {
+        // Load child-specific learned words
+        const childLearnedWords = await getData(
+          StorageKeys.CHILD_LEARNED_WORDS
+        );
+        if (childLearnedWords && childLearnedWords[activeChild.id]) {
+          setLearnedWords(childLearnedWords[activeChild.id]);
+        } else {
+          setLearnedWords([]);
+        }
+
+        // Load child-specific math stats
+        const childMathStats = await getData(StorageKeys.CHILD_MATH_STATS);
+        if (childMathStats && childMathStats[activeChild.id]) {
+          setMathStats(childMathStats[activeChild.id]);
+        } else {
+          setMathStats({
+            totalProblems: 0,
+            correctAnswers: 0,
+            streak: 0,
+            highestStreak: 0,
+            addition: {
+              attempted: 0,
+              correct: 0,
+              accuracy: 0,
+              timeSpent: 0,
+              averageTime: 0,
+              highestScore: 0,
+              perfectScores: 0,
+              hintsUsed: 0,
+              strategies: {},
+            },
+            subtraction: {
+              attempted: 0,
+              correct: 0,
+              accuracy: 0,
+              timeSpent: 0,
+              averageTime: 0,
+              highestScore: 0,
+              perfectScores: 0,
+              hintsUsed: 0,
+              strategies: {},
+            },
+            counting: {
+              attempted: 0,
+              correct: 0,
+              accuracy: 0,
+              timeSpent: 0,
+              averageTime: 0,
+              highestScore: 0,
+              perfectScores: 0,
+              hintsUsed: 0,
+              strategies: {},
+            },
+            multiplication: {
+              attempted: 0,
+              correct: 0,
+              accuracy: 0,
+              timeSpent: 0,
+              averageTime: 0,
+              highestScore: 0,
+              perfectScores: 0,
+              hintsUsed: 0,
+              strategies: {},
+            },
+            division: {
+              attempted: 0,
+              correct: 0,
+              accuracy: 0,
+              timeSpent: 0,
+              averageTime: 0,
+              highestScore: 0,
+              perfectScores: 0,
+              hintsUsed: 0,
+              strategies: {},
+            },
+            averageTimePerProblem: 0,
+            lastPlayed: "",
+            achievements: [],
+          });
+        }
+
+        // Update child's level based on XP
+        const childProfiles = await getData(StorageKeys.CHILD_PROFILES);
+        if (childProfiles) {
+          const childIndex = childProfiles.findIndex(
+            (child) => child.id === activeChild.id
+          );
+          if (childIndex !== -1) {
+            const updatedChild = { ...childProfiles[childIndex] };
+            let newLevel = "1";
+
+            // Find the appropriate level based on XP
+            for (const level of playerLevels) {
+              if (
+                updatedChild.xp >= level.minXp &&
+                updatedChild.xp < level.maxXp
+              ) {
+                newLevel = level.id;
+                break;
+              }
+            }
+
+            // Handle case where XP exceeds the highest level
+            if (
+              updatedChild.xp >= playerLevels[playerLevels.length - 1].maxXp
+            ) {
+              newLevel = playerLevels[playerLevels.length - 1].id;
+            }
+
+            // Update level if it has changed
+            if (updatedChild.level !== newLevel) {
+              updatedChild.level = newLevel;
+              childProfiles[childIndex] = updatedChild;
+              await storeData(StorageKeys.CHILD_PROFILES, childProfiles);
+            }
+          }
+        }
+      } else {
+        // Load parent's learned words
+        const storedWords = await getData(StorageKeys.LEARNED_WORDS);
+        if (storedWords) {
+          setLearnedWords(storedWords);
+        }
+
+        // Load parent's math stats
+        const mathStats = await getData(StorageKeys.MATH_STATS);
+        if (mathStats) {
+          setMathStats(mathStats);
+        }
+
+        // Update parent's level based on XP
+        const userProfile = await getData(StorageKeys.USER_PROFILE);
+        if (userProfile) {
+          const updatedProfile = { ...userProfile };
+          let newLevel = "1";
+
+          // Find the appropriate level based on XP
+          for (const level of playerLevels) {
+            if (
+              updatedProfile.xp >= level.minXp &&
+              updatedProfile.xp < level.maxXp
+            ) {
+              newLevel = level.id;
+              break;
+            }
+          }
+
+          // Handle case where XP exceeds the highest level
+          if (
+            updatedProfile.xp >= playerLevels[playerLevels.length - 1].maxXp
+          ) {
+            newLevel = playerLevels[playerLevels.length - 1].id;
+          }
+
+          // Update level if it has changed
+          if (updatedProfile.level !== newLevel) {
+            updatedProfile.level = newLevel;
+            await storeData(StorageKeys.USER_PROFILE, updatedProfile);
+          }
+        }
       }
 
-      // Load user profile using type-safe storage
+      // Load user profile
       const userProfile = await getData(StorageKeys.USER_PROFILE);
       if (userProfile) {
         setUserProfile(userProfile);
       }
 
-      // Load math stats using type-safe storage
-      const mathStats = await getData(StorageKeys.MATH_STATS);
-      if (mathStats) {
-        setMathStats(mathStats);
+      // Load child profiles
+      const childProfiles = await getData(StorageKeys.CHILD_PROFILES);
+      if (childProfiles) {
+        setChildProfiles(childProfiles);
       }
 
       setIsLoading(false);
@@ -143,12 +318,12 @@ export default function ProfileScreen(): JSX.Element {
       );
       setIsLoading(false);
     }
-  }, []);
+  }, [activeChild]);
 
-  // Load data on initial mount
+  // Load data on initial mount and when active child changes
   useEffect(() => {
     loadUserData();
-  }, []);
+  }, [loadUserData]);
 
   // Refresh data when the screen comes into focus
   useFocusEffect(
@@ -162,6 +337,91 @@ export default function ProfileScreen(): JSX.Element {
       pathname: "/word/[id]",
       params: { id: word.id, category: word.category },
     });
+  };
+
+  const handleChildSelect = async (child: ChildProfile) => {
+    try {
+      setActiveChild(child);
+      // Load the selected child's data immediately
+      const childLearnedWords = await getData(StorageKeys.CHILD_LEARNED_WORDS);
+      if (childLearnedWords && childLearnedWords[child.id]) {
+        setLearnedWords(childLearnedWords[child.id]);
+      } else {
+        setLearnedWords([]);
+      }
+
+      const childMathStats = await getData(StorageKeys.CHILD_MATH_STATS);
+      if (childMathStats && childMathStats[child.id]) {
+        setMathStats(childMathStats[child.id]);
+      } else {
+        setMathStats({
+          totalProblems: 0,
+          correctAnswers: 0,
+          streak: 0,
+          highestStreak: 0,
+          addition: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          subtraction: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          counting: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          multiplication: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          division: {
+            attempted: 0,
+            correct: 0,
+            accuracy: 0,
+            timeSpent: 0,
+            averageTime: 0,
+            highestScore: 0,
+            perfectScores: 0,
+            hintsUsed: 0,
+            strategies: {},
+          },
+          averageTimePerProblem: 0,
+          lastPlayed: "",
+          achievements: [],
+        });
+      }
+    } catch (error) {
+      console.error("Error loading child data:", error);
+    }
   };
 
   const renderWordItem = ({
@@ -362,7 +622,9 @@ export default function ProfileScreen(): JSX.Element {
       <ScrollView>
         <View className="px-5 pt-5 pb-4 flex-row justify-between items-center">
           <Text className="text-2xl font-bold text-[#1E293B]">
-            My Learning Profile
+            {activeChild
+              ? `${activeChild.name}'s Profile`
+              : "My Learning Profile"}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/(protected)/settings")}
@@ -373,14 +635,48 @@ export default function ProfileScreen(): JSX.Element {
           </TouchableOpacity>
         </View>
 
+        {/* Child Profiles Section */}
+        {userProfile.isParent && childProfiles.length > 0 && (
+          <View className="px-5 mb-5">
+            <Text className="text-lg font-bold text-[#1E293B] mb-3">
+              Child Profiles
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {childProfiles.map((child) => (
+                <TouchableOpacity
+                  key={child.id}
+                  className={`bg-white rounded-xl p-4 mr-3 w-40 shadow-sm ${
+                    activeChild?.id === child.id
+                      ? "border-2 border-[#6366F1]"
+                      : ""
+                  }`}
+                  onPress={() => handleChildSelect(child)}
+                >
+                  <View className="w-12 h-12 rounded-full bg-[#EEF2FF] justify-center items-center mb-2">
+                    <Ionicons name="person" color="#6366F1" size={24} />
+                  </View>
+                  <Text className="font-bold text-[#1E293B] mb-1">
+                    {child.name}
+                  </Text>
+                  <Text className="text-xs text-[#64748B]">
+                    Level {child.level}
+                  </Text>
+                  <Text className="text-xs text-[#64748B]">{child.xp} XP</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* Level progress bar */}
         <View className="mx-5 mb-5 bg-white p-4 rounded-xl shadow-sm">
           <View className="flex-row justify-between items-center mb-2">
             <Text className="text-base font-bold text-[#1E293B]">
-              Level {userProfile.level}: {currentLevel?.title || "Beginner"}
+              Level {activeChild ? activeChild.level : userProfile.level}:{" "}
+              {currentLevel?.title || "Beginner"}
             </Text>
             <Text className="text-sm text-[#6366F1] font-bold">
-              {userProfile.xp} XP Total
+              {activeChild ? activeChild.xp : userProfile.xp} XP Total
             </Text>
           </View>
 
@@ -434,7 +730,7 @@ export default function ProfileScreen(): JSX.Element {
               <Ionicons name="star-outline" color="#6366F1" size={20} />
             </View>
             <Text className="text-lg font-bold text-[#1E293B] mb-1">
-              Level {userProfile.level}
+              Level {activeChild ? activeChild.level : userProfile.level}
             </Text>
             <Text className="text-xs text-[#64748B] text-center">
               {currentLevel.title}

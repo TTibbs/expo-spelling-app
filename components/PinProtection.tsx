@@ -3,6 +3,7 @@ import { View } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import PinModal from "@/components/PinModal";
 import { PinProtectionProps } from "@/types/common";
+import { getData, storeData, StorageKeys } from "@/lib/storage";
 
 const PIN_KEY = "parental_control_pin";
 
@@ -11,18 +12,29 @@ const PinProtection: React.FC<PinProtectionProps> = ({
   isProtected,
   onAccessGranted,
   onAccessDenied,
+  setupMode = false,
 }) => {
   const [showPinModal, setShowPinModal] = useState<boolean>(false);
   const [isPinVerified, setIsPinVerified] = useState<boolean>(false);
   const [isPinSetup, setIsPinSetup] = useState<boolean>(false);
 
   useEffect(() => {
-    const checkPinExists = async () => {
+    const checkPinAndVerification = async () => {
       try {
-        const pin = await SecureStore.getItemAsync(PIN_KEY);
-        setIsPinSetup(!!pin);
+        const [pin, verification] = await Promise.all([
+          SecureStore.getItemAsync(PIN_KEY),
+          getData(StorageKeys.PIN_VERIFICATION),
+        ]);
 
-        if (isProtected && !isPinVerified) {
+        setIsPinSetup(!!pin);
+        setIsPinVerified(!!verification);
+
+        // Only show PIN modal if:
+        // 1. Content is protected AND
+        // 2. Either:
+        //    a. We're in setup mode (explicitly setting/changing PIN) OR
+        //    b. We're not verified and need to verify
+        if (isProtected && (setupMode || (!verification && !!pin))) {
           setShowPinModal(true);
         }
       } catch (error) {
@@ -30,19 +42,28 @@ const PinProtection: React.FC<PinProtectionProps> = ({
       }
     };
 
-    checkPinExists();
-  }, [isProtected, isPinVerified]);
+    checkPinAndVerification();
+  }, [isProtected, setupMode]);
 
-  const handlePinSuccess = () => {
-    setIsPinVerified(true);
-    setShowPinModal(false);
-    onAccessGranted?.();
+  const handlePinSuccess = async () => {
+    try {
+      await storeData(StorageKeys.PIN_VERIFICATION, true);
+      setIsPinVerified(true);
+      setShowPinModal(false);
+      onAccessGranted?.();
+    } catch (error) {
+      console.error("Error saving PIN verification:", error);
+    }
   };
 
-  const handleCloseModal = () => {
+  const handleCloseModal = async () => {
     if (!isPinVerified && isProtected) {
-      // If we close without verifying, we should navigate back or prevent access
-      onAccessDenied?.();
+      try {
+        await storeData(StorageKeys.PIN_VERIFICATION, false);
+        onAccessDenied?.();
+      } catch (error) {
+        console.error("Error saving PIN verification:", error);
+      }
     }
     setShowPinModal(false);
   };
@@ -57,7 +78,7 @@ const PinProtection: React.FC<PinProtectionProps> = ({
         isVisible={showPinModal}
         onClose={handleCloseModal}
         onSuccess={handlePinSuccess}
-        setupMode={!isPinSetup}
+        setupMode={setupMode}
       />
     </View>
   );

@@ -15,78 +15,221 @@ import { triangles } from "@/lib/data";
 import { TriangleType } from "@/types/shapes";
 import { updateShapeCategoryStats, ShapeStorageError } from "@/lib/shapeUtils";
 import { getData, storeData, StorageKeys } from "@/lib/storage";
+import { useChild } from "@/context/ChildContext";
+import { getShapeStats, saveShapeStats, updateUserXP } from "@/lib/storage";
+import { ShapeStats } from "@/types/shapes";
+
+// Utility functions
+const calculateAccuracy = (completed: number, attempts: number): number => {
+  if (attempts === 0) return 0;
+  return Math.round((completed / attempts) * 100);
+};
+
+const calculateXP = (completed: number): number => {
+  // Base XP for completing a shape
+  let xp = 10;
+
+  // Bonus XP for perfect accuracy
+  if (completed % 5 === 0) {
+    xp += 5;
+  }
+
+  return xp;
+};
 
 export default function TrianglesScreen(): JSX.Element {
   const router = useRouter();
+  const { activeChild } = useChild();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [completed, setCompleted] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [answerAnimation] = useState(new Animated.Value(0));
+  const [shapeStats, setShapeStats] = useState<ShapeStats>({
+    totalShapes: 0,
+    circles: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    squares: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    triangles: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    polygons: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    averageTimePerShape: 0,
+    lastPlayed: new Date().toISOString(),
+    achievements: [],
+  });
 
+  // Load shape stats
   useEffect(() => {
-    // Load progress from storage using type-safe functions
-    const loadProgress = async (): Promise<void> => {
+    const loadStats = async () => {
       try {
-        const shapeStats = await getData(StorageKeys.SHAPE_STATS);
-        if (shapeStats) {
-          setCompleted(shapeStats.triangles.completed || 0);
-        }
+        const stats = await getShapeStats(activeChild?.id);
+        setShapeStats(stats);
       } catch (error) {
-        console.error(
-          "Error loading shape progress:",
-          error instanceof Error ? error.message : "Unknown error"
-        );
+        console.error("Error loading shape stats:", error);
       }
     };
 
-    loadProgress();
-  }, []);
+    loadStats();
+  }, [activeChild?.id]);
 
-  const saveProgress = async (): Promise<void> => {
+  // Save shape stats
+  const saveStats = async (newStats: ShapeStats) => {
     try {
-      // Update user profile XP with type-safe storage
-      const userProfile = await getData(StorageKeys.USER_PROFILE);
-      if (userProfile) {
-        const updatedXp = (userProfile.xp || 0) + 5;
-        const updatedProfile = {
-          ...userProfile,
-          xp: updatedXp,
-        };
-        await storeData(StorageKeys.USER_PROFILE, updatedProfile);
+      const success = await saveShapeStats(newStats, activeChild?.id);
+      if (success) {
+        setShapeStats(newStats);
       }
-
-      // Update shape statistics using our utility function
-      const shapeStats = await updateShapeCategoryStats("triangles");
-      setCompleted(shapeStats.triangles.completed);
     } catch (error) {
-      const errorMessage =
-        error instanceof ShapeStorageError
-          ? error.message
-          : "Unknown error saving progress";
-
-      console.error("Failed to save progress:", errorMessage);
-      Alert.alert("Error", "Failed to save your progress.");
+      console.error("Error saving shape stats:", error);
     }
   };
 
-  const handleNext = (): void => {
-    if (currentIndex < triangles.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setShowAnswer(false);
-      answerAnimation.setValue(0);
-    } else {
-      // Completed all shapes
-      Alert.alert("Well Done!", "You've completed the Triangles lesson!", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
-    }
-  };
+  // Handle correct answer
+  const handleCorrectAnswer = async () => {
+    const newStats: ShapeStats = {
+      ...shapeStats,
+      totalShapes: shapeStats.totalShapes + 1,
+      triangles: {
+        ...shapeStats.triangles,
+        completed: shapeStats.triangles.completed + 1,
+        correct: shapeStats.triangles.correct + 1,
+        attempts: shapeStats.triangles.attempts + 1,
+        accuracy: calculateAccuracy(
+          shapeStats.triangles.completed + 1,
+          shapeStats.triangles.attempts + 1
+        ),
+      },
+    };
 
-  const handleShowProperties = (): void => {
+    await saveStats(newStats);
+
+    // Award XP
+    const xpEarned = calculateXP(shapeStats.triangles.completed + 1);
+    await updateUserXP(xpEarned, activeChild?.id);
+
     setShowAnswer(true);
     setScore(score + 5);
-    saveProgress();
+    setCompleted(completed + 1);
+
+    Animated.timing(answerAnimation, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  // Handle incorrect answer
+  const handleIncorrectAnswer = async () => {
+    const newStats: ShapeStats = {
+      ...shapeStats,
+      triangles: {
+        ...shapeStats.triangles,
+        attempts: shapeStats.triangles.attempts + 1,
+        accuracy: calculateAccuracy(
+          shapeStats.triangles.completed,
+          shapeStats.triangles.attempts + 1
+        ),
+      },
+    };
+
+    await saveStats(newStats);
+
+    setShowAnswer(true);
+    Animated.timing(answerAnimation, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleAnswer = async (isCorrect: boolean): Promise<void> => {
+    if (isCorrect) {
+      await handleCorrectAnswer();
+    } else {
+      await handleIncorrectAnswer();
+    }
+  };
+
+  const handleNext = async (): Promise<void> => {
+    try {
+      setShowAnswer(false);
+      answerAnimation.setValue(0);
+      if (currentIndex < triangles.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        // Save final stats before navigating back
+        await saveStats(shapeStats);
+        Alert.alert("Well Done!", "You've completed the Triangles lesson!", [
+          { text: "OK", onPress: () => router.back() },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error handling next:", error);
+      Alert.alert("Error", "There was a problem saving your progress.");
+    }
+  };
+
+  const handleShowProperties = async (): Promise<void> => {
+    setShowAnswer(true);
+    setScore(score + 5);
+
+    const newStats: ShapeStats = {
+      ...shapeStats,
+      triangles: {
+        ...shapeStats.triangles,
+        completed: shapeStats.triangles.completed + 1,
+        correct: shapeStats.triangles.correct + 1,
+        attempts: shapeStats.triangles.attempts + 1,
+        accuracy: calculateAccuracy(
+          shapeStats.triangles.completed + 1,
+          shapeStats.triangles.attempts + 1
+        ),
+      },
+    };
+
+    await saveStats(newStats);
 
     Animated.timing(answerAnimation, {
       toValue: 1,

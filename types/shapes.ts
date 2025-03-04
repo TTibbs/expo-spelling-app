@@ -136,6 +136,7 @@ export interface ShapeCategoryStats {
   completed: number;
   accuracy: number;
   correct: number;
+  attempts: number;
   timeSpent: number;
   averageTime: number;
   highestScore: number;
