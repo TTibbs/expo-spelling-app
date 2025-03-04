@@ -1,24 +1,16 @@
 import { useState, useEffect } from "react";
 import { View, Alert, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { choreCategories, choresByCategory, xpValues } from "@/lib/data";
-import { Chore, CompletedChore } from "@/types/common";
-import {
-  getData,
-  storeData,
-  StorageKeys,
-  loadUserProfile,
-  updateUserXP,
-} from "@/lib/storage";
-import { useChild } from "@/context/ChildContext";
-import { useProfileData } from "@/hooks/useProfileData";
-
-// Import newly created components
 import ProfileHeader from "@/components/ProfileHeader";
 import CategorySelector from "@/components/CategorySelector";
 import ChoreDropdown from "@/components/ChoreDropdown";
 import AssignedChoresList from "@/components/AssignedChoresList";
 import ChoreActionButtons from "@/components/ChoreActionButtons";
+import { useChild } from "@/context/ChildContext";
+import { Chore, CompletedChore } from "@/types/common";
+import { choreCategories, choresByCategory, xpValues } from "@/lib/data";
+import { getData, storeData, StorageKeys, updateUserXP } from "@/lib/storage";
+import { useProfileData } from "@/hooks/useProfileData";
 
 export default function ChoresScreen() {
   const { activeChild, isLoading: isChildLoading } = useChild();
