@@ -221,15 +221,6 @@ export default function ProtectedSettingsScreen(): JSX.Element {
 
   const SettingsContent = () => (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
-      <View className="px-5 pt-5 pb-4 flex-row justify-between items-center">
-        <View className="flex-row items-center gap-2">
-          <TouchableOpacity onPress={() => router.back()} className="mr-2">
-            <Ionicons name="arrow-back" size={24} color="#1E293B" />
-          </TouchableOpacity>
-          <Text className="text-2xl font-bold text-[#1E293B]">Settings</Text>
-        </View>
-      </View>
-
       <ScrollView className="flex-1">
         {/* Child Profiles Section */}
         <View className="bg-white rounded-xl mx-5 my-2.5 p-4 shadow-sm">

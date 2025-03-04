@@ -9,14 +9,12 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Dimensions,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { PinModalProps } from "@/types/common";
 
 const PIN_KEY = "parental_control_pin";
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const PinModal: React.FC<PinModalProps> = ({
   isVisible,
