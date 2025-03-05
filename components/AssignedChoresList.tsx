@@ -15,6 +15,7 @@ const AssignedChoresList: React.FC<AssignedChoresListProps> = ({
         <TouchableOpacity
           className="mr-3"
           onPress={() => toggleChoreCompletion(item.id)}
+          testID={`toggle-chore-${item.id}`}
         >
           <View
             className={`w-6 h-6 rounded-full items-center justify-center border ${
@@ -24,12 +25,18 @@ const AssignedChoresList: React.FC<AssignedChoresListProps> = ({
             }`}
           >
             {item.completed && (
-              <Ionicons name="checkmark" size={16} color="white" />
+              <Ionicons
+                name="checkmark"
+                size={16}
+                color="white"
+                testID={`checkmark-icon-${item.id}`}
+              />
             )}
           </View>
         </TouchableOpacity>
         <View className="flex-1">
           <Text
+            testID={`chore-text-${item.id}`}
             className={`font-medium ${
               item.completed ? "text-[#94A3B8] line-through" : "text-[#1E293B]"
             }`}
@@ -38,7 +45,11 @@ const AssignedChoresList: React.FC<AssignedChoresListProps> = ({
           </Text>
           <Text className="text-xs text-[#64748B]">{item.xp} XP</Text>
         </View>
-        <TouchableOpacity className="p-2" onPress={() => removeChore(item.id)}>
+        <TouchableOpacity
+          className="p-2"
+          onPress={() => removeChore(item.id)}
+          testID={`remove-chore-${item.id}`}
+        >
           <Ionicons name="trash-outline" size={20} color="#EF4444" />
         </TouchableOpacity>
       </View>

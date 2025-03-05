@@ -13,6 +13,7 @@ const ChoreActionButtons: React.FC<ChoreActionButtonsProps> = ({
       <TouchableOpacity
         className="bg-[#F1F5F9] py-2 px-4 rounded-lg"
         onPress={resetChores}
+        testID="reset-chores-button"
       >
         <Text className="text-[#64748B] font-medium">Reset</Text>
       </TouchableOpacity>
@@ -23,6 +24,7 @@ const ChoreActionButtons: React.FC<ChoreActionButtonsProps> = ({
         }`}
         onPress={completeAllChores}
         disabled={assignedChores.length === 0}
+        testID="complete-all-chores-button"
       >
         <Text className="text-white font-medium">
           Complete {assignedChores.length > 0 && `(${calculateTotalXp()} XP)`}

@@ -10,11 +10,13 @@ const ChoreDropdown: React.FC<ChoreDropdownProps> = ({
   choresByCategory,
   assignedChores,
   addChore,
+  testID,
 }) => {
   // Render dropdown button for chore category selection
   const renderDropdownButton = (): JSX.Element => {
     return (
       <TouchableOpacity
+        testID={`${testID}-chore-dropdown-button`}
         className="bg-white rounded-lg p-3 flex-row items-center justify-between shadow-sm"
         onPress={() => setIsDropdownOpen(!isDropdownOpen)}
       >
@@ -47,6 +49,7 @@ const ChoreDropdown: React.FC<ChoreDropdownProps> = ({
             return (
               <TouchableOpacity
                 key={chore.id}
+                testID={`${testID}-chore-item-${chore.id}`}
                 className={`flex-row items-center p-2 rounded-lg mb-1 ${
                   isAlreadyAssigned ? "bg-[#F0F9FF]" : "bg-[#F9FAFB]"
                 }`}

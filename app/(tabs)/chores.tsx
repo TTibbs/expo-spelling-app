@@ -278,6 +278,7 @@ export default function ChoresScreen() {
                   categories={choreCategories}
                   selectedCategory={selectedCategory}
                   setSelectedCategory={setSelectedCategory}
+                  testID="category-selector"
                 />
               </Tooltip>
 
@@ -319,6 +320,7 @@ export default function ChoresScreen() {
                   choresByCategory={choresByCategory}
                   assignedChores={assignedChores}
                   addChore={addChore}
+                  testID="chore-dropdown"
                 />
               </Tooltip>
 
@@ -358,12 +360,14 @@ export default function ChoresScreen() {
                     assignedChores={assignedChores}
                     toggleChoreCompletion={toggleChoreCompletion}
                     removeChore={removeChore}
+                    testID="assigned-chores-list"
                   />
                   <ChoreActionButtons
                     assignedChores={assignedChores}
                     resetChores={resetChores}
                     completeAllChores={completeAllChores}
                     calculateTotalXp={calculateTotalXp}
+                    testID="chore-action-buttons"
                   />
                 </View>
               </Tooltip>

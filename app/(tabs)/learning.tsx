@@ -39,6 +39,7 @@ const LearningPathCard: React.FC<{
     style={{ backgroundColor: path.backgroundColor }}
     onPress={() => onPress(path)}
     activeOpacity={0.8}
+    testID={`learning-path-${path.id}`}
   >
     <View className="flex-row items-center">
       <View
@@ -128,6 +129,7 @@ export default function LearningScreen() {
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={<HeaderBanner />}
+          testID="learning-paths-list"
         />
 
         <Tooltip

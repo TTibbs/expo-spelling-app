@@ -183,12 +183,14 @@ export interface AssignedChoresListProps {
   assignedChores: Chore[];
   toggleChoreCompletion: (id: string) => void;
   removeChore: (id: string) => void;
+  testID?: string;
 }
 
 export interface CategorySelectorProps {
   categories: Category[];
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
+  testID?: string;
 }
 
 export interface ChoreActionButtonsProps {
@@ -196,6 +198,7 @@ export interface ChoreActionButtonsProps {
   resetChores: () => Promise<void>;
   completeAllChores: () => Promise<void>;
   calculateTotalXp: () => number;
+  testID?: string;
 }
 
 export interface ChoreDropdownProps {
@@ -205,6 +208,7 @@ export interface ChoreDropdownProps {
   choresByCategory: Record<string, Chore[]>;
   assignedChores: Chore[];
   addChore: (chore: Chore) => void;
+  testID?: string;
 }
 
 export interface ProfileHeaderProps {
