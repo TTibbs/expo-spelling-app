@@ -13,8 +13,12 @@ const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo(),
 });
 
+// Use hardcoded DSN for production builds to avoid environment variable issues
+const SENTRY_DSN =
+  "https://9f1607c25c667487756ddcfe4f607a52@o4508922347913216.ingest.de.sentry.io/4508922357022800";
+
 Sentry.init({
-  dsn: process.env.SENTRY_DSN,
+  dsn: SENTRY_DSN, // Use hardcoded DSN instead of process.env.SENTRY_DSN
   debug: __DEV__, // Only enable debug in development
   tracesSampleRate: 1.0,
   integrations: [navigationIntegration],

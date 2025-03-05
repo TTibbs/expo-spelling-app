@@ -49,7 +49,8 @@
         {
           "url": "https://sentry.io/",
           "project": "react-native",
-          "organization": "terry-ward"
+          "organization": "terry-ward",
+          "authToken": "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"
         }
       ]
     ],
