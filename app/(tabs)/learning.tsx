@@ -6,23 +6,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { learningPaths } from "@/lib/data";
 import { LearningPath } from "@/types/learning";
 import { useChild } from "@/context/ChildContext";
-import { useProfileData } from "@/hooks/useProfileData";
 import { PageHeader } from "@/components/PageHeader";
-
-// Extracted components for better organization and reusability
-const ProfileBadge: React.FC<{
-  level: string;
-  xp: number;
-  onPress: () => void;
-}> = React.memo(({ level, xp, onPress }) => (
-  <TouchableOpacity className="bg-indigo-50 p-2 rounded-xl" onPress={onPress}>
-    <View className="flex-row items-center">
-      <Ionicons name="star" color="#6366F1" size={18} />
-      <Text className="font-bold text-indigo-500 ml-1">Level {level}</Text>
-    </View>
-    <Text className="text-xs text-slate-500 text-center mt-1">{xp} XP</Text>
-  </TouchableOpacity>
-));
 
 const HeaderBanner: React.FC = React.memo(() => (
   <View className="mx-4 h-40 rounded-2xl overflow-hidden mb-6">
@@ -80,7 +64,6 @@ const LearningPathCard: React.FC<{
 export default function LearningScreen() {
   const router = useRouter();
   const { activeChild } = useChild();
-  const { userLevel, xp } = useProfileData();
 
   const handlePathPress = React.useCallback(
     (path: LearningPath) => {
@@ -97,11 +80,7 @@ export default function LearningScreen() {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <PageHeader
-        title={
-          activeChild
-            ? `${activeChild.name}'s Learning Adventures`
-            : "Learning Adventures"
-        }
+        title={activeChild ? `${activeChild.name}'s Adventures` : "Adventures"}
         subtitle="Pick a path to start learning!"
       />
 

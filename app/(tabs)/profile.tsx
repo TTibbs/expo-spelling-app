@@ -19,11 +19,13 @@ import {
   RewardProgress,
 } from "@/types/common";
 import { MathStats as MathStatsType } from "@/types/numbers";
+import { ShapeStats as ShapeStatsType } from "@/types/shapes";
 import {
   getData,
   StorageKeys,
   storeData,
   getRewardProgress,
+  getShapeStats,
 } from "@/lib/storage";
 import { useChild } from "@/context/ChildContext";
 import { PageHeader } from "@/components/PageHeader";
@@ -50,7 +52,9 @@ export default function ProfileScreen(): JSX.Element {
   });
   const [childProfiles, setChildProfiles] = useState<ChildProfile[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<"spelling" | "math">("spelling");
+  const [activeTab, setActiveTab] = useState<"spelling" | "math" | "shapes">(
+    "spelling"
+  );
   const [mathStats, setMathStats] = useState<MathStatsType>({
     totalProblems: 0,
     correctAnswers: 0,
@@ -113,6 +117,60 @@ export default function ProfileScreen(): JSX.Element {
     },
     averageTimePerProblem: 0,
     lastPlayed: "",
+    achievements: [],
+  });
+  const [shapeStats, setShapeStats] = useState<ShapeStatsType>({
+    totalShapes: 0,
+    circles: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    squares: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    triangles: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    polygons: {
+      completed: 0,
+      accuracy: 0,
+      correct: 0,
+      attempts: 0,
+      timeSpent: 0,
+      averageTime: 0,
+      highestScore: 0,
+      perfectScores: 0,
+      hintsUsed: 0,
+      propertiesLearned: [],
+    },
+    averageTimePerShape: 0,
+    lastPlayed: new Date().toISOString(),
     achievements: [],
   });
   const [refreshing, setRefreshing] = React.useState(false);
@@ -278,6 +336,12 @@ export default function ProfileScreen(): JSX.Element {
             }
           }
         }
+
+        // Load shape stats
+        const childShapeStats = await getData(StorageKeys.CHILD_SHAPE_STATS);
+        if (childShapeStats && childShapeStats[activeChild.id]) {
+          setShapeStats(childShapeStats[activeChild.id]);
+        }
       } else {
         // Load parent's learned words
         const storedWords = await getData(StorageKeys.LEARNED_WORDS);
@@ -320,6 +384,12 @@ export default function ProfileScreen(): JSX.Element {
             updatedProfile.level = newLevel;
             await storeData(StorageKeys.USER_PROFILE, updatedProfile);
           }
+        }
+
+        // Load shape stats
+        const shapeStats = await getData(StorageKeys.SHAPE_STATS);
+        if (shapeStats) {
+          setShapeStats(shapeStats);
         }
       }
 
@@ -609,6 +679,22 @@ export default function ProfileScreen(): JSX.Element {
               Numbers & Math
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            className={`flex-1 py-3 ${
+              activeTab === "shapes"
+                ? "border-b-2 border-[#3B82F6]"
+                : "border-b-2 border-[#E2E8F0]"
+            }`}
+            onPress={() => setActiveTab("shapes")}
+          >
+            <Text
+              className={`text-center font-bold ${
+                activeTab === "shapes" ? "text-[#3B82F6]" : "text-[#64748B]"
+              }`}
+            >
+              Shapes
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Learning path content */}
@@ -638,7 +724,7 @@ export default function ProfileScreen(): JSX.Element {
                 <EmptyState type="spelling" />
               )}
             </>
-          ) : (
+          ) : activeTab === "math" ? (
             <>
               <View className="flex-row items-center justify-between mb-4">
                 <Text className="text-lg font-bold text-[#1E293B]">
@@ -655,6 +741,78 @@ export default function ProfileScreen(): JSX.Element {
                 <MathStats stats={mathStats} />
               ) : (
                 <EmptyState type="math" />
+              )}
+            </>
+          ) : (
+            <>
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-lg font-bold text-[#1E293B]">
+                  My Shapes Progress
+                </Text>
+                <Ionicons name="shapes-outline" color="#3B82F6" size={20} />
+              </View>
+
+              {isLoading ? (
+                <View className="justify-center items-center py-10">
+                  <Text>Loading...</Text>
+                </View>
+              ) : shapeStats.totalShapes > 0 ? (
+                <View className="space-y-4">
+                  <View className="flex-row justify-between">
+                    <StatsCard
+                      icon="ellipse-outline"
+                      iconColor="#6366F1"
+                      value={shapeStats.circles.completed}
+                      label="Circles"
+                    />
+                    <StatsCard
+                      icon="square-outline"
+                      iconColor="#3B82F6"
+                      value={shapeStats.squares.completed}
+                      label="Squares"
+                    />
+                    <StatsCard
+                      icon="triangle-outline"
+                      iconColor="#10B981"
+                      value={shapeStats.triangles.completed}
+                      label="Triangles"
+                    />
+                  </View>
+
+                  <View className="mt-6 bg-white rounded-xl p-4 shadow-sm">
+                    <Text className="text-base font-bold text-slate-800 mb-2">
+                      Overall Progress
+                    </Text>
+                    <View className="space-y-2">
+                      <View className="flex-row justify-between">
+                        <Text className="text-sm text-slate-600">
+                          Shapes Completed
+                        </Text>
+                        <Text className="text-sm font-semibold text-slate-800">
+                          {shapeStats.circles.completed +
+                            shapeStats.squares.completed +
+                            shapeStats.triangles.completed +
+                            shapeStats.polygons.completed}
+                        </Text>
+                      </View>
+                      <View className="flex-row justify-between">
+                        <Text className="text-sm text-slate-600">Accuracy</Text>
+                        <Text className="text-sm font-semibold text-slate-800">
+                          {Math.round(
+                            (shapeStats.circles.accuracy +
+                              shapeStats.squares.accuracy +
+                              shapeStats.triangles.accuracy +
+                              shapeStats.polygons.accuracy) /
+                              4
+                          )}
+                          %
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <EmptyState type="shapes" />
               )}
             </>
           )}

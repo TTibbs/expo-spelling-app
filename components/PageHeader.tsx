@@ -3,13 +3,13 @@ import { View, Text, TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter, usePathname } from "expo-router";
 import { useProfileData } from "@/hooks/useProfileData";
-import { useChild } from "@/context/ChildContext";
 
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
   showProfileBadge?: boolean;
   rightElement?: React.ReactNode;
+  leftElement?: React.ReactNode;
   onProfilePress?: () => void;
 }
 
@@ -33,11 +33,11 @@ export const PageHeader: React.FC<PageHeaderProps> = React.memo(
     subtitle,
     showProfileBadge = true,
     rightElement,
+    leftElement,
     onProfilePress,
   }) => {
     const router = useRouter();
     const pathname = usePathname();
-    const { activeChild } = useChild();
     const { userLevel, xp } = useProfileData();
 
     const handleProfilePress = React.useCallback(() => {
@@ -53,20 +53,27 @@ export const PageHeader: React.FC<PageHeaderProps> = React.memo(
 
     return (
       <View className="px-5 pt-5 pb-2.5 flex-row justify-between items-center">
-        <View>
-          <Text className="text-2xl font-bold text-[#1E293B]">{title}</Text>
-          {subtitle && (
-            <Text className="text-base text-[#64748B] mt-1.5">{subtitle}</Text>
-          )}
+        <View className="flex-row items-center">
+          {leftElement}
+          <View>
+            <Text className="text-2xl font-bold text-[#1E293B]">{title}</Text>
+            {subtitle && (
+              <Text className="text-base text-[#64748B] mt-1.5">
+                {subtitle}
+              </Text>
+            )}
+          </View>
         </View>
-        {shouldShowProfileBadge && (
-          <ProfileBadge
-            level={userLevel}
-            xp={xp}
-            onPress={handleProfilePress}
-          />
-        )}
-        {rightElement}
+        <View className="flex-row items-center">
+          {shouldShowProfileBadge && (
+            <ProfileBadge
+              level={userLevel}
+              xp={xp}
+              onPress={handleProfilePress}
+            />
+          )}
+          {rightElement}
+        </View>
       </View>
     );
   }

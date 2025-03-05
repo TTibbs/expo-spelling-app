@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -14,9 +14,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import ReAnimated, { FlipInYRight } from "react-native-reanimated";
+import ReAnimated, {
+  FlipInYRight,
+  FadeIn,
+  FadeOut,
+  ZoomIn,
+  ZoomOut,
+  withSequence,
+  withSpring,
+} from "react-native-reanimated";
 import { wordsByCategory, xpValues } from "@/lib/data";
-import { Word } from "@/types/common";
+import { Word, Reward } from "@/types/common";
 import {
   WordGameState,
   LetterTile,
@@ -37,6 +45,7 @@ import { wordSounds } from "@/lib/data";
 import { useChild } from "@/context/ChildContext";
 import * as Speech from "expo-speech";
 import * as Haptics from "expo-haptics";
+import { useSharedValue } from "react-native-reanimated";
 
 // Generate alphabet buttons
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -225,6 +234,12 @@ function WordDetailScreen(): JSX.Element {
   // Add new state for syllable pronunciation
   const [isSpeakingSyllable, setIsSpeakingSyllable] = useState<boolean>(false);
   const [syllableAnim] = useState<Animated.Value>(new Animated.Value(1));
+
+  // Add new state for reward celebration
+  const [showRewardCelebration, setShowRewardCelebration] =
+    useState<boolean>(false);
+  const [completedRewards, setCompletedRewards] = useState<Reward[]>([]);
+  const [currentRewardIndex, setCurrentRewardIndex] = useState<number>(0);
 
   // Find the word data
   const wordData: Word | undefined = wordsByCategory[
@@ -438,7 +453,11 @@ function WordDetailScreen(): JSX.Element {
       }
 
       // Update reward progress for word challenges
-      await updateRewardProgress("word_challenges", 1, activeChild?.id);
+      const { completedRewards } = await updateRewardProgress(
+        "word_challenges",
+        1,
+        activeChild?.id
+      );
 
       setGameState((prev) => ({
         ...prev,
@@ -468,7 +487,35 @@ function WordDetailScreen(): JSX.Element {
     }));
   };
 
-  // Handle letter press
+  // Update showRewardAnimation function
+  const showRewardAnimation = (rewards: Reward[]) => {
+    if (rewards.length === 0) return;
+
+    setCompletedRewards(rewards);
+    setCurrentRewardIndex(0);
+    setShowRewardCelebration(true);
+
+    // Play celebration sound
+    playSound("winner");
+
+    // Add haptic feedback
+    if (Platform.OS === "ios") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+
+    // Hide celebration after delay and show next reward or finish
+    setTimeout(() => {
+      if (currentRewardIndex < rewards.length - 1) {
+        setCurrentRewardIndex((prev) => prev + 1);
+      } else {
+        setShowRewardCelebration(false);
+        setCompletedRewards([]);
+        setCurrentRewardIndex(0);
+      }
+    }, 2000);
+  };
+
+  // Update handleLetterPress to sequence the animations
   const handleLetterPress = async (letter: string): Promise<void> => {
     if (gameState.guessedLetters.includes(letter) || gameState.gameWon) return;
 
@@ -502,22 +549,49 @@ function WordDetailScreen(): JSX.Element {
 
           // Save the word and award XP - wait for it to complete
           const earnedXpAmount = await saveWordAndAwardXp();
-          console.log("XP earned:", earnedXpAmount); // Debug log
 
-          // Show the success alert after a delay
-          setTimeout(() => {
-            Alert.alert(
-              "Well Done!",
-              `You've spelled "${wordData.word}" correctly!`,
-              [
+          // Update reward progress and check for completed rewards
+          const { completedRewards } = await updateRewardProgress(
+            "word_challenges",
+            1,
+            activeChild?.id
+          );
+
+          // Prepare success message
+          const message = `You've spelled "${wordData.word}" correctly!`;
+          let xpMessage = "";
+          if (earnedXpAmount > 0) {
+            xpMessage = `\n\n✨ You earned ${earnedXpAmount} XP! ✨`;
+            if (!gameState.wordAlreadyLearned) {
+              xpMessage += `\n(First time bonus: +${xpValues.completeWord} XP)`;
+            }
+          } else {
+            xpMessage = "\n\nYou've already earned XP for this word.";
+          }
+
+          // Show reward celebration if any rewards were completed
+          if (completedRewards.length > 0) {
+            showRewardAnimation(completedRewards);
+            // Show the success alert after all rewards are shown
+            setTimeout(() => {
+              Alert.alert("Well Done!", message + xpMessage, [
                 {
                   text: "View Profile",
                   onPress: () => router.push("/profile"),
                 },
                 { text: "Choose Another Word", onPress: () => router.back() },
-              ]
-            );
-          }, 200);
+              ]);
+            }, completedRewards.length * 2000 + 200);
+          } else {
+            // Show the success alert immediately if no rewards
+            Alert.alert("Well Done!", message + xpMessage, [
+              {
+                text: "View Profile",
+                onPress: () => router.push("/profile"),
+              },
+              { text: "Choose Another Word", onPress: () => router.back() },
+            ]);
+          }
         } catch (error) {
           console.error("Error processing word completion:", error);
           Alert.alert("Error", "There was a problem saving your progress.");
@@ -1049,6 +1123,43 @@ function WordDetailScreen(): JSX.Element {
         pitch={speechPitch}
         onPitchChange={setSpeechPitch}
       />
+
+      {showRewardCelebration && completedRewards.length > 0 && (
+        <View className="absolute inset-0 justify-center items-center bg-white/90">
+          <Text className="text-3xl font-bold text-amber-500 mb-2">
+            🎉 Reward Unlocked! 🎉
+          </Text>
+          <Text className="text-xl font-bold text-slate-800 mb-2">
+            {completedRewards[currentRewardIndex].title}
+          </Text>
+          <Text className="text-base text-slate-600 mb-4 text-center px-6">
+            {completedRewards[currentRewardIndex].description}
+          </Text>
+          <View
+            className="w-16 h-16 rounded-full items-center justify-center mb-4"
+            style={{
+              backgroundColor: `${completedRewards[currentRewardIndex].color}20`,
+            }}
+          >
+            <Ionicons
+              name={completedRewards[currentRewardIndex].icon as any}
+              size={32}
+              color={completedRewards[currentRewardIndex].color}
+            />
+          </View>
+          <View className="flex-row items-center bg-amber-100 px-4 py-2 rounded-full">
+            <Text className="text-xl font-bold text-amber-600 mr-2">
+              +{completedRewards[currentRewardIndex].points}
+            </Text>
+            <Ionicons name="star" size={24} color="#D97706" />
+          </View>
+          {completedRewards.length > 1 && (
+            <Text className="text-sm text-slate-500 mt-4">
+              Reward {currentRewardIndex + 1} of {completedRewards.length}
+            </Text>
+          )}
+        </View>
+      )}
     </SafeAreaView>
   );
 }

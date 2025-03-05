@@ -851,11 +851,13 @@ interface RewardProgressData {
   >;
 }
 
+export const DAILY_POINTS_MAX = 100;
+
 export async function updateRewardProgress(
   activityType: string,
   value: number,
   childId?: string
-): Promise<boolean> {
+): Promise<{ success: boolean; completedRewards: Reward[] }> {
   try {
     // Get current progress
     let currentProgress = await getRewardProgress(childId);
@@ -867,11 +869,12 @@ export async function updateRewardProgress(
 
     if (!currentProgress) {
       console.error("Failed to initialize reward progress");
-      return false;
+      return { success: false, completedRewards: [] };
     }
 
     const today = new Date().toISOString().split("T")[0];
     const weekStart = getWeekStart(today);
+    const completedRewards: Reward[] = [];
 
     // Update daily progress
     if (
@@ -884,7 +887,11 @@ export async function updateRewardProgress(
         completed: [],
       };
     }
-    currentProgress.dailyProgress.points += value;
+    const newDailyPoints = Math.min(
+      currentProgress.dailyProgress.points + value,
+      DAILY_POINTS_MAX
+    );
+    currentProgress.dailyProgress.points = newDailyPoints;
 
     // Update weekly progress
     if (
@@ -952,21 +959,28 @@ export async function updateRewardProgress(
             currentProgress.rewards[reward.id].completedAt =
               new Date().toISOString();
 
-            // Add to completed list and add points
+            // Add to completed list and add points with limit check
             if (reward.type === "daily") {
               currentProgress.dailyProgress.completed.push(reward.id);
-              currentProgress.dailyProgress.points += reward.points;
+              currentProgress.dailyProgress.points = Math.min(
+                currentProgress.dailyProgress.points + reward.points,
+                DAILY_POINTS_MAX
+              );
               currentProgress.weeklyProgress.points += reward.points;
             }
+
+            // Add to completedRewards array
+            completedRewards.push(reward);
           }
         }
       });
     });
 
     // Save the updated progress
-    return await saveRewardProgress(currentProgress, childId);
+    const success = await saveRewardProgress(currentProgress, childId);
+    return { success, completedRewards };
   } catch (error) {
     console.error("Error updating reward progress:", error);
-    return false;
+    return { success: false, completedRewards: [] };
   }
 }

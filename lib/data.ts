@@ -901,7 +901,7 @@ export const shapeActivities: ShapeActivity[] = [
     id: "rectangles",
     title: "Rectangles",
     description: "Explore rectangles and squares",
-    route: "/learning/shapes/rectangles",
+    route: "/learning/shapes/squares",
     icon: "square-outline",
     color: "#3B82F6",
     backgroundColor: "#DBEAFE",

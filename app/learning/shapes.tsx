@@ -70,26 +70,6 @@ export default function ShapesScreen() {
     );
   };
 
-  // Progress indicator component
-  const ProgressIndicator = ({
-    id,
-    completed,
-  }: {
-    id: string;
-    completed: number;
-  }) => {
-    if (completed === 0) return null;
-
-    return (
-      <View className="flex-row items-center mt-1.5">
-        <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-        <Text className="text-xs text-emerald-500 ml-1 font-medium">
-          {completed} completed
-        </Text>
-      </View>
-    );
-  };
-
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Banner */}
@@ -145,12 +125,6 @@ export default function ShapesScreen() {
                 <Text className="text-sm text-slate-500">
                   {activity.description}
                 </Text>
-                {progress[activity.id as keyof typeof progress] > 0 && (
-                  <ProgressIndicator
-                    id={activity.id}
-                    completed={progress[activity.id as keyof typeof progress]}
-                  />
-                )}
               </View>
 
               {!activity.available && (

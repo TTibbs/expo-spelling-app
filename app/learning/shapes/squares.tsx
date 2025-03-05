@@ -120,6 +120,23 @@ export default function SquaresScreen(): JSX.Element {
     achievements: [],
   });
 
+  // Load initial completion count
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        const stats = await getShapeStats(activeChild?.id);
+        if (stats) {
+          setCompleted(stats.squares.completed);
+          setShapeStats(stats);
+        }
+      } catch (error) {
+        console.error("Error loading shape progress:", error);
+      }
+    };
+
+    loadProgress();
+  }, [activeChild?.id]);
+
   // Load shape stats
   useEffect(() => {
     const loadStats = async () => {
@@ -146,39 +163,11 @@ export default function SquaresScreen(): JSX.Element {
     }
   };
 
-  /**
-   * Handles navigation to the next shape or completes the lesson
-   * Shows completion alert when all shapes have been viewed
-   */
-  const handleNext = (): void => {
-    if (currentIndex < rectangles.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setShowAnswer(false);
-      answerAnimation.setValue(0);
-    } else {
-      // Completed all shapes
-      Alert.alert(
-        "Well Done!",
-        "You've completed the Squares & Rectangles lesson!",
-        [{ text: "OK", onPress: () => router.back() }]
-      );
-    }
-  };
-
-  /**
-   * Handles the "Show Properties" button press
-   * Reveals the shape properties with animation
-   * Saves progress and adds to score
-   */
-  const handleShowProperties = async (): Promise<void> => {
-    setShowAnswer(true);
-    setScore(score + 5);
-
-    // Update reward progress
-    await updateRewardProgress("shapes", 1, activeChild?.id);
-
+  // Handle correct answer
+  const handleCorrectAnswer = async () => {
     const newStats: ShapeStats = {
       ...shapeStats,
+      totalShapes: shapeStats.totalShapes + 1,
       squares: {
         ...shapeStats.squares,
         completed: shapeStats.squares.completed + 1,
@@ -193,11 +182,71 @@ export default function SquaresScreen(): JSX.Element {
 
     await saveStats(newStats);
 
+    // Award XP
+    const xpEarned = calculateXP(shapeStats.squares.completed + 1);
+    await updateUserXP(xpEarned, activeChild?.id);
+
+    setShowAnswer(true);
+    setScore(score + 5);
+    setCompleted(completed + 1);
+
     Animated.timing(answerAnimation, {
       toValue: 1,
       duration: 500,
       useNativeDriver: true,
     }).start();
+  };
+
+  // Handle incorrect answer
+  const handleIncorrectAnswer = async () => {
+    const newStats: ShapeStats = {
+      ...shapeStats,
+      squares: {
+        ...shapeStats.squares,
+        attempts: shapeStats.squares.attempts + 1,
+        accuracy: calculateAccuracy(
+          shapeStats.squares.completed,
+          shapeStats.squares.attempts + 1
+        ),
+      },
+    };
+
+    await saveStats(newStats);
+
+    setShowAnswer(true);
+    Animated.timing(answerAnimation, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleNext = async (): Promise<void> => {
+    try {
+      setShowAnswer(false);
+      answerAnimation.setValue(0);
+      if (currentIndex < rectangles.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        // Save final stats before navigating back
+        await saveStats(shapeStats);
+        Alert.alert(
+          "Well Done!",
+          "You've completed the Squares & Rectangles lesson!",
+          [{ text: "OK", onPress: () => router.back() }]
+        );
+      }
+    } catch (error) {
+      console.error("Error handling next:", error);
+      Alert.alert("Error", "There was a problem saving your progress.");
+    }
+  };
+
+  const handleShowProperties = async (): Promise<void> => {
+    await handleCorrectAnswer();
+
+    // Update reward progress
+    await updateRewardProgress("shapes", 1, activeChild?.id);
   };
 
   /**

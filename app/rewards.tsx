@@ -149,8 +149,8 @@ export default function RewardsScreen() {
           title="Your Rewards 🎁"
           subtitle="Keep learning to unlock special rewards!"
           showProfileBadge={false}
-          rightElement={
-            <TouchableOpacity onPress={() => router.back()}>
+          leftElement={
+            <TouchableOpacity onPress={() => router.back()} className="mr-3">
               <Ionicons name="arrow-back" size={24} color="#1E293B" />
             </TouchableOpacity>
           }

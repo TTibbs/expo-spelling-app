@@ -13,8 +13,8 @@ import { useProfileData } from "@/hooks/useProfileData";
 import { PageHeader } from "@/components/PageHeader";
 
 export default function ChoresScreen() {
-  const { activeChild, isLoading: isChildLoading } = useChild();
-  const { refreshProfile, userLevel, xp } = useProfileData();
+  const { activeChild } = useChild();
+  const { refreshProfile } = useProfileData();
   const [selectedCategory, setSelectedCategory] = useState<string>("home");
   const [assignedChores, setAssignedChores] = useState<Chore[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);

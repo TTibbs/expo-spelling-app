@@ -105,12 +105,10 @@ export default function WordsScreen(): JSX.Element {
           numColumns={2}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
-          columnWrapperStyle={{
-            justifyContent: "space-between",
-            paddingHorizontal: 2,
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: 20,
           }}
-          className="px-2"
-          contentContainerStyle={{ paddingBottom: 20 }}
         />
       </View>
     </SafeAreaView>
@@ -153,7 +151,7 @@ function WordItem({ item, onPress, category }: WordItemProps): JSX.Element {
       onPress={() => onPress(item, category)}
       className="m-2 h-36 rounded-lg overflow-hidden bg-white shadow-sm"
       style={{
-        width: "48%", // Fixed width to ensure consistent sizing
+        width: "47%", // Slightly reduced to ensure proper spacing
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
