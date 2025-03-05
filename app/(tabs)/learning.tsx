@@ -14,12 +14,12 @@ const HeaderBanner: React.FC = React.memo(() => (
   <View className="mx-4 h-40 rounded-2xl overflow-hidden mb-6">
     <Image
       source={{
-        uri: "https://images.unsplash.com/photo-1577451818680-9abb25a366cd?q=80&w=1000&auto=format&fit=crop",
+        uri: "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS6BqkwwAIkGsqUgazHJ6p5X3rTLuAcBQhx70f",
       }}
       className="w-full h-full"
       resizeMode="cover"
     />
-    <View className="absolute bottom-0 left-0 right-0 bg-black/50 p-4">
+    <View className="absolute bottom-0 left-0 right-0 bg-black/30 p-4">
       <Text className="text-xl font-bold text-white mb-1">
         Unlock Your Potential!
       </Text>

@@ -76,12 +76,12 @@ export default function ShapesScreen() {
       <View className="mx-4 h-40 rounded-xl overflow-hidden mb-6">
         <Image
           source={{
-            uri: "https://images.unsplash.com/photo-1633008848202-9c5575a0567b?q=80&w=1000&auto=format&fit=crop",
+            uri: "https://dtsjrc96mj.ufs.sh/f/E1OdRdSFWCZS6BqkwwAIkGsqUgazHJ6p5X3rTLuAcBQhx70f",
           }}
           className="w-full h-full"
           resizeMode="cover"
         />
-        <View className="absolute bottom-0 left-0 right-0 p-4 bg-black/50">
+        <View className="absolute bottom-0 left-0 right-0 p-4 bg-black/30">
           <Text className="text-xl font-bold text-white mb-1">
             Shape Adventures!
           </Text>
