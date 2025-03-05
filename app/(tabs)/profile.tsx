@@ -25,7 +25,6 @@ import {
   StorageKeys,
   storeData,
   getRewardProgress,
-  getShapeStats,
 } from "@/lib/storage";
 import { useChild } from "@/context/ChildContext";
 import { PageHeader } from "@/components/PageHeader";
@@ -36,6 +35,7 @@ import { WordCard } from "@/components/WordCard";
 import { EmptyState } from "@/components/EmptyState";
 import { MathStats } from "@/components/MathStats";
 import { initializeRewardProgress } from "@/lib/utils";
+import Tooltip from "react-native-walkthrough-tooltip";
 
 export default function ProfileScreen(): JSX.Element {
   const router = useRouter();
@@ -177,6 +177,8 @@ export default function ProfileScreen(): JSX.Element {
   const [rewardProgress, setRewardProgress] = useState<RewardProgress>(() =>
     initializeRewardProgress(activeChild?.id || "default")
   );
+  const [showTutorial, setShowTutorial] = useState<boolean>(true);
+  const [currentStep, setCurrentStep] = useState<number>(0);
 
   // Stats for the profile
   const totalWords = learnedWords.length;
@@ -556,6 +558,14 @@ export default function ProfileScreen(): JSX.Element {
     }
   };
 
+  const handleSkipTutorial = () => {
+    setShowTutorial(false);
+  };
+
+  const handleNextStep = () => {
+    setCurrentStep((prevStep) => prevStep + 1);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
       <ScrollView
@@ -599,34 +609,269 @@ export default function ProfileScreen(): JSX.Element {
           </View>
         )}
 
-        {/* Level progress bar */}
-        <LevelProgressBar
-          currentLevel={currentLevel}
-          nextLevel={nextLevel}
-          currentXP={currentXP}
-        />
+        {showTutorial ? (
+          <>
+            <Tooltip
+              isVisible={currentStep === 0}
+              content={
+                <View className="p-4">
+                  <Text className="text-zinc-900 text-base font-bold mb-2">
+                    Track Your Progress! 📊
+                  </Text>
+                  <Text className="text-zinc-900 text-sm mb-4">
+                    See your level progress, XP, and achievements. Keep learning
+                    to level up!
+                  </Text>
+                  <View className="flex-row justify-between">
+                    <TouchableOpacity
+                      onPress={handleSkipTutorial}
+                      className="px-4 py-2"
+                    >
+                      <Text className="text-zinc-900 text-sm">Skip</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleNextStep}
+                      className="bg-white px-4 py-2 rounded-lg"
+                    >
+                      <Text className="text-[#6366F1] font-bold">Next</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              }
+              placement="bottom"
+              onClose={() => setShowTutorial(false)}
+              backgroundColor="rgba(0,0,0,0.7)"
+            >
+              <LevelProgressBar
+                currentLevel={currentLevel}
+                nextLevel={nextLevel}
+                currentXP={currentXP}
+              />
+            </Tooltip>
 
-        {/* Stats summary cards */}
-        <View className="flex-row justify-between px-5 mb-5">
-          <StatsCard
-            icon="book-outline"
-            iconColor="#EEF2FF"
-            value={totalWords}
-            label="Words Learned"
-          />
-          <StatsCard
-            icon="calculator-outline"
-            iconColor="#ECFDF5"
-            value={mathStats.totalProblems}
-            label="Math Problems"
-          />
-          <StatsCard
-            icon="gift-outline"
-            iconColor="#FDF2F8"
-            value={rewardProgress.dailyProgress.points}
-            label="Daily Points"
-          />
-        </View>
+            <Tooltip
+              isVisible={currentStep === 1}
+              content={
+                <View className="p-4">
+                  <Text className="text-zinc-900 text-base font-bold mb-2">
+                    View Your Stats! 📈
+                  </Text>
+                  <Text className="text-zinc-900 text-sm mb-4">
+                    Check your progress in words learned, math problems solved,
+                    and daily points earned!
+                  </Text>
+                  <View className="flex-row justify-between">
+                    <TouchableOpacity
+                      onPress={handleSkipTutorial}
+                      className="px-4 py-2"
+                    >
+                      <Text className="text-zinc-900 text-sm">Skip</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleNextStep}
+                      className="bg-white px-4 py-2 rounded-lg"
+                    >
+                      <Text className="text-[#6366F1] font-bold">Next</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              }
+              placement="bottom"
+              onClose={() => setShowTutorial(false)}
+              backgroundColor="rgba(0,0,0,0.7)"
+            >
+              <View className="flex-row justify-between px-5 mb-5">
+                <StatsCard
+                  icon="book-outline"
+                  iconColor="#EEF2FF"
+                  value={totalWords}
+                  label="Words Learned"
+                />
+                <StatsCard
+                  icon="calculator-outline"
+                  iconColor="#ECFDF5"
+                  value={mathStats.totalProblems}
+                  label="Math Problems"
+                />
+                <StatsCard
+                  icon="gift-outline"
+                  iconColor="#FDF2F8"
+                  value={rewardProgress.dailyProgress.points}
+                  label="Daily Points"
+                />
+              </View>
+            </Tooltip>
+
+            <Tooltip
+              isVisible={currentStep === 2}
+              content={
+                <View className="p-4">
+                  <Text className="text-zinc-900 text-base font-bold mb-2">
+                    Explore Your Learning Journey! 🎯
+                  </Text>
+                  <Text className="text-zinc-900 text-sm mb-4">
+                    Switch between tabs to see your progress in spelling, math,
+                    and shapes. Each area has its own achievements!
+                  </Text>
+                  <View className="flex-row justify-between">
+                    <TouchableOpacity
+                      onPress={handleSkipTutorial}
+                      className="px-4 py-2"
+                    >
+                      <Text className="text-zinc-900 text-sm">Skip</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleNextStep}
+                      className="bg-white px-4 py-2 rounded-lg"
+                    >
+                      <Text className="text-[#6366F1] font-bold">Finish</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              }
+              placement="bottom"
+              onClose={() => setShowTutorial(false)}
+              backgroundColor="rgba(0,0,0,0.7)"
+            >
+              <View className="flex-row px-5 mb-4">
+                <TouchableOpacity
+                  className={`flex-1 py-3 ${
+                    activeTab === "spelling"
+                      ? "border-b-2 border-[#6366F1]"
+                      : "border-b-2 border-[#E2E8F0]"
+                  }`}
+                  onPress={() => setActiveTab("spelling")}
+                >
+                  <Text
+                    className={`text-center font-bold ${
+                      activeTab === "spelling"
+                        ? "text-[#6366F1]"
+                        : "text-[#64748B]"
+                    }`}
+                  >
+                    Spelling
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className={`flex-1 py-3 ${
+                    activeTab === "math"
+                      ? "border-b-2 border-[#10B981]"
+                      : "border-b-2 border-[#E2E8F0]"
+                  }`}
+                  onPress={() => setActiveTab("math")}
+                >
+                  <Text
+                    className={`text-center font-bold ${
+                      activeTab === "math" ? "text-[#10B981]" : "text-[#64748B]"
+                    }`}
+                  >
+                    Numbers
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className={`flex-1 py-3 ${
+                    activeTab === "shapes"
+                      ? "border-b-2 border-[#3B82F6]"
+                      : "border-b-2 border-[#E2E8F0]"
+                  }`}
+                  onPress={() => setActiveTab("shapes")}
+                >
+                  <Text
+                    className={`text-center font-bold ${
+                      activeTab === "shapes"
+                        ? "text-[#3B82F6]"
+                        : "text-[#64748B]"
+                    }`}
+                  >
+                    Shapes
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Tooltip>
+          </>
+        ) : (
+          <>
+            <LevelProgressBar
+              currentLevel={currentLevel}
+              nextLevel={nextLevel}
+              currentXP={currentXP}
+            />
+
+            <View className="flex-row justify-between px-5 mb-5">
+              <StatsCard
+                icon="book-outline"
+                iconColor="#EEF2FF"
+                value={totalWords}
+                label="Words Learned"
+              />
+              <StatsCard
+                icon="calculator-outline"
+                iconColor="#ECFDF5"
+                value={mathStats.totalProblems}
+                label="Math Problems"
+              />
+              <StatsCard
+                icon="gift-outline"
+                iconColor="#FDF2F8"
+                value={rewardProgress.dailyProgress.points}
+                label="Daily Points"
+              />
+            </View>
+
+            <View className="flex-row px-5 mb-4">
+              <TouchableOpacity
+                className={`flex-1 py-3 ${
+                  activeTab === "spelling"
+                    ? "border-b-2 border-[#6366F1]"
+                    : "border-b-2 border-[#E2E8F0]"
+                }`}
+                onPress={() => setActiveTab("spelling")}
+              >
+                <Text
+                  className={`text-center font-bold ${
+                    activeTab === "spelling"
+                      ? "text-[#6366F1]"
+                      : "text-[#64748B]"
+                  }`}
+                >
+                  Spelling
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`flex-1 py-3 ${
+                  activeTab === "math"
+                    ? "border-b-2 border-[#10B981]"
+                    : "border-b-2 border-[#E2E8F0]"
+                }`}
+                onPress={() => setActiveTab("math")}
+              >
+                <Text
+                  className={`text-center font-bold ${
+                    activeTab === "math" ? "text-[#10B981]" : "text-[#64748B]"
+                  }`}
+                >
+                  Numbers
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`flex-1 py-3 ${
+                  activeTab === "shapes"
+                    ? "border-b-2 border-[#3B82F6]"
+                    : "border-b-2 border-[#E2E8F0]"
+                }`}
+                onPress={() => setActiveTab("shapes")}
+              >
+                <Text
+                  className={`text-center font-bold ${
+                    activeTab === "shapes" ? "text-[#3B82F6]" : "text-[#64748B]"
+                  }`}
+                >
+                  Shapes
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
 
         {/* Rewards quick access */}
         <TouchableOpacity
@@ -644,58 +889,6 @@ export default function ProfileScreen(): JSX.Element {
             <Ionicons name="chevron-forward" size={20} color="white" />
           </View>
         </TouchableOpacity>
-
-        {/* Learning path tabs */}
-        <View className="flex-row px-5 mb-4">
-          <TouchableOpacity
-            className={`flex-1 py-3 ${
-              activeTab === "spelling"
-                ? "border-b-2 border-[#6366F1]"
-                : "border-b-2 border-[#E2E8F0]"
-            }`}
-            onPress={() => setActiveTab("spelling")}
-          >
-            <Text
-              className={`text-center font-bold ${
-                activeTab === "spelling" ? "text-[#6366F1]" : "text-[#64748B]"
-              }`}
-            >
-              Spelling & Words
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className={`flex-1 py-3 ${
-              activeTab === "math"
-                ? "border-b-2 border-[#10B981]"
-                : "border-b-2 border-[#E2E8F0]"
-            }`}
-            onPress={() => setActiveTab("math")}
-          >
-            <Text
-              className={`text-center font-bold ${
-                activeTab === "math" ? "text-[#10B981]" : "text-[#64748B]"
-              }`}
-            >
-              Numbers & Math
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className={`flex-1 py-3 ${
-              activeTab === "shapes"
-                ? "border-b-2 border-[#3B82F6]"
-                : "border-b-2 border-[#E2E8F0]"
-            }`}
-            onPress={() => setActiveTab("shapes")}
-          >
-            <Text
-              className={`text-center font-bold ${
-                activeTab === "shapes" ? "text-[#3B82F6]" : "text-[#64748B]"
-              }`}
-            >
-              Shapes
-            </Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Learning path content */}
         <View className="px-5 pb-10">

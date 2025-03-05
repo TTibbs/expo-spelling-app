@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -7,6 +7,8 @@ import { learningPaths } from "@/lib/data";
 import { LearningPath } from "@/types/learning";
 import { useChild } from "@/context/ChildContext";
 import { PageHeader } from "@/components/PageHeader";
+import Tooltip from "react-native-walkthrough-tooltip";
+import { getData, storeData, StorageKeys } from "@/lib/storage";
 
 const HeaderBanner: React.FC = React.memo(() => (
   <View className="mx-4 h-40 rounded-2xl overflow-hidden mb-6">
@@ -64,6 +66,38 @@ const LearningPathCard: React.FC<{
 export default function LearningScreen() {
   const router = useRouter();
   const { activeChild } = useChild();
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    checkFirstTimeUser();
+  }, []);
+
+  const checkFirstTimeUser = async () => {
+    try {
+      const hasSeenTutorial = await getData(
+        StorageKeys.HAS_SEEN_LEARNING_TUTORIAL
+      );
+      if (!hasSeenTutorial) {
+        setShowTutorial(true);
+        await storeData(StorageKeys.HAS_SEEN_LEARNING_TUTORIAL, true);
+      }
+    } catch (error) {
+      console.error("Error checking tutorial status:", error);
+    }
+  };
+
+  const handleNextStep = () => {
+    if (currentStep < 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      setShowTutorial(false);
+    }
+  };
+
+  const handleSkipTutorial = () => {
+    setShowTutorial(false);
+  };
 
   const handlePathPress = React.useCallback(
     (path: LearningPath) => {
@@ -84,17 +118,86 @@ export default function LearningScreen() {
         subtitle="Pick a path to start learning!"
       />
 
-      <HeaderBanner />
+      <View className="flex-1">
+        <FlatList
+          data={learningPaths}
+          renderItem={({ item }) => (
+            <LearningPathCard path={item} onPress={handlePathPress} />
+          )}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={<HeaderBanner />}
+        />
 
-      <FlatList
-        data={learningPaths}
-        renderItem={({ item }) => (
-          <LearningPathCard path={item} onPress={handlePathPress} />
-        )}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
-      />
+        <Tooltip
+          isVisible={showTutorial && currentStep === 0}
+          content={
+            <View className="p-4">
+              <Text className="text-zinc-900 text-base font-bold mb-2">
+                Welcome to Learning Adventures! 🎯
+              </Text>
+              <Text className="text-zinc-900 text-sm mb-4">
+                Choose from different learning paths like spelling, numbers, and
+                shapes. Each path offers unique learning experiences!
+              </Text>
+              <View className="flex-row justify-between">
+                <TouchableOpacity
+                  onPress={handleSkipTutorial}
+                  className="px-4 py-2"
+                >
+                  <Text className="text-zinc-900 text-sm">Skip</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleNextStep}
+                  className="bg-white px-4 py-2 rounded-lg"
+                >
+                  <Text className="text-[#6366F1] font-bold">Next</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          }
+          placement="bottom"
+          onClose={() => setShowTutorial(false)}
+          backgroundColor="rgba(0,0,0,0.7)"
+        >
+          <View />
+        </Tooltip>
+
+        <Tooltip
+          isVisible={showTutorial && currentStep === 1}
+          content={
+            <View className="p-4">
+              <Text className="text-zinc-900 text-base font-bold mb-2">
+                Start Your Learning Journey! ✨
+              </Text>
+              <Text className="text-zinc-900 text-sm mb-4">
+                Tap on any learning path to begin. Complete activities to earn
+                XP and level up!
+              </Text>
+              <View className="flex-row justify-between">
+                <TouchableOpacity
+                  onPress={handleSkipTutorial}
+                  className="px-4 py-2"
+                >
+                  <Text className="text-zinc-900 text-sm">Skip</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleNextStep}
+                  className="bg-white px-4 py-2 rounded-lg"
+                >
+                  <Text className="text-[#6366F1] font-bold">Finish</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          }
+          placement="top"
+          onClose={() => setShowTutorial(false)}
+          backgroundColor="rgba(0,0,0,0.7)"
+        >
+          <View />
+        </Tooltip>
+      </View>
     </SafeAreaView>
   );
 }

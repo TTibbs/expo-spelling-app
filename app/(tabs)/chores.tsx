@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Alert, Text, FlatList, RefreshControl } from "react-native";
+import {
+  View,
+  Alert,
+  Text,
+  RefreshControl,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CategorySelector from "@/components/CategorySelector";
 import ChoreDropdown from "@/components/ChoreDropdown";
@@ -11,6 +18,7 @@ import { choreCategories, choresByCategory, xpValues } from "@/lib/data";
 import { getData, storeData, StorageKeys, updateUserXP } from "@/lib/storage";
 import { useProfileData } from "@/hooks/useProfileData";
 import { PageHeader } from "@/components/PageHeader";
+import Tooltip from "react-native-walkthrough-tooltip";
 
 export default function ChoresScreen() {
   const { activeChild } = useChild();
@@ -20,6 +28,8 @@ export default function ChoresScreen() {
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = React.useState(false);
+  const [showTutorial, setShowTutorial] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
 
   // Check if all chores are completed
   const allChoresCompleted =
@@ -198,59 +208,24 @@ export default function ChoresScreen() {
         { text: "Cancel", style: "cancel" },
         {
           text: "Yes",
-          onPress: () => setAssignedChores([]),
+          onPress: () => {
+            setAssignedChores([]);
+            setFeedbackMessage("All chores have been reset");
+          },
         },
       ]
     );
   }, []);
 
-  // Render the main content
-  const renderContent = React.useCallback(
-    () => (
-      <>
-        <CategorySelector
-          categories={choreCategories}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-        />
+  const handleSkipTutorial = () => {
+    setShowTutorial(false);
+    setCurrentStep(currentStep + 1);
+  };
 
-        <ChoreDropdown
-          isDropdownOpen={isDropdownOpen}
-          setIsDropdownOpen={setIsDropdownOpen}
-          selectedCategory={selectedCategory}
-          choresByCategory={choresByCategory}
-          assignedChores={assignedChores}
-          addChore={addChore}
-        />
-
-        <View className="flex-1">
-          <AssignedChoresList
-            assignedChores={assignedChores}
-            toggleChoreCompletion={toggleChoreCompletion}
-            removeChore={removeChore}
-          />
-        </View>
-
-        <ChoreActionButtons
-          assignedChores={assignedChores}
-          resetChores={resetChores}
-          completeAllChores={completeAllChores}
-          calculateTotalXp={calculateTotalXp}
-        />
-      </>
-    ),
-    [
-      selectedCategory,
-      isDropdownOpen,
-      assignedChores,
-      addChore,
-      toggleChoreCompletion,
-      removeChore,
-      resetChores,
-      completeAllChores,
-      calculateTotalXp,
-    ]
-  );
+  const handleNextStep = () => {
+    setShowTutorial(false);
+    setCurrentStep(currentStep + 1);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-[#F9F9F9]">
@@ -259,16 +234,174 @@ export default function ChoresScreen() {
         subtitle="Complete tasks to earn XP!"
       />
 
-      <FlatList
-        className="flex-1 px-5 pt-1"
-        data={[{ key: "content" }]}
-        renderItem={() => renderContent()}
-        keyExtractor={() => "content"}
+      <ScrollView
+        className="flex-1"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        showsVerticalScrollIndicator={true}
-      />
+      >
+        <View className="px-5">
+          {showTutorial ? (
+            <>
+              <Tooltip
+                isVisible={currentStep === 0}
+                content={
+                  <View className="p-4">
+                    <Text className="text-zinc-900 text-base font-bold mb-2">
+                      Welcome to Chores! 🧹
+                    </Text>
+                    <Text className="text-zinc-900 text-sm mb-4">
+                      Select a category to see available chores. Complete them
+                      to earn XP and rewards!
+                    </Text>
+                    <View className="flex-row justify-between">
+                      <TouchableOpacity
+                        onPress={handleSkipTutorial}
+                        className="px-4 py-2"
+                      >
+                        <Text className="text-zinc-900 text-sm">Skip</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={handleNextStep}
+                        className="bg-white px-4 py-2 rounded-lg"
+                      >
+                        <Text className="text-[#6366F1] font-bold">Next</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                }
+                placement="bottom"
+                onClose={() => setShowTutorial(false)}
+                backgroundColor="rgba(0,0,0,0.7)"
+              >
+                <CategorySelector
+                  categories={choreCategories}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                />
+              </Tooltip>
+
+              <Tooltip
+                isVisible={currentStep === 1}
+                content={
+                  <View className="p-4">
+                    <Text className="text-zinc-900 text-base font-bold mb-2">
+                      Add Chores to Your List! 📝
+                    </Text>
+                    <Text className="text-zinc-900 text-sm mb-4">
+                      Tap the + button to add chores. Mark them as complete when
+                      you're done!
+                    </Text>
+                    <View className="flex-row justify-between">
+                      <TouchableOpacity
+                        onPress={handleSkipTutorial}
+                        className="px-4 py-2"
+                      >
+                        <Text className="text-zinc-900 text-sm">Skip</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={handleNextStep}
+                        className="bg-white px-4 py-2 rounded-lg"
+                      >
+                        <Text className="text-[#6366F1] font-bold">Next</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                }
+                placement="bottom"
+                onClose={() => setShowTutorial(false)}
+                backgroundColor="rgba(0,0,0,0.7)"
+              >
+                <ChoreDropdown
+                  isDropdownOpen={isDropdownOpen}
+                  setIsDropdownOpen={setIsDropdownOpen}
+                  selectedCategory={selectedCategory}
+                  choresByCategory={choresByCategory}
+                  assignedChores={assignedChores}
+                  addChore={addChore}
+                />
+              </Tooltip>
+
+              <Tooltip
+                isVisible={currentStep === 2}
+                content={
+                  <View className="p-4">
+                    <Text className="text-zinc-900 text-base font-bold mb-2">
+                      Complete Chores & Earn Rewards! 🎁
+                    </Text>
+                    <Text className="text-zinc-900 text-sm mb-4">
+                      Mark chores as complete and tap "Complete All" to earn XP.
+                      Complete all chores for bonus rewards!
+                    </Text>
+                    <View className="flex-row justify-between">
+                      <TouchableOpacity
+                        onPress={handleSkipTutorial}
+                        className="px-4 py-2"
+                      >
+                        <Text className="text-zinc-900 text-sm">Skip</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={handleNextStep}
+                        className="bg-white px-4 py-2 rounded-lg"
+                      >
+                        <Text className="text-[#6366F1] font-bold">Finish</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                }
+                placement="top"
+                onClose={() => setShowTutorial(false)}
+                backgroundColor="rgba(0,0,0,0.7)"
+              >
+                <View className="flex-1">
+                  <AssignedChoresList
+                    assignedChores={assignedChores}
+                    toggleChoreCompletion={toggleChoreCompletion}
+                    removeChore={removeChore}
+                  />
+                  <ChoreActionButtons
+                    assignedChores={assignedChores}
+                    resetChores={resetChores}
+                    completeAllChores={completeAllChores}
+                    calculateTotalXp={calculateTotalXp}
+                  />
+                </View>
+              </Tooltip>
+            </>
+          ) : (
+            <>
+              <CategorySelector
+                categories={choreCategories}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+              />
+
+              <ChoreDropdown
+                isDropdownOpen={isDropdownOpen}
+                setIsDropdownOpen={setIsDropdownOpen}
+                selectedCategory={selectedCategory}
+                choresByCategory={choresByCategory}
+                assignedChores={assignedChores}
+                addChore={addChore}
+              />
+
+              <View className="flex-1">
+                <AssignedChoresList
+                  assignedChores={assignedChores}
+                  toggleChoreCompletion={toggleChoreCompletion}
+                  removeChore={removeChore}
+                />
+                <ChoreActionButtons
+                  assignedChores={assignedChores}
+                  resetChores={resetChores}
+                  completeAllChores={completeAllChores}
+                  calculateTotalXp={calculateTotalXp}
+                />
+              </View>
+            </>
+          )}
+        </View>
+      </ScrollView>
 
       {feedbackMessage && (
         <View className="absolute bottom-5 self-center bg-[#1E293B] px-4 py-2 rounded-full">

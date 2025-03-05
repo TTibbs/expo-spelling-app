@@ -3,14 +3,18 @@ import { View, Text, TouchableOpacity, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Audio } from "expo-av";
-import { SubtractionEquationProps, MathEquation } from "@/types/numbers";
 import {
-  getData,
-  storeData,
-  StorageKeys,
+  SubtractionEquationProps,
+  MathEquation,
+  MathGameState,
+} from "@/types/numbers";
+import {
+  getMathStats,
+  saveMathStats,
   updateRewardProgress,
 } from "@/lib/storage";
 import { useChild } from "@/context/ChildContext";
+import { formatPoints } from "@/lib/utils";
 
 const Equation = ({
   num1,
@@ -18,11 +22,8 @@ const Equation = ({
   answer,
   selectedAnswer,
   onSelect,
+  options,
 }: SubtractionEquationProps) => {
-  const options = [answer, answer + 1, answer - 1].sort(
-    () => Math.random() - 0.5
-  );
-
   return (
     <View className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
       <View className="flex-row justify-center items-center mb-6">
@@ -75,7 +76,7 @@ const Equation = ({
       </View>
 
       <View className="flex-row justify-around">
-        {options.map((option, index) => (
+        {options.map((option: number, index: number) => (
           <TouchableOpacity
             key={index}
             className={`bg-white border-2 border-amber-500 rounded-xl py-3 px-6 min-w-[80px] items-center ${
@@ -90,7 +91,11 @@ const Equation = ({
           >
             <Text
               className={`text-2xl font-bold ${
-                selectedAnswer === option ? "text-white" : "text-slate-800"
+                selectedAnswer === option
+                  ? option === answer
+                    ? "text-emerald-500"
+                    : "text-red-500"
+                  : "text-slate-800"
               }`}
             >
               {option}
@@ -104,6 +109,19 @@ const Equation = ({
 
 export default function SubtractionScreen() {
   const { activeChild } = useChild();
+  const [gameState, setGameState] = useState<MathGameState>({
+    currentProblem: null,
+    score: 0,
+    streak: 0,
+    level: 1,
+    problemsCompleted: 0,
+    showCelebration: false,
+    showHint: false,
+    showExplanation: false,
+    isPaused: false,
+    gameMode: "practice",
+    difficulty: "easy",
+  });
   const [currentEquation, setCurrentEquation] = useState<MathEquation>({
     num1: 5,
     num2: 2,
@@ -112,21 +130,18 @@ export default function SubtractionScreen() {
     difficulty: "easy",
   });
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [level, setLevel] = useState(1);
-  const [showCelebration, setShowCelebration] = useState(false);
+  const [answerOptions, setAnswerOptions] = useState<number[]>([]);
   const scaleAnim = useState(new Animated.Value(1))[0];
   const [soundEffect, setSoundEffect] = useState<Audio.Sound | null>(null);
 
   useEffect(() => {
     generateNewEquation();
-  }, [level]);
+  }, [gameState.level]);
 
   const generateNewEquation = () => {
     // Difficulty increases with level
-    const maxNum = Math.min(5 + level, 20);
+    const maxNum = Math.min(5 + gameState.level, 20);
 
     // For subtraction, we need num1 >= num2
     const num1 = Math.floor(Math.random() * maxNum) + 2; // ensure at least 2
@@ -142,23 +157,26 @@ export default function SubtractionScreen() {
     });
     setSelectedAnswer(null);
     setIsCorrect(null);
+
+    // Generate and store answer options
+    const options = [answer, answer + 1, answer - 1].sort(
+      () => Math.random() - 0.5
+    );
+    setAnswerOptions(options);
   };
 
   // Play sound effect
   const playSound = async (type: "correct" | "incorrect") => {
     try {
-      // Unload previous sound if exists
       if (soundEffect) {
         await soundEffect.unloadAsync();
       }
 
-      // Select the appropriate sound file
       const soundFile =
         type === "correct"
           ? require("../../../assets/sounds/correct.mp3")
           : require("../../../assets/sounds/incorrect.mp3");
 
-      // Load and play the sound
       const { sound } = await Audio.Sound.createAsync(soundFile);
       setSoundEffect(sound);
       await sound.playAsync();
@@ -182,8 +200,12 @@ export default function SubtractionScreen() {
 
     if (correct) {
       playSound("correct");
-      setScore(score + 10);
-      setStreak(streak + 1);
+      setGameState((prev) => ({
+        ...prev,
+        score: prev.score + 10,
+        streak: prev.streak + 1,
+        problemsCompleted: prev.problemsCompleted + 1,
+      }));
 
       // Update reward progress
       await updateRewardProgress("math_problems", 1, activeChild?.id);
@@ -191,7 +213,7 @@ export default function SubtractionScreen() {
       // Scale animation for correct answer
       Animated.sequence([
         Animated.timing(scaleAnim, {
-          toValue: 1.2,
+          toValue: 1.1,
           duration: 200,
           useNativeDriver: true,
         }),
@@ -203,242 +225,55 @@ export default function SubtractionScreen() {
       ]).start();
 
       // Level up logic
-      if (streak > 0 && streak % 5 === 0) {
-        setLevel((prevLevel) => Math.min(prevLevel + 1, 10));
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 3000);
+      if (gameState.streak > 0 && gameState.streak % 5 === 0) {
+        setGameState((prev) => ({
+          ...prev,
+          level: Math.min(prev.level + 1, 10),
+          showCelebration: true,
+        }));
+        setTimeout(() => {
+          setGameState((prev) => ({ ...prev, showCelebration: false }));
+        }, 3000);
       }
 
       // Update math statistics
-      const mathStats = activeChild
-        ? ((await getData(StorageKeys.CHILD_MATH_STATS)) || {})[
-            activeChild.id
-          ] || {
-            totalProblems: 0,
-            correctAnswers: 0,
-            streak: 0,
-            highestStreak: 0,
-            addition: {
-              attempted: 0,
-              correct: 0,
-              accuracy: 0,
-              timeSpent: 0,
-              averageTime: 0,
-              highestScore: 0,
-              perfectScores: 0,
-              hintsUsed: 0,
-              strategies: {},
-            },
-            subtraction: {
-              attempted: 0,
-              correct: 0,
-              accuracy: 0,
-              timeSpent: 0,
-              averageTime: 0,
-              highestScore: 0,
-              perfectScores: 0,
-              hintsUsed: 0,
-              strategies: {},
-            },
-            counting: {
-              attempted: 0,
-              correct: 0,
-              accuracy: 0,
-              timeSpent: 0,
-              averageTime: 0,
-              highestScore: 0,
-              perfectScores: 0,
-              hintsUsed: 0,
-              strategies: {},
-            },
-            multiplication: {
-              attempted: 0,
-              correct: 0,
-              accuracy: 0,
-              timeSpent: 0,
-              averageTime: 0,
-              highestScore: 0,
-              perfectScores: 0,
-              hintsUsed: 0,
-              strategies: {},
-            },
-            division: {
-              attempted: 0,
-              correct: 0,
-              accuracy: 0,
-              timeSpent: 0,
-              averageTime: 0,
-              highestScore: 0,
-              perfectScores: 0,
-              hintsUsed: 0,
-              strategies: {},
-            },
-            averageTimePerProblem: 0,
-            lastPlayed: "",
-            achievements: [],
-          }
-        : (await getData(StorageKeys.MATH_STATS)) || {
-            totalProblems: 0,
-            correctAnswers: 0,
-            streak: 0,
-            highestStreak: 0,
-            addition: {
-              attempted: 0,
-              correct: 0,
-              accuracy: 0,
-              timeSpent: 0,
-              averageTime: 0,
-              highestScore: 0,
-              perfectScores: 0,
-              hintsUsed: 0,
-              strategies: {},
-            },
-            subtraction: {
-              attempted: 0,
-              correct: 0,
-              accuracy: 0,
-              timeSpent: 0,
-              averageTime: 0,
-              highestScore: 0,
-              perfectScores: 0,
-              hintsUsed: 0,
-              strategies: {},
-            },
-            counting: {
-              attempted: 0,
-              correct: 0,
-              accuracy: 0,
-              timeSpent: 0,
-              averageTime: 0,
-              highestScore: 0,
-              perfectScores: 0,
-              hintsUsed: 0,
-              strategies: {},
-            },
-            multiplication: {
-              attempted: 0,
-              correct: 0,
-              accuracy: 0,
-              timeSpent: 0,
-              averageTime: 0,
-              highestScore: 0,
-              perfectScores: 0,
-              hintsUsed: 0,
-              strategies: {},
-            },
-            division: {
-              attempted: 0,
-              correct: 0,
-              accuracy: 0,
-              timeSpent: 0,
-              averageTime: 0,
-              highestScore: 0,
-              perfectScores: 0,
-              hintsUsed: 0,
-              strategies: {},
-            },
-            averageTimePerProblem: 0,
-            lastPlayed: "",
-            achievements: [],
-          };
+      try {
+        const mathStats = await getMathStats(activeChild?.id);
 
-      // Update subtraction stats
-      mathStats.totalProblems += 1;
-      mathStats.correctAnswers += 1;
-      mathStats.subtraction.attempted += 1;
-      mathStats.subtraction.correct += 1;
+        // Update subtraction stats
+        mathStats.totalProblems += 1;
+        mathStats.correctAnswers += 1;
+        mathStats.subtraction.attempted += 1;
+        mathStats.subtraction.correct += 1;
 
-      // Calculate new accuracy
-      const subtractionAccuracy = Math.round(
-        (mathStats.subtraction.correct / mathStats.subtraction.attempted) * 100
-      );
-      mathStats.subtraction.accuracy = subtractionAccuracy;
+        // Calculate new accuracy
+        const subtractionAccuracy = Math.round(
+          (mathStats.subtraction.correct / mathStats.subtraction.attempted) *
+            100
+        );
+        mathStats.subtraction.accuracy = subtractionAccuracy;
 
-      // Update highest streak if current streak is higher
-      if (streak + 1 > mathStats.highestStreak) {
-        mathStats.highestStreak = streak + 1;
-      }
-      mathStats.streak = streak;
+        // Update streak
+        if (gameState.streak + 1 > mathStats.highestStreak) {
+          mathStats.highestStreak = gameState.streak + 1;
+        }
+        mathStats.streak = gameState.streak;
 
-      // Save updated math stats
-      if (activeChild) {
-        const childMathStats =
-          (await getData(StorageKeys.CHILD_MATH_STATS)) || {};
-        childMathStats[activeChild.id] = mathStats;
-        await storeData(StorageKeys.CHILD_MATH_STATS, childMathStats);
-      } else {
-        await storeData(StorageKeys.MATH_STATS, mathStats);
+        // Save updated math stats
+        await saveMathStats(mathStats, activeChild?.id);
+      } catch (error) {
+        console.error(
+          "Failed to update stats:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
     } else {
       playSound("incorrect");
-      setStreak(0);
+      setGameState((prev) => ({ ...prev, streak: 0 }));
 
       // Update math statistics for incorrect answer
       try {
-        const mathStats = (await getData(StorageKeys.MATH_STATS)) || {
-          totalProblems: 0,
-          correctAnswers: 0,
-          streak: 0,
-          highestStreak: 0,
-          addition: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          subtraction: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          counting: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          multiplication: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          division: {
-            attempted: 0,
-            correct: 0,
-            accuracy: 0,
-            timeSpent: 0,
-            averageTime: 0,
-            highestScore: 0,
-            perfectScores: 0,
-            hintsUsed: 0,
-            strategies: {},
-          },
-          averageTimePerProblem: 0,
-          lastPlayed: "",
-          achievements: [],
-        };
+        const mathStats = await getMathStats(activeChild?.id);
 
         mathStats.totalProblems += 1;
         mathStats.subtraction.attempted += 1;
@@ -449,19 +284,11 @@ export default function SubtractionScreen() {
           (mathStats.subtraction.correct / mathStats.subtraction.attempted) *
             100
         );
-
         mathStats.subtraction.accuracy = newAccuracy;
         mathStats.streak = 0; // Reset streak on incorrect answer
 
         // Save updated math stats
-        if (activeChild) {
-          const childMathStats =
-            (await getData(StorageKeys.CHILD_MATH_STATS)) || {};
-          childMathStats[activeChild.id] = mathStats;
-          await storeData(StorageKeys.CHILD_MATH_STATS, childMathStats);
-        } else {
-          await storeData(StorageKeys.MATH_STATS, mathStats);
-        }
+        await saveMathStats(mathStats, activeChild?.id);
       } catch (error) {
         console.error(
           "Failed to update stats:",
@@ -485,16 +312,16 @@ export default function SubtractionScreen() {
         <View className="flex-row items-center">
           <Ionicons name="star" size={20} color="#F59E0B" />
           <Text className="text-base font-bold text-slate-800 ml-1">
-            {score}
+            {formatPoints(gameState.score)} points
           </Text>
         </View>
         <View className="bg-amber-500 px-3 py-1 rounded-full">
-          <Text className="text-white font-bold">Level {level}</Text>
+          <Text className="text-white font-bold">Level {gameState.level}</Text>
         </View>
         <View className="flex-row items-center">
           <Ionicons name="flame" size={20} color="#EF4444" />
           <Text className="text-base font-bold text-slate-800 ml-1">
-            {streak}
+            {gameState.streak}
           </Text>
         </View>
       </View>
@@ -511,6 +338,7 @@ export default function SubtractionScreen() {
             answer={currentEquation.answer}
             selectedAnswer={selectedAnswer}
             onSelect={handleAnswerSelect}
+            options={answerOptions}
           />
         </Animated.View>
 
@@ -527,7 +355,7 @@ export default function SubtractionScreen() {
 
         {/* Feedback icon */}
         {isCorrect !== null && (
-          <View className="absolute bottom-10 items-center">
+          <View className="absolute bottom-10 left-0 right-0 items-center">
             <Ionicons
               name={isCorrect ? "checkmark-circle" : "close-circle"}
               size={48}
@@ -544,13 +372,13 @@ export default function SubtractionScreen() {
         )}
 
         {/* Level up celebration */}
-        {showCelebration && (
+        {gameState.showCelebration && (
           <View className="absolute inset-0 justify-center items-center bg-white/90">
             <Text className="text-3xl font-bold text-amber-500 mb-2">
               Level Up!
             </Text>
             <Text className="text-lg text-slate-800 mb-4">
-              You're now level {level}!
+              You're now level {gameState.level}!
             </Text>
             <Ionicons name="trophy" size={48} color="#F59E0B" />
           </View>

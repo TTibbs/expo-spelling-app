@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -6,6 +6,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { learningPaths } from "@/lib/data";
 import { useChild } from "@/context/ChildContext";
 import { PageHeader } from "@/components/PageHeader";
+import Tooltip from "react-native-walkthrough-tooltip";
+import { getData, storeData, StorageKeys } from "@/lib/storage";
 
 const HeaderBanner: React.FC<{ onPress: () => void }> = React.memo(
   ({ onPress }) => (
@@ -86,6 +88,36 @@ const FunFactCard: React.FC<{
 export default function HomeScreen(): JSX.Element {
   const router = useRouter();
   const { activeChild } = useChild();
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    checkFirstTimeUser();
+  }, []);
+
+  const checkFirstTimeUser = async () => {
+    try {
+      const hasSeenTutorial = await getData(StorageKeys.HAS_SEEN_TUTORIAL);
+      if (!hasSeenTutorial) {
+        setShowTutorial(true);
+        await storeData(StorageKeys.HAS_SEEN_TUTORIAL, true);
+      }
+    } catch (error) {
+      console.error("Error checking tutorial status:", error);
+    }
+  };
+
+  const handleNextStep = () => {
+    if (currentStep < 2) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      setShowTutorial(false);
+    }
+  };
+
+  const handleSkipTutorial = () => {
+    setShowTutorial(false);
+  };
 
   const handlePathPress = useCallback(
     (path: (typeof learningPaths)[0]) => {
@@ -134,62 +166,158 @@ export default function HomeScreen(): JSX.Element {
         />
 
         {/* Banner with cool image */}
-        <HeaderBanner onPress={() => router.push("/learning")} />
+        <Tooltip
+          isVisible={showTutorial && currentStep === 0}
+          content={
+            <View className="p-4">
+              <Text className="text-zinc-900 text-base font-bold mb-2">
+                Start Your Learning Journey! 🚀
+              </Text>
+              <Text className="text-zinc-900 text-sm mb-4">
+                Tap here to explore all learning adventures and unlock new
+                content!
+              </Text>
+              <View className="flex-row justify-between">
+                <TouchableOpacity
+                  onPress={handleSkipTutorial}
+                  className="px-4 py-2"
+                >
+                  <Text className="text-zinc-900 text-sm">Skip</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleNextStep}
+                  className="bg-white px-4 py-2 rounded-lg"
+                >
+                  <Text className="text-[#6366F1] font-bold">Next</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          }
+          placement="bottom"
+          onClose={() => setShowTutorial(false)}
+          backgroundColor="rgba(0,0,0,0.7)"
+        >
+          <HeaderBanner onPress={() => router.push("/learning")} />
+        </Tooltip>
 
         {/* Quick access to learning paths */}
-        <View className="px-5 mb-4">
-          <Text className="text-xl font-bold text-[#1E293B] mb-4">
-            Pick your adventure! ✨
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {learningPaths.map((path) => (
-              <LearningPathCard
-                key={path.id}
-                path={path}
-                onPress={handlePathPress}
-              />
-            ))}
-          </ScrollView>
-        </View>
+        <Tooltip
+          isVisible={showTutorial && currentStep === 1}
+          content={
+            <View className="p-4">
+              <Text className="text-zinc-900 text-base font-bold mb-2">
+                Choose Your Learning Path! 🎯
+              </Text>
+              <Text className="text-zinc-900 text-sm mb-4">
+                Select from different activities like spelling, numbers, and
+                shapes. Each path offers unique learning experiences!
+              </Text>
+              <View className="flex-row justify-between">
+                <TouchableOpacity
+                  onPress={handleSkipTutorial}
+                  className="px-4 py-2"
+                >
+                  <Text className="text-zinc-900 text-sm">Skip</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleNextStep}
+                  className="bg-white px-4 py-2 rounded-lg"
+                >
+                  <Text className="text-[#6366F1] font-bold">Next</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          }
+          placement="bottom"
+          onClose={() => setShowTutorial(false)}
+          backgroundColor="rgba(0,0,0,0.7)"
+        >
+          <View className="px-5 mb-4">
+            <Text className="text-xl font-bold text-[#1E293B] mb-4">
+              Pick your adventure! ✨
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {learningPaths.map((path) => (
+                <LearningPathCard
+                  key={path.id}
+                  path={path}
+                  onPress={handlePathPress}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        </Tooltip>
 
         {/* Fun facts about learning */}
-        <View className="px-5">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-xl font-bold text-[#1E293B]">
-              Discover More! 🎯
-            </Text>
-            <TouchableOpacity>
-              <Text className="text-[#6366F1] font-medium">See All</Text>
-            </TouchableOpacity>
+        <Tooltip
+          isVisible={showTutorial && currentStep === 2}
+          content={
+            <View className="p-4">
+              <Text className="text-zinc-900 text-base font-bold mb-2">
+                Discover More Features! 🌟
+              </Text>
+              <Text className="text-zinc-900 text-sm mb-4">
+                Explore achievements, rewards, and fun facts to make your
+                learning journey even more exciting!
+              </Text>
+              <View className="flex-row justify-between">
+                <TouchableOpacity
+                  onPress={handleSkipTutorial}
+                  className="px-4 py-2"
+                >
+                  <Text className="text-zinc-900 text-sm">Skip</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleNextStep}
+                  className="bg-white px-4 py-2 rounded-lg"
+                >
+                  <Text className="text-[#6366F1] font-bold">Finish</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          }
+          placement="top"
+          onClose={() => setShowTutorial(false)}
+          backgroundColor="rgba(0,0,0,0.7)"
+        >
+          <View className="px-5">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-xl font-bold text-[#1E293B]">
+                Discover More! 🎯
+              </Text>
+              <TouchableOpacity>
+                <Text className="text-[#6366F1] font-medium">See All</Text>
+              </TouchableOpacity>
+            </View>
+
+            <FunFactCard
+              icon="bulb-outline"
+              iconColor="#EC4899"
+              bgColor="#FDF2F8"
+              title="Power Up Your Mind!"
+              description="Every new word you learn creates new connections in your brain. Let's make your brain super strong! 🧠✨"
+              onPress={() => handleFunFactPress("brain")}
+            />
+
+            <FunFactCard
+              icon="trophy"
+              iconColor="#10B981"
+              bgColor="#ECFDF5"
+              title="Unlock Achievements!"
+              description="Complete challenges to earn special badges and watch your progress soar to new heights! 🏆"
+              onPress={() => handleFunFactPress("achievements")}
+            />
+
+            <FunFactCard
+              icon="gift"
+              iconColor="#8B5CF6"
+              bgColor="#F5F3FF"
+              title="Earn Cool Rewards!"
+              description="Turn your learning adventures into awesome rewards! What will you unlock next? 🎁"
+              onPress={() => handleFunFactPress("rewards")}
+            />
           </View>
-
-          <FunFactCard
-            icon="bulb-outline"
-            iconColor="#EC4899"
-            bgColor="#FDF2F8"
-            title="Power Up Your Mind!"
-            description="Every new word you learn creates new connections in your brain. Let's make your brain super strong! 🧠✨"
-            onPress={() => handleFunFactPress("brain")}
-          />
-
-          <FunFactCard
-            icon="trophy"
-            iconColor="#10B981"
-            bgColor="#ECFDF5"
-            title="Unlock Achievements!"
-            description="Complete challenges to earn special badges and watch your progress soar to new heights! 🏆"
-            onPress={() => handleFunFactPress("achievements")}
-          />
-
-          <FunFactCard
-            icon="gift"
-            iconColor="#8B5CF6"
-            bgColor="#F5F3FF"
-            title="Earn Cool Rewards!"
-            description="Turn your learning adventures into awesome rewards! What will you unlock next? 🎁"
-            onPress={() => handleFunFactPress("rewards")}
-          />
-        </View>
+        </Tooltip>
       </ScrollView>
     </SafeAreaView>
   );

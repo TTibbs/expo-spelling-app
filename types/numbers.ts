@@ -202,6 +202,7 @@ export interface AdditionEquationProps {
   onSelect: (answer: number) => void;
   showStrategy?: boolean;
   timeRemaining?: number;
+  options: number[];
 }
 
 /**
@@ -215,6 +216,7 @@ export interface SubtractionEquationProps {
   onSelect: (answer: number) => void;
   showStrategy?: boolean;
   timeRemaining?: number;
+  options: number[];
 }
 
 /**

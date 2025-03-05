@@ -6,12 +6,12 @@ import { Audio } from "expo-av";
 import { NumberItemProps, NumberVisualProps } from "@/types/numbers";
 import { themes } from "@/lib/data";
 import {
-  getData,
-  storeData,
-  StorageKeys,
+  getMathStats,
+  saveMathStats,
   updateRewardProgress,
 } from "@/lib/storage";
 import { useChild } from "@/context/ChildContext";
+import { formatPoints } from "@/lib/utils";
 
 // Number item component
 const NumberItem = ({
@@ -19,7 +19,7 @@ const NumberItem = ({
   onPress,
   selected,
   correct,
-}: NumberItemProps) => {
+}: Omit<NumberItemProps, "showCount" | "count" | "disabled">) => {
   return (
     <TouchableOpacity
       className={`w-[18%] aspect-square m-[1%] bg-white justify-center items-center rounded-xl border-2 ${
@@ -34,7 +34,11 @@ const NumberItem = ({
     >
       <Text
         className={`text-2xl font-bold ${
-          selected ? "text-white" : "text-slate-800"
+          selected
+            ? correct === true
+              ? "text-emerald-500"
+              : "text-red-500"
+            : "text-slate-800"
         }`}
       >
         {number}
@@ -44,7 +48,11 @@ const NumberItem = ({
 };
 
 // Number visuals - displays objects to count
-const NumberVisual = ({ count, icon, color }: NumberVisualProps) => {
+const NumberVisual = ({
+  count,
+  icon,
+  color,
+}: Omit<NumberVisualProps, "size" | "showCount" | "animation">) => {
   return (
     <View className="flex-row flex-wrap justify-center p-4 bg-white rounded-2xl max-w-[90%] mx-[5%] shadow-sm">
       {[...Array(count)].map((_, index) => (
@@ -73,13 +81,11 @@ export default function CountingScreen() {
   }, []);
 
   const generateNewQuestion = () => {
-    // Generate a random number between 1 and 10 for beginners
     const number = Math.floor(Math.random() * 10) + 1;
     setCurrentNumber(number);
     setSelectedNumber(null);
     setIsCorrect(null);
 
-    // Pick a random theme
     const themeIndex = Math.floor(Math.random() * themes.length);
     setCurrentTheme(themes[themeIndex]);
   };
@@ -87,18 +93,15 @@ export default function CountingScreen() {
   // Play sound effect
   const playSound = async (type: "correct" | "incorrect") => {
     try {
-      // Unload previous sound if exists
       if (soundEffect) {
         await soundEffect.unloadAsync();
       }
 
-      // Select the appropriate sound file
       const soundFile =
         type === "correct"
           ? require("../../../assets/sounds/correct.mp3")
           : require("../../../assets/sounds/incorrect.mp3");
 
-      // Load and play the sound
       const { sound } = await Audio.Sound.createAsync(soundFile);
       setSoundEffect(sound);
       await sound.playAsync();
@@ -143,151 +146,9 @@ export default function CountingScreen() {
         }),
       ]).start();
 
-      // Save progress using type-safe storage
+      // Update math statistics
       try {
-        // Update user profile XP
-        const userProfile = await getData(StorageKeys.USER_PROFILE);
-        if (userProfile) {
-          const updatedXp = (userProfile.xp || 0) + 5;
-          const updatedProfile = {
-            ...userProfile,
-            xp: updatedXp,
-          };
-          await storeData(StorageKeys.USER_PROFILE, updatedProfile);
-        }
-
-        // Update math statistics
-        const mathStats = activeChild
-          ? ((await getData(StorageKeys.CHILD_MATH_STATS)) || {})[
-              activeChild.id
-            ] || {
-              totalProblems: 0,
-              correctAnswers: 0,
-              streak: 0,
-              highestStreak: 0,
-              addition: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              subtraction: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              counting: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              multiplication: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              division: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              averageTimePerProblem: 0,
-              lastPlayed: "",
-              achievements: [],
-            }
-          : (await getData(StorageKeys.MATH_STATS)) || {
-              totalProblems: 0,
-              correctAnswers: 0,
-              streak: 0,
-              highestStreak: 0,
-              addition: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              subtraction: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              counting: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              multiplication: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              division: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              averageTimePerProblem: 0,
-              lastPlayed: "",
-              achievements: [],
-            };
+        const mathStats = await getMathStats(activeChild?.id);
 
         // Update counting stats
         mathStats.totalProblems += 1;
@@ -301,20 +162,19 @@ export default function CountingScreen() {
         );
         mathStats.counting.accuracy = countingAccuracy;
 
-        // Update highest streak if current streak is higher
+        // Update streak
         if (streak + 1 > mathStats.highestStreak) {
           mathStats.highestStreak = streak + 1;
         }
         mathStats.streak = streak;
 
         // Save updated math stats
-        if (activeChild) {
-          const childMathStats =
-            (await getData(StorageKeys.CHILD_MATH_STATS)) || {};
-          childMathStats[activeChild.id] = mathStats;
-          await storeData(StorageKeys.CHILD_MATH_STATS, childMathStats);
-        } else {
-          await storeData(StorageKeys.MATH_STATS, mathStats);
+        await saveMathStats(mathStats, activeChild?.id);
+
+        // Check for milestone
+        if (streak > 0 && streak % 10 === 0) {
+          setShowCelebration(true);
+          setTimeout(() => setShowCelebration(false), 3000);
         }
       } catch (error) {
         console.error(
@@ -322,149 +182,13 @@ export default function CountingScreen() {
           error instanceof Error ? error.message : "Unknown error"
         );
       }
-
-      // Check for milestone
-      if (streak > 0 && streak % 10 === 0) {
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 3000);
-      }
     } else {
       playSound("incorrect");
       setStreak(0);
 
       // Update math statistics for incorrect answer
       try {
-        const mathStats = activeChild
-          ? ((await getData(StorageKeys.CHILD_MATH_STATS)) || {})[
-              activeChild.id
-            ] || {
-              totalProblems: 0,
-              correctAnswers: 0,
-              streak: 0,
-              highestStreak: 0,
-              addition: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              subtraction: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              counting: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              multiplication: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              division: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              averageTimePerProblem: 0,
-              lastPlayed: "",
-              achievements: [],
-            }
-          : (await getData(StorageKeys.MATH_STATS)) || {
-              totalProblems: 0,
-              correctAnswers: 0,
-              streak: 0,
-              highestStreak: 0,
-              addition: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              subtraction: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              counting: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              multiplication: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              division: {
-                attempted: 0,
-                correct: 0,
-                accuracy: 0,
-                timeSpent: 0,
-                averageTime: 0,
-                highestScore: 0,
-                perfectScores: 0,
-                hintsUsed: 0,
-                strategies: {},
-              },
-              averageTimePerProblem: 0,
-              lastPlayed: "",
-              achievements: [],
-            };
+        const mathStats = await getMathStats(activeChild?.id);
 
         mathStats.totalProblems += 1;
         mathStats.counting.attempted += 1;
@@ -474,19 +198,11 @@ export default function CountingScreen() {
         const newAccuracy = Math.round(
           (mathStats.counting.correct / mathStats.counting.attempted) * 100
         );
-
         mathStats.counting.accuracy = newAccuracy;
         mathStats.streak = 0; // Reset streak on incorrect answer
 
         // Save updated math stats
-        if (activeChild) {
-          const childMathStats =
-            (await getData(StorageKeys.CHILD_MATH_STATS)) || {};
-          childMathStats[activeChild.id] = mathStats;
-          await storeData(StorageKeys.CHILD_MATH_STATS, childMathStats);
-        } else {
-          await storeData(StorageKeys.MATH_STATS, mathStats);
-        }
+        await saveMathStats(mathStats, activeChild?.id);
       } catch (error) {
         console.error(
           "Failed to update stats:",
@@ -498,8 +214,6 @@ export default function CountingScreen() {
     // Generate new number after a delay
     setTimeout(() => {
       generateNewQuestion();
-      setSelectedNumber(null);
-      setIsCorrect(null);
     }, 1500);
   };
 
@@ -513,7 +227,7 @@ export default function CountingScreen() {
         <View className="flex-row items-center">
           <Ionicons name="star" size={20} color="#F59E0B" />
           <Text className="text-base font-bold text-slate-800 ml-1">
-            {score} points
+            {formatPoints(score)} points
           </Text>
         </View>
 
@@ -578,9 +292,7 @@ export default function CountingScreen() {
               isCorrect ? "text-emerald-500" : "text-red-500"
             }`}
           >
-            {isCorrect
-              ? "Great counting!"
-              : `That's ${selectedNumber}. Let's try again!`}
+            {isCorrect ? "Great job!" : "Let's try again!"}
           </Text>
         </View>
       )}

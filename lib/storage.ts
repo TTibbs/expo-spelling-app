@@ -41,6 +41,8 @@ export enum StorageKeys {
   PIN_VERIFICATION = "pinVerification",
   REWARD_PROGRESS = "rewardProgress",
   CHILD_REWARD_PROGRESS = "childRewardProgress",
+  HAS_SEEN_TUTORIAL = "hasSeenTutorial",
+  HAS_SEEN_LEARNING_TUTORIAL = "hasSeenLearningTutorial",
 }
 
 /**
@@ -65,6 +67,8 @@ export interface StorageData {
   [StorageKeys.PIN_VERIFICATION]: boolean;
   [StorageKeys.REWARD_PROGRESS]: RewardProgress;
   [StorageKeys.CHILD_REWARD_PROGRESS]: { [childId: string]: RewardProgress };
+  [StorageKeys.HAS_SEEN_TUTORIAL]: boolean;
+  [StorageKeys.HAS_SEEN_LEARNING_TUTORIAL]: boolean;
 }
 
 /**
@@ -110,6 +114,10 @@ const storageKeyToValidationKey = (key: StorageKeys): ValidationStorageKeys => {
       return ValidationStorageKeys.REWARD_PROGRESS;
     case StorageKeys.CHILD_REWARD_PROGRESS:
       return ValidationStorageKeys.CHILD_REWARD_PROGRESS;
+    case StorageKeys.HAS_SEEN_TUTORIAL:
+      return ValidationStorageKeys.HAS_SEEN_TUTORIAL;
+    case StorageKeys.HAS_SEEN_LEARNING_TUTORIAL:
+      return ValidationStorageKeys.HAS_SEEN_LEARNING_TUTORIAL;
     default:
       const exhaustiveCheck: never = key;
       throw new Error(`Unhandled storage key: ${exhaustiveCheck}`);

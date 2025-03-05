@@ -38,6 +38,8 @@ export enum ValidationStorageKeys {
   PIN_VERIFICATION = "pinVerification",
   REWARD_PROGRESS = "rewardProgress",
   CHILD_REWARD_PROGRESS = "childRewardProgress",
+  HAS_SEEN_TUTORIAL = "hasSeenTutorial",
+  HAS_SEEN_LEARNING_TUTORIAL = "hasSeenLearningTutorial",
 }
 
 // Define storage data interface to avoid circular import
@@ -66,6 +68,8 @@ export interface ValidationStorageData {
   [ValidationStorageKeys.CHILD_REWARD_PROGRESS]: {
     [childId: string]: RewardProgress;
   };
+  [ValidationStorageKeys.HAS_SEEN_TUTORIAL]: boolean;
+  [ValidationStorageKeys.HAS_SEEN_LEARNING_TUTORIAL]: boolean;
 }
 
 /**
@@ -479,6 +483,16 @@ export function validateStorageData<K extends keyof ValidationStorageData>(
           (childProgress) =>
             typeof childProgress === "object" && isRewardProgress(childProgress)
         )
+        ? (data as ValidationStorageData[K])
+        : null;
+
+    case ValidationStorageKeys.HAS_SEEN_TUTORIAL:
+      return typeof data === "boolean"
+        ? (data as ValidationStorageData[K])
+        : null;
+
+    case ValidationStorageKeys.HAS_SEEN_LEARNING_TUTORIAL:
+      return typeof data === "boolean"
         ? (data as ValidationStorageData[K])
         : null;
 
