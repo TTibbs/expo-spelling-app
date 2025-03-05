@@ -217,6 +217,22 @@ export default function ChoresScreen() {
     );
   }, []);
 
+  useEffect(() => {
+    checkFirstTimeUser();
+  }, []);
+
+  const checkFirstTimeUser = async () => {
+    try {
+      const hasSeenTutorial = await getData(StorageKeys.HAS_SEEN_TUTORIAL);
+      if (!hasSeenTutorial) {
+        setShowTutorial(true);
+        await storeData(StorageKeys.HAS_SEEN_TUTORIAL, true);
+      }
+    } catch (error) {
+      console.error("Error checking tutorial status:", error);
+    }
+  };
+
   const handleSkipTutorial = () => {
     setShowTutorial(false);
     setCurrentStep(currentStep + 1);
